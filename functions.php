@@ -269,17 +269,77 @@ function wrugc_get_field_value($name, $post_id = null)
  */
 function wrugc_get_media_rows($field_name, $post_id)
 {
-	$rows = wrugc_get_field_value($field_name, $post_id);
+	$rows       = wrugc_get_field_value($field_name, $post_id);
+	$media_rows = wrugc_normalize_media_rows($rows);
+
+	if (!empty($media_rows)) {
+		return $media_rows;
+	}
+
+	$raw_rows = get_post_meta($post_id, $field_name, true);
+
+	if ($raw_rows !== $rows) {
+		$media_rows = wrugc_normalize_media_rows($raw_rows);
+
+		if (!empty($media_rows)) {
+			return $media_rows;
+		}
+	}
+
+	if (is_numeric($raw_rows)) {
+		for ($i = 0; $i < (int) $raw_rows; $i++) {
+			$file_url = get_post_meta($post_id, "{$field_name}_{$i}_file_url", true);
+
+			if (!$file_url) {
+				$file_url = get_post_meta($post_id, "{$field_name}_{$i}_url", true);
+			}
+
+			if ($file_url && filter_var($file_url, FILTER_VALIDATE_URL)) {
+				$media_rows[] = ['file_url' => esc_url_raw($file_url)];
+			}
+		}
+	}
+
+	return $media_rows;
+}
+
+/**
+ * Normalize mixed media field data to rows with file_url.
+ *
+ * @param mixed $rows Raw field/post-meta data.
+ * @return array<int, array{file_url:string}>
+ */
+function wrugc_normalize_media_rows($rows)
+{
+	if (is_string($rows)) {
+		$maybe_unserialized = maybe_unserialize($rows);
+
+		if (is_array($maybe_unserialized)) {
+			$rows = $maybe_unserialized;
+		}
+	}
+
+	$media_rows = [];
+
+	if (is_string($rows) && filter_var($rows, FILTER_VALIDATE_URL)) {
+		return [['file_url' => esc_url_raw($rows)]];
+	}
 
 	if (!is_array($rows)) {
 		return [];
 	}
 
-	$media_rows = [];
-
 	foreach ($rows as $row) {
 		if (is_array($row) && !empty($row['file_url'])) {
 			$media_rows[] = ['file_url' => esc_url_raw($row['file_url'])];
+		} elseif (is_array($row) && !empty($row['url'])) {
+			$media_rows[] = ['file_url' => esc_url_raw($row['url'])];
+		} elseif (is_array($row) && !empty($row['ID'])) {
+			$url = wp_get_attachment_url((int) $row['ID']);
+
+			if ($url) {
+				$media_rows[] = ['file_url' => esc_url_raw($url)];
+			}
 		} elseif (is_string($row) && filter_var($row, FILTER_VALIDATE_URL)) {
 			$media_rows[] = ['file_url' => esc_url_raw($row)];
 		}
@@ -1168,7 +1228,8 @@ function wrugc_gallery_item_columns($columns)
 
 	$columns['email']               = __('Email', WRUGC_TEXT_DOMAIN);
 	$columns['project_description'] = __('Project Description', WRUGC_TEXT_DOMAIN);
-	$columns['ugc_media_preview']   = __('Preview', WRUGC_TEXT_DOMAIN);
+	$columns['ugc_before_preview']  = __('Before Preview', WRUGC_TEXT_DOMAIN);
+	$columns['ugc_after_preview']   = __('After Preview', WRUGC_TEXT_DOMAIN);
 
 	if ($date_column) {
 		$columns['date'] = $date_column;
@@ -1186,39 +1247,16 @@ add_filter('manage_' . WRUGC_POST_TYPE . '_posts_columns', 'wrugc_gallery_item_c
  */
 function wrugc_gallery_item_custom_column($column, $post_id)
 {
-	if ('ugc_media_preview' === $column) {
-		$media_urls = wrugc_get_media_rows('ugc_media_urls', $post_id);
-
-		if (!empty($media_urls)) {
-			$count = 0;
-
-			foreach ($media_urls as $item) {
-				$url  = esc_url($item['file_url']);
-				$type = wrugc_get_media_type_from_url($url);
-
-				if (!$url || !$type) {
-					continue;
-				}
-
-				echo '<a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">';
-
-				if ('image' === $type) {
-					echo '<img src="' . esc_url($url) . '" style="height:30px; width:auto; margin-right:5px;" alt="">';
-				} elseif ('video' === $type) {
-					echo '<video src="' . esc_url($url) . '" style="height:30px; width:auto; margin-right:5px;" muted preload="metadata"></video>';
-				}
-
-				echo '</a>';
-
-				$count++;
-
-				if ($count >= 4) {
-					break;
-				}
-			}
-		} else {
-			echo '<span style="color:#999;">' . esc_html__('No media', WRUGC_TEXT_DOMAIN) . '</span>';
-		}
+	if ('ugc_before_preview' === $column) {
+		wrugc_render_admin_media_preview(
+			wrugc_get_media_rows('ugc_before_media_urls', $post_id),
+			__('No before media', WRUGC_TEXT_DOMAIN)
+		);
+	} elseif ('ugc_after_preview' === $column) {
+		wrugc_render_admin_media_preview(
+			wrugc_get_media_rows('ugc_after_media_urls', $post_id),
+			__('No after media', WRUGC_TEXT_DOMAIN)
+		);
 	} elseif ('project_description' === $column) {
 		$description = wrugc_get_field_value('ugc_project_description', $post_id);
 		echo $description ? esc_html(wp_trim_words($description, 20)) : '<span style="color:#999;">' . esc_html__('No description', WRUGC_TEXT_DOMAIN) . '</span>';
@@ -1228,6 +1266,57 @@ function wrugc_gallery_item_custom_column($column, $post_id)
 	}
 }
 add_action('manage_' . WRUGC_POST_TYPE . '_posts_custom_column', 'wrugc_gallery_item_custom_column', 10, 2);
+
+/**
+ * Render small media thumbnails in the submissions list table.
+ *
+ * @param array  $media_rows Media rows.
+ * @param string $empty_label Empty state label.
+ */
+function wrugc_render_admin_media_preview($media_rows, $empty_label)
+{
+	if (empty($media_rows)) {
+		echo '<span style="color:#999;">' . esc_html($empty_label) . '</span>';
+		return;
+	}
+
+	$count = 0;
+
+	foreach ($media_rows as $item) {
+		if (empty($item['file_url'])) {
+			continue;
+		}
+
+		$url  = esc_url($item['file_url']);
+		$type = wrugc_get_media_type_from_url($url);
+
+		if (!$url) {
+			continue;
+		}
+
+		echo '<a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer" style="display:inline-block; margin-right:5px; vertical-align:middle;">';
+
+		if ('image' === $type) {
+			echo '<img src="' . esc_url($url) . '" style="height:40px; width:40px; object-fit:cover; border:1px solid #ccd0d4; border-radius:2px;" alt="">';
+		} elseif ('video' === $type) {
+			echo '<video src="' . esc_url($url) . '" style="height:40px; width:40px; object-fit:cover; border:1px solid #ccd0d4; border-radius:2px;" muted preload="metadata"></video>';
+		} else {
+			echo '<span class="dashicons dashicons-media-default" style="line-height:40px; width:40px; height:40px; border:1px solid #ccd0d4; color:#50575e;"></span>';
+		}
+
+		echo '</a>';
+
+		$count++;
+
+		if ($count >= 4) {
+			break;
+		}
+	}
+
+	if (0 === $count) {
+		echo '<span style="color:#999;">' . esc_html($empty_label) . '</span>';
+	}
+}
 
 /**
  * Add email settings submenu.
