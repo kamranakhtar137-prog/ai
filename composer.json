@@ -1,0 +1,11 @@
+{
+  "name": "woodrich/gallery-child-theme",
+  "description": "WordPress child theme functionality for Woodrich gallery submissions.",
+  "type": "wordpress-theme",
+  "require": {
+    "aws/aws-sdk-php": "^3.0"
+  },
+  "config": {
+    "allow-plugins": {}
+  }
+}
