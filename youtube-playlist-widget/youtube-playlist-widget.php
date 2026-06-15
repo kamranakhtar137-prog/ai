@@ -166,6 +166,18 @@ function ypw_register_widget() {
 add_action( 'init', 'ypw_register_widget' );
 
 /**
+ * Register the Beaver Builder module when Beaver Builder is available.
+ */
+function ypw_register_beaver_builder_module() {
+	if ( ! class_exists( 'FLBuilder' ) || ! class_exists( 'FLBuilderModule' ) ) {
+		return;
+	}
+
+	require_once YPW_PLUGIN_DIR . 'beaver-builder/class-ypw-beaver-builder-module.php';
+}
+add_action( 'init', 'ypw_register_beaver_builder_module', 20 );
+
+/**
  * Render the shortcode version.
  *
  * @param array<string,string> $atts Shortcode attributes.
@@ -222,6 +234,44 @@ function ypw_render_shortcode( $atts ) {
 			'layout'              => $atts['layout'],
 			'openInNewTab'        => filter_var( $atts['open_in_new_tab'], FILTER_VALIDATE_BOOLEAN ),
 		)
+	);
+}
+
+/**
+ * Map Beaver Builder module settings to renderer attributes.
+ *
+ * @param object $settings Beaver Builder settings object.
+ * @return array<string,mixed>
+ */
+function ypw_map_beaver_builder_settings( $settings ) {
+	$settings = (object) $settings;
+
+	return array(
+		'title'               => ypw_get_object_value( $settings, 'title' ),
+		'description'         => ypw_get_object_value( $settings, 'description' ),
+		'playlistUrl'         => ypw_get_object_value( $settings, 'playlist_url' ),
+		'playlistId'          => ypw_get_object_value( $settings, 'playlist_id' ),
+		'thumbnailId'         => absint( ypw_get_object_value( $settings, 'thumbnail' ) ),
+		'thumbnailUrl'        => ypw_get_object_value( $settings, 'external_thumbnail_url', ypw_get_object_value( $settings, 'thumbnail_src' ) ),
+		'backgroundColor'     => ypw_format_beaver_builder_color( ypw_get_object_value( $settings, 'background_color' ) ),
+		'contentColor'        => ypw_format_beaver_builder_color( ypw_get_object_value( $settings, 'content_color' ) ),
+		'titleColor'          => ypw_format_beaver_builder_color( ypw_get_object_value( $settings, 'title_color' ) ),
+		'textColor'           => ypw_format_beaver_builder_color( ypw_get_object_value( $settings, 'text_color' ) ),
+		'accentColor'         => ypw_format_beaver_builder_color( ypw_get_object_value( $settings, 'accent_color' ) ),
+		'playButtonColor'     => ypw_format_beaver_builder_color( ypw_get_object_value( $settings, 'play_button_color' ) ),
+		'titleFontFamily'     => ypw_resolve_font_family(
+			ypw_get_object_value( $settings, 'title_font_preset' ),
+			ypw_get_object_value( $settings, 'title_font_family' )
+		),
+		'bodyFontFamily'      => ypw_resolve_font_family(
+			ypw_get_object_value( $settings, 'body_font_preset' ),
+			ypw_get_object_value( $settings, 'body_font_family' )
+		),
+		'titleFontSize'       => ypw_get_object_value( $settings, 'title_font_size' ),
+		'descriptionFontSize' => ypw_get_object_value( $settings, 'description_font_size' ),
+		'buttonText'          => ypw_get_object_value( $settings, 'button_text' ),
+		'layout'              => ypw_get_object_value( $settings, 'layout' ),
+		'openInNewTab'        => 'yes' === ypw_get_object_value( $settings, 'open_in_new_tab', 'yes' ),
 	);
 }
 
@@ -421,6 +471,62 @@ function ypw_get_thumbnail_url( $thumbnail_id, $thumbnail_url ) {
 	}
 
 	return $thumbnail_url;
+}
+
+/**
+ * Safely read a property from a settings object.
+ *
+ * @param object $object   Settings object.
+ * @param string $property Property name.
+ * @param mixed  $default  Default value.
+ * @return mixed
+ */
+function ypw_get_object_value( $object, $property, $default = '' ) {
+	return isset( $object->{$property} ) ? $object->{$property} : $default;
+}
+
+/**
+ * Convert Beaver Builder color values into CSS color values.
+ *
+ * Beaver color fields commonly save hex colors without the leading #.
+ *
+ * @param mixed $value Raw Beaver Builder color value.
+ * @return string
+ */
+function ypw_format_beaver_builder_color( $value ) {
+	$value = trim( (string) $value );
+
+	if ( '' === $value ) {
+		return '';
+	}
+
+	if ( preg_match( '/^[A-Fa-f0-9]{3}([A-Fa-f0-9]{3})?$/', $value ) ) {
+		return '#' . $value;
+	}
+
+	return $value;
+}
+
+/**
+ * Resolve editor font preset and custom value into a font-family stack.
+ *
+ * @param string $preset Font preset.
+ * @param string $custom Custom font family stack.
+ * @return string
+ */
+function ypw_resolve_font_family( $preset, $custom ) {
+	if ( 'custom' === $preset && $custom ) {
+		return $custom;
+	}
+
+	$fonts = array(
+		'baloo'  => '"Baloo 2", "Arial Rounded MT Bold", Arial, sans-serif',
+		'shadow' => '"Shadows Into Light", "Comic Sans MS", cursive',
+		'sans'   => 'Arial, Helvetica, sans-serif',
+		'serif'  => 'Georgia, "Times New Roman", serif',
+	);
+
+	return isset( $fonts[ $preset ] ) ? $fonts[ $preset ] : $custom;
 }
 
 /**
