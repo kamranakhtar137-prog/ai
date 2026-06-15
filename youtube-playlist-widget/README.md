@@ -1,6 +1,6 @@
 # YouTube Playlist Widget
 
-Reusable WordPress CMS module for adding a configurable YouTube playlist card to any page. The primary editor integration is a Beaver Builder module, with Gutenberg block and shortcode fallbacks.
+Reusable WordPress CMS module for adding a configurable YouTube playlist card to any page. The primary editor integration is a Beaver Builder widget/module named **YouTube Playlist Widget**, with Gutenberg block and shortcode fallbacks.
 
 ## What editors can configure
 
@@ -41,14 +41,14 @@ The title font can be switched from a Shadow-style preset to Baloo, or replaced 
 2. Make sure Beaver Builder is installed and active.
 3. Activate **YouTube Playlist Widget** in WordPress admin.
 4. Edit any page with Beaver Builder.
-5. Open the Beaver Builder module panel and add **YouTube Playlist Widget** from the Media category.
+5. Open the Beaver Builder module panel, search for **YouTube Playlist Widget**, and add it from the Media category.
 6. Configure the content, playlist, image, colors, and fonts in the module settings.
 
 ## Beaver Builder editor workflow
 
 1. Editor opens a page, for example the Student Exchange page.
 2. Editor launches Beaver Builder.
-3. Editor drags **YouTube Playlist Widget** into the layout.
+3. Editor searches for or drags **YouTube Playlist Widget** into the layout.
 4. Editor configures:
    - title
    - description/text

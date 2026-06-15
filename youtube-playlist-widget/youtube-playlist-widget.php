@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: YouTube Playlist Widget
- * Description: Reusable CMS module for configurable YouTube playlist cards.
+ * Description: Reusable Beaver Builder widget/module for configurable YouTube playlist cards.
  * Version: 1.0.0
  * Author: Cursor
  * Text Domain: youtube-playlist-widget
