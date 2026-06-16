@@ -71,7 +71,9 @@
 }
 
 .ypw-thumbnail-link {
+	position: relative;
 	display: block;
+	overflow: hidden;
 	color: inherit;
 	text-decoration: none;
 }
@@ -85,11 +87,47 @@
 }
 
 .ypw-thumbnail-placeholder {
+	display: block;
 	min-height: 84px;
 	background:
 		linear-gradient(135deg, rgba(255, 255, 255, 0.22) 25%, transparent 25%) 0 0 / 26px 26px,
 		linear-gradient(135deg, transparent 75%, rgba(255, 255, 255, 0.22) 75%) 0 0 / 26px 26px,
 		linear-gradient(135deg, #d66d5d, #ac4a3f);
+}
+
+.ypw-thumbnail-play {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	display: inline-flex;
+	width: 42px;
+	height: 42px;
+	align-items: center;
+	justify-content: center;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.88);
+	color: var(--ypw-card-background);
+	box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+	transform: translate(-50%, -50%);
+	transition:
+		background 160ms ease,
+		transform 160ms ease;
+}
+
+.ypw-thumbnail-play::before {
+	width: 0;
+	height: 0;
+	margin-left: 3px;
+	border-top: 8px solid transparent;
+	border-bottom: 8px solid transparent;
+	border-left: 11px solid currentColor;
+	content: "";
+}
+
+.ypw-thumbnail-link:hover .ypw-thumbnail-play,
+.ypw-thumbnail-link:focus-visible .ypw-thumbnail-play {
+	background: rgba(255, 255, 255, 0.96);
+	transform: translate(-50%, -50%) scale(1.06);
 }
 
 .ypw-video-list {

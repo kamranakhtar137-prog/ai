@@ -671,18 +671,26 @@ function ypw_render_widget( $attributes ) {
 	$playlist_id  = ypw_get_playlist_id( $attributes['playlistUrl'], $attributes['playlistId'] );
 	$playlist_url = ypw_get_playlist_url( $playlist_id, $attributes['playlistUrl'] );
 	$metadata     = ypw_get_playlist_metadata( $playlist_url );
+	$recent       = ypw_get_playlist_recent_videos( $playlist_id );
+
+	if ( empty( $metadata['thumbnail_url'] ) && ! empty( $recent[0]['thumbnail_url'] ) ) {
+		$metadata['thumbnail_url'] = $recent[0]['thumbnail_url'];
+	}
+
 	$thumbnail    = ypw_get_thumbnail_url( $attributes['thumbnailId'], $attributes['thumbnailUrl'], $metadata );
 	$title        = $attributes['title'] ? $attributes['title'] : $metadata['title'];
 	$target       = $attributes['openInNewTab'] ? ' target="_blank" rel="noopener noreferrer"' : '';
 	$style        = ypw_build_inline_style( $attributes );
 	$videos       = array(
 		array(
-			'date'  => $attributes['videoOneDate'],
-			'title' => $attributes['videoOneTitle'],
+			'date'  => $attributes['videoOneDate'] ? $attributes['videoOneDate'] : ypw_get_array_value( ypw_get_array_value( $recent, 0, array() ), 'date' ),
+			'title' => $attributes['videoOneTitle'] ? $attributes['videoOneTitle'] : ypw_get_array_value( ypw_get_array_value( $recent, 0, array() ), 'title' ),
+			'url'   => ypw_get_array_value( ypw_get_array_value( $recent, 0, array() ), 'url', $playlist_url ),
 		),
 		array(
-			'date'  => $attributes['videoTwoDate'],
-			'title' => $attributes['videoTwoTitle'],
+			'date'  => $attributes['videoTwoDate'] ? $attributes['videoTwoDate'] : ypw_get_array_value( ypw_get_array_value( $recent, 1, array() ), 'date' ),
+			'title' => $attributes['videoTwoTitle'] ? $attributes['videoTwoTitle'] : ypw_get_array_value( ypw_get_array_value( $recent, 1, array() ), 'title' ),
+			'url'   => ypw_get_array_value( ypw_get_array_value( $recent, 1, array() ), 'url', $playlist_url ),
 		),
 	);
 
@@ -705,13 +713,14 @@ function ypw_render_widget( $attributes ) {
 					<?php else : ?>
 						<span class="ypw-thumbnail ypw-thumbnail-placeholder" aria-hidden="true"></span>
 					<?php endif; ?>
+					<span class="ypw-thumbnail-play" aria-hidden="true"></span>
 				</a>
 			</div>
 
 			<div class="ypw-video-list">
 				<?php foreach ( $videos as $video ) : ?>
 					<?php if ( $video['date'] || $video['title'] ) : ?>
-						<a class="ypw-video-row" href="<?php echo esc_url( $playlist_url ); ?>" aria-label="<?php esc_attr_e( 'Open YouTube playlist', 'youtube-playlist-widget' ); ?>"<?php echo $target; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+						<a class="ypw-video-row" href="<?php echo esc_url( $video['url'] ? $video['url'] : $playlist_url ); ?>" aria-label="<?php esc_attr_e( 'Open YouTube video', 'youtube-playlist-widget' ); ?>"<?php echo $target; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 							<span class="ypw-video-copy">
 								<?php if ( $video['date'] ) : ?>
 									<span class="ypw-video-date"><?php echo esc_html( $video['date'] ); ?></span>
@@ -961,6 +970,88 @@ function ypw_get_playlist_metadata( $playlist_url ) {
 	set_transient( $cache_key, $metadata, 12 * HOUR_IN_SECONDS );
 
 	return $metadata;
+}
+
+/**
+ * Fetch recent videos for a public YouTube playlist without an API key.
+ *
+ * @param string $playlist_id YouTube playlist ID.
+ * @return array<int,array{title:string,date:string,url:string,thumbnail_url:string}>
+ */
+function ypw_get_playlist_recent_videos( $playlist_id ) {
+	$playlist_id = ypw_sanitize_playlist_id( $playlist_id );
+
+	if ( ! $playlist_id || ! function_exists( 'simplexml_load_string' ) ) {
+		return array();
+	}
+
+	$cache_key = 'ypw_playlist_videos_' . md5( $playlist_id );
+	$cached    = get_transient( $cache_key );
+
+	if ( is_array( $cached ) ) {
+		return $cached;
+	}
+
+	$response = wp_safe_remote_get(
+		add_query_arg(
+			array(
+				'playlist_id' => $playlist_id,
+			),
+			'https://www.youtube.com/feeds/videos.xml'
+		),
+		array(
+			'timeout' => 6,
+		)
+	);
+
+	if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+		set_transient( $cache_key, array(), HOUR_IN_SECONDS );
+		return array();
+	}
+
+	$previous_errors = libxml_use_internal_errors( true );
+	$xml             = simplexml_load_string( wp_remote_retrieve_body( $response ) );
+	libxml_clear_errors();
+	libxml_use_internal_errors( $previous_errors );
+
+	if ( ! $xml || empty( $xml->entry ) ) {
+		set_transient( $cache_key, array(), HOUR_IN_SECONDS );
+		return array();
+	}
+
+	$videos = array();
+
+	foreach ( $xml->entry as $entry ) {
+		$link          = '';
+		$thumbnail_url = '';
+		$published     = strtotime( (string) $entry->published );
+
+		if ( isset( $entry->link ) ) {
+			$link_attributes = $entry->link->attributes();
+			$link            = isset( $link_attributes['href'] ) ? esc_url_raw( (string) $link_attributes['href'] ) : '';
+		}
+
+		$media = $entry->children( 'http://search.yahoo.com/mrss/' );
+		if ( isset( $media->group->thumbnail ) ) {
+			$thumbnail_attributes = $media->group->thumbnail->attributes();
+			$thumbnail_url        = isset( $thumbnail_attributes['url'] ) ? esc_url_raw( (string) $thumbnail_attributes['url'] ) : '';
+		}
+
+		$videos[] = array(
+			'title'         => sanitize_text_field( (string) $entry->title ),
+			'date'          => $published ? date_i18n( 'j. M Y', $published ) : '',
+			'url'           => $link,
+			'thumbnail_url' => $thumbnail_url,
+		);
+
+		if ( 2 <= count( $videos ) ) {
+			break;
+		}
+	}
+
+	set_transient( $cache_key, $videos, 6 * HOUR_IN_SECONDS );
+
+	return $videos;
 }
 
 /**

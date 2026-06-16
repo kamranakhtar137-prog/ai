@@ -7,9 +7,9 @@ Reusable WordPress CMS module for adding a configurable YouTube playlist card to
 - Title
 - Description/text
 - Right-side heading and text
-- Optional video row dates and titles
+- Optional video row date/title overrides; when left empty, the widget uses the latest public playlist videos
 - YouTube playlist URL or playlist ID
-- Thumbnail/image from the Media Library, an external image URL, or the public YouTube playlist poster when available
+- Thumbnail/image from the Media Library, an external image URL, the public YouTube playlist poster, or the latest playlist video thumbnail when available
 - Layout (`Version 6 split layout` or stacked)
 - Colors:
   - outer background
@@ -34,7 +34,8 @@ The title font can be switched from a Shadow-style preset to Baloo, or replaced 
   - orange playlist card on the left
   - handwritten white playlist title
   - description text next to the thumbnail
-  - optional video rows with dates, titles, dividers, and white circular play buttons
+  - latest playlist video rows with dates, titles, dividers, and white circular play buttons
+  - centered transparent poster play overlay that opens the playlist
   - "Alle Videos" CTA button
   - handwritten coral heading and body text on the right
 - The thumbnail remains a core part of the widget.
@@ -59,7 +60,7 @@ The title font can be switched from a Shadow-style preset to Baloo, or replaced 
    - playlist card title
    - description/text
    - right heading and right text
-   - optional video row dates and titles
+   - optional video row date/title overrides; leave empty to auto-use the latest playlist videos
    - YouTube playlist URL or playlist ID
    - Media Library thumbnail or external thumbnail URL
    - Version 6 split layout or stacked layout
@@ -83,11 +84,11 @@ If your Beaver Builder setup blocks third-party custom modules, use Beaver Build
 - Description/Text
 - Right Heading
 - Right Text
-- Optional Row 1 Date / Title
-- Optional Row 2 Date / Title
+- Optional Row 1 Date / Title overrides
+- Optional Row 2 Date / Title overrides
 - YouTube Playlist URL
 - YouTube Playlist ID
-- Thumbnail/Image URL, or automatic public YouTube playlist poster when available
+- Thumbnail/Image URL, automatic public YouTube playlist poster, or latest playlist video thumbnail when available
 - Colors
 - Fonts
 - Layout
