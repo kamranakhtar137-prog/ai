@@ -92,23 +92,23 @@ if ( ! defined( 'YPW_BB_MODULE_REGISTERED' ) ) {
 						'fields' => array(
 							'video_one_date'  => array(
 								'type'    => 'text',
-								'label'   => __( 'Video 1 Date', 'youtube-playlist-widget' ),
-								'default' => '3. März 2025',
+								'label'   => __( 'Optional Row 1 Date', 'youtube-playlist-widget' ),
+								'default' => '',
 							),
 							'video_one_title' => array(
 								'type'    => 'text',
-								'label'   => __( 'Video 1 Title', 'youtube-playlist-widget' ),
-								'default' => 'Schulalltag in Schweden | Experiment Vlog',
+								'label'   => __( 'Optional Row 1 Title', 'youtube-playlist-widget' ),
+								'default' => '',
 							),
 							'video_two_date'  => array(
 								'type'    => 'text',
-								'label'   => __( 'Video 2 Date', 'youtube-playlist-widget' ),
-								'default' => '18. Feb. 2025',
+								'label'   => __( 'Optional Row 2 Date', 'youtube-playlist-widget' ),
+								'default' => '',
 							),
 							'video_two_title' => array(
 								'type'    => 'text',
-								'label'   => __( 'Video 2 Title', 'youtube-playlist-widget' ),
-								'default' => 'Ein Wochenende in Stockholm | Experiment Vlog',
+								'label'   => __( 'Optional Row 2 Title', 'youtube-playlist-widget' ),
+								'default' => '',
 							),
 						),
 					),

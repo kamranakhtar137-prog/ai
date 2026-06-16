@@ -64,19 +64,19 @@ function ypw_get_block_attributes() {
 		),
 		'videoOneDate'         => array(
 			'type'    => 'string',
-			'default' => '3. März 2025',
+			'default' => '',
 		),
 		'videoOneTitle'        => array(
 			'type'    => 'string',
-			'default' => 'Schulalltag in Schweden | Experiment Vlog',
+			'default' => '',
 		),
 		'videoTwoDate'         => array(
 			'type'    => 'string',
-			'default' => '18. Feb. 2025',
+			'default' => '',
 		),
 		'videoTwoTitle'        => array(
 			'type'    => 'string',
-			'default' => 'Ein Wochenende in Stockholm | Experiment Vlog',
+			'default' => '',
 		),
 		'playlistUrl'          => array(
 			'type'    => 'string',
@@ -305,10 +305,10 @@ if ( class_exists( 'WP_Widget' ) && ! class_exists( 'YPW_WordPress_Widget' ) ) {
 			$this->render_textarea_field( 'description', __( 'Description/Text', 'youtube-playlist-widget' ), $instance['description'] );
 			$this->render_text_field( 'contentTitle', __( 'Right Heading', 'youtube-playlist-widget' ), $instance['contentTitle'] );
 			$this->render_textarea_field( 'contentText', __( 'Right Text', 'youtube-playlist-widget' ), $instance['contentText'] );
-			$this->render_text_field( 'videoOneDate', __( 'Video 1 Date', 'youtube-playlist-widget' ), $instance['videoOneDate'] );
-			$this->render_text_field( 'videoOneTitle', __( 'Video 1 Title', 'youtube-playlist-widget' ), $instance['videoOneTitle'] );
-			$this->render_text_field( 'videoTwoDate', __( 'Video 2 Date', 'youtube-playlist-widget' ), $instance['videoTwoDate'] );
-			$this->render_text_field( 'videoTwoTitle', __( 'Video 2 Title', 'youtube-playlist-widget' ), $instance['videoTwoTitle'] );
+			$this->render_text_field( 'videoOneDate', __( 'Optional Row 1 Date', 'youtube-playlist-widget' ), $instance['videoOneDate'] );
+			$this->render_text_field( 'videoOneTitle', __( 'Optional Row 1 Title', 'youtube-playlist-widget' ), $instance['videoOneTitle'] );
+			$this->render_text_field( 'videoTwoDate', __( 'Optional Row 2 Date', 'youtube-playlist-widget' ), $instance['videoTwoDate'] );
+			$this->render_text_field( 'videoTwoTitle', __( 'Optional Row 2 Title', 'youtube-playlist-widget' ), $instance['videoTwoTitle'] );
 			$this->render_text_field( 'playlistUrl', __( 'YouTube Playlist URL', 'youtube-playlist-widget' ), $instance['playlistUrl'] );
 			$this->render_text_field( 'playlistId', __( 'YouTube Playlist ID', 'youtube-playlist-widget' ), $instance['playlistId'] );
 			$this->render_text_field( 'thumbnailUrl', __( 'Thumbnail/Image URL', 'youtube-playlist-widget' ), $instance['thumbnailUrl'] );
@@ -670,7 +670,9 @@ function ypw_render_widget( $attributes ) {
 	$attributes   = ypw_normalize_attributes( $attributes );
 	$playlist_id  = ypw_get_playlist_id( $attributes['playlistUrl'], $attributes['playlistId'] );
 	$playlist_url = ypw_get_playlist_url( $playlist_id, $attributes['playlistUrl'] );
-	$thumbnail    = ypw_get_thumbnail_url( $attributes['thumbnailId'], $attributes['thumbnailUrl'] );
+	$metadata     = ypw_get_playlist_metadata( $playlist_url );
+	$thumbnail    = ypw_get_thumbnail_url( $attributes['thumbnailId'], $attributes['thumbnailUrl'], $metadata );
+	$title        = $attributes['title'] ? $attributes['title'] : $metadata['title'];
 	$target       = $attributes['openInNewTab'] ? ' target="_blank" rel="noopener noreferrer"' : '';
 	$style        = ypw_build_inline_style( $attributes );
 	$videos       = array(
@@ -686,10 +688,10 @@ function ypw_render_widget( $attributes ) {
 
 	ob_start();
 	?>
-	<section class="ypw-widget ypw-layout-<?php echo esc_attr( $attributes['layout'] ); ?>" style="<?php echo esc_attr( $style ); ?>" aria-label="<?php echo esc_attr( $attributes['title'] ); ?>">
+	<section class="ypw-widget ypw-layout-<?php echo esc_attr( $attributes['layout'] ); ?>" style="<?php echo esc_attr( $style ); ?>" aria-label="<?php echo esc_attr( $title ); ?>">
 		<div class="ypw-card">
-			<?php if ( $attributes['title'] ) : ?>
-				<h2 class="ypw-card-title"><?php echo esc_html( $attributes['title'] ); ?></h2>
+			<?php if ( $title ) : ?>
+				<h2 class="ypw-card-title"><?php echo esc_html( $title ); ?></h2>
 			<?php endif; ?>
 
 			<div class="ypw-card-intro">
@@ -699,7 +701,7 @@ function ypw_render_widget( $attributes ) {
 
 				<a class="ypw-thumbnail-link" href="<?php echo esc_url( $playlist_url ); ?>"<?php echo $target; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 					<?php if ( $thumbnail ) : ?>
-						<img class="ypw-thumbnail" src="<?php echo esc_url( $thumbnail ); ?>" alt="<?php echo esc_attr( $attributes['title'] ); ?>" loading="lazy" />
+						<img class="ypw-thumbnail" src="<?php echo esc_url( $thumbnail ); ?>" alt="<?php echo esc_attr( $title ); ?>" loading="lazy" />
 					<?php else : ?>
 						<span class="ypw-thumbnail ypw-thumbnail-placeholder" aria-hidden="true"></span>
 					<?php endif; ?>
@@ -709,7 +711,7 @@ function ypw_render_widget( $attributes ) {
 			<div class="ypw-video-list">
 				<?php foreach ( $videos as $video ) : ?>
 					<?php if ( $video['date'] || $video['title'] ) : ?>
-						<a class="ypw-video-row" href="<?php echo esc_url( $playlist_url ); ?>"<?php echo $target; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+						<a class="ypw-video-row" href="<?php echo esc_url( $playlist_url ); ?>" aria-label="<?php esc_attr_e( 'Open YouTube playlist', 'youtube-playlist-widget' ); ?>"<?php echo $target; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 							<span class="ypw-video-copy">
 								<?php if ( $video['date'] ) : ?>
 									<span class="ypw-video-date"><?php echo esc_html( $video['date'] ); ?></span>
@@ -719,7 +721,6 @@ function ypw_render_widget( $attributes ) {
 								<?php endif; ?>
 							</span>
 							<span class="ypw-row-play" aria-hidden="true"></span>
-							<span class="screen-reader-text"><?php esc_html_e( 'Open YouTube playlist', 'youtube-playlist-widget' ); ?></span>
 						</a>
 					<?php endif; ?>
 				<?php endforeach; ?>
@@ -876,11 +877,12 @@ function ypw_get_playlist_url( $playlist_id, $playlist_url ) {
 /**
  * Get configured thumbnail URL.
  *
- * @param int    $thumbnail_id  Attachment ID.
- * @param string $thumbnail_url Manual image URL.
+ * @param int                 $thumbnail_id  Attachment ID.
+ * @param string              $thumbnail_url Manual image URL.
+ * @param array<string,mixed> $metadata      Playlist metadata.
  * @return string
  */
-function ypw_get_thumbnail_url( $thumbnail_id, $thumbnail_url ) {
+function ypw_get_thumbnail_url( $thumbnail_id, $thumbnail_url, $metadata = array() ) {
 	if ( $thumbnail_id ) {
 		$image = wp_get_attachment_image_url( $thumbnail_id, 'large' );
 
@@ -889,7 +891,76 @@ function ypw_get_thumbnail_url( $thumbnail_id, $thumbnail_url ) {
 		}
 	}
 
-	return $thumbnail_url;
+	if ( $thumbnail_url ) {
+		return $thumbnail_url;
+	}
+
+	if ( ! empty( $metadata['thumbnail_url'] ) ) {
+		return esc_url_raw( $metadata['thumbnail_url'] );
+	}
+
+	return '';
+}
+
+/**
+ * Fetch basic YouTube playlist metadata without requiring an API key.
+ *
+ * YouTube's oEmbed endpoint can provide a poster thumbnail and title for
+ * public playlists. Results are cached to avoid repeated external requests.
+ *
+ * @param string $playlist_url Playlist URL.
+ * @return array{title:string,thumbnail_url:string}
+ */
+function ypw_get_playlist_metadata( $playlist_url ) {
+	$metadata = array(
+		'title'         => '',
+		'thumbnail_url' => '',
+	);
+
+	if ( ! $playlist_url || ! wp_http_validate_url( $playlist_url ) ) {
+		return $metadata;
+	}
+
+	$cache_key = 'ypw_playlist_meta_' . md5( $playlist_url );
+	$cached    = get_transient( $cache_key );
+
+	if ( is_array( $cached ) ) {
+		return wp_parse_args( $cached, $metadata );
+	}
+
+	$response = wp_safe_remote_get(
+		add_query_arg(
+			array(
+				'url'    => $playlist_url,
+				'format' => 'json',
+			),
+			'https://www.youtube.com/oembed'
+		),
+		array(
+			'timeout' => 6,
+		)
+	);
+
+	if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+		set_transient( $cache_key, $metadata, HOUR_IN_SECONDS );
+		return $metadata;
+	}
+
+	$data = json_decode( wp_remote_retrieve_body( $response ), true );
+
+	if ( is_array( $data ) ) {
+		if ( ! empty( $data['title'] ) ) {
+			$metadata['title'] = sanitize_text_field( $data['title'] );
+		}
+
+		if ( ! empty( $data['thumbnail_url'] ) ) {
+			$metadata['thumbnail_url'] = esc_url_raw( $data['thumbnail_url'] );
+		}
+	}
+
+	set_transient( $cache_key, $metadata, 12 * HOUR_IN_SECONDS );
+
+	return $metadata;
 }
 
 /**
