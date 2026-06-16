@@ -1,26 +1,25 @@
 .ypw-widget {
-	--ypw-background: #f8f3ec;
+	--ypw-card-background: #ff7f66;
 	--ypw-content-background: #ffffff;
-	--ypw-title-color: #1b1b1b;
-	--ypw-text-color: #3d3d3d;
-	--ypw-accent-color: #ff0000;
+	--ypw-title-color: #ffffff;
+	--ypw-text-color: #ffffff;
+	--ypw-accent-color: #ff6f61;
 	--ypw-play-button-color: #ffffff;
-	--ypw-title-font-family: "Baloo 2", "Arial Rounded MT Bold", Arial, sans-serif;
+	--ypw-title-font-family: "Shadows Into Light", "Comic Sans MS", cursive;
 	--ypw-body-font-family: Arial, Helvetica, sans-serif;
-	--ypw-title-font-size: clamp(2rem, 5vw, 4.5rem);
-	--ypw-description-font-size: clamp(1rem, 2vw, 1.25rem);
+	--ypw-title-font-size: clamp(1.85rem, 3vw, 2.45rem);
+	--ypw-description-font-size: clamp(0.88rem, 1.4vw, 1rem);
 
 	display: grid;
-	grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
-	gap: clamp(20px, 4vw, 48px);
-	align-items: stretch;
+	grid-template-columns: minmax(290px, 0.95fr) minmax(280px, 1.15fr);
+	gap: clamp(28px, 4.8vw, 64px);
+	align-items: start;
 	box-sizing: border-box;
-	max-width: 1180px;
+	max-width: 1060px;
 	margin: 32px auto;
-	padding: clamp(18px, 3vw, 36px);
-	border-radius: 32px;
-	background: var(--ypw-background);
-	color: var(--ypw-text-color);
+	padding: 0;
+	background: var(--ypw-content-background);
+	color: #333333;
 	font-family: var(--ypw-body-font-family);
 }
 
@@ -32,144 +31,195 @@
 
 .ypw-layout-stacked {
 	grid-template-columns: 1fr;
-	max-width: 860px;
+	max-width: 720px;
 }
 
-.ypw-media {
-	position: relative;
-	display: block;
-	overflow: hidden;
-	min-height: 280px;
-	border-radius: 28px;
-	background: #1f1f1f;
-	color: var(--ypw-play-button-color);
-	text-decoration: none;
-	box-shadow: 0 24px 50px rgba(0, 0, 0, 0.16);
-	isolation: isolate;
-}
-
-.ypw-media::after {
-	position: absolute;
-	inset: 0;
-	content: "";
-	background: linear-gradient(180deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.22));
-	pointer-events: none;
-	z-index: 1;
-}
-
-.ypw-thumbnail {
-	display: block;
-	width: 100%;
-	height: 100%;
-	min-height: 280px;
-	aspect-ratio: 16 / 10;
-	object-fit: cover;
-	transition: transform 180ms ease;
-}
-
-.ypw-thumbnail-placeholder {
-	background:
-		linear-gradient(135deg, rgba(255, 255, 255, 0.12) 25%, transparent 25%) 0 0 / 48px 48px,
-		linear-gradient(135deg, transparent 75%, rgba(255, 255, 255, 0.12) 75%) 0 0 / 48px 48px,
-		linear-gradient(135deg, #2a2a2a, #111111);
-}
-
-.ypw-media:hover .ypw-thumbnail,
-.ypw-media:focus-visible .ypw-thumbnail {
-	transform: scale(1.035);
-}
-
-.ypw-play-button {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	display: inline-flex;
-	width: clamp(72px, 9vw, 104px);
-	height: clamp(72px, 9vw, 104px);
-	align-items: center;
-	justify-content: center;
-	color: var(--ypw-play-button-color);
-	filter: drop-shadow(0 12px 26px rgba(0, 0, 0, 0.36));
-	transform: translate(-50%, -50%);
-	transition:
-		filter 180ms ease,
-		transform 180ms ease;
-	z-index: 2;
-}
-
-.ypw-play-button svg {
-	display: block;
-	width: 100%;
-	height: 100%;
-}
-
-.ypw-media:hover .ypw-play-button,
-.ypw-media:focus-visible .ypw-play-button {
-	filter: drop-shadow(0 16px 30px rgba(0, 0, 0, 0.42));
-	transform: translate(-50%, -50%) scale(1.06);
-}
-
-.ypw-content {
+.ypw-card {
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
-	min-height: 280px;
-	padding: clamp(22px, 4vw, 52px);
-	border-radius: 28px;
-	background: var(--ypw-content-background);
-	box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
+	min-height: 398px;
+	padding: clamp(22px, 3vw, 34px) clamp(18px, 3vw, 30px);
+	border-radius: 6px;
+	background: var(--ypw-card-background);
+	color: var(--ypw-text-color);
 }
 
-.ypw-title {
-	margin: 0 0 16px;
+.ypw-card-title {
+	margin: 0 0 28px;
 	color: var(--ypw-title-color);
 	font-family: var(--ypw-title-font-family);
 	font-size: var(--ypw-title-font-size);
-	font-weight: 800;
-	line-height: 0.98;
-	letter-spacing: -0.035em;
+	font-weight: 400;
+	line-height: 1.05;
+	text-align: center;
+}
+
+.ypw-card-intro {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(120px, 150px);
+	gap: 18px;
+	align-items: start;
 }
 
 .ypw-description {
-	max-width: 34rem;
 	margin: 0;
 	color: var(--ypw-text-color);
 	font-family: var(--ypw-body-font-family);
 	font-size: var(--ypw-description-font-size);
 	font-weight: 500;
-	line-height: 1.55;
+	line-height: 1.35;
+}
+
+.ypw-thumbnail-link {
+	display: block;
+	color: inherit;
+	text-decoration: none;
+}
+
+.ypw-thumbnail {
+	display: block;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	border: 0;
+	object-fit: cover;
+}
+
+.ypw-thumbnail-placeholder {
+	min-height: 84px;
+	background:
+		linear-gradient(135deg, rgba(255, 255, 255, 0.22) 25%, transparent 25%) 0 0 / 26px 26px,
+		linear-gradient(135deg, transparent 75%, rgba(255, 255, 255, 0.22) 75%) 0 0 / 26px 26px,
+		linear-gradient(135deg, #d66d5d, #ac4a3f);
+}
+
+.ypw-video-list {
+	margin-top: 14px;
+}
+
+.ypw-video-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 24px;
+	gap: 12px;
+	align-items: center;
+	min-height: 64px;
+	padding: 11px 0 13px;
+	border-top: 1px solid rgba(255, 255, 255, 0.72);
+	color: var(--ypw-text-color);
+	text-decoration: none;
+}
+
+.ypw-video-row:last-child {
+	border-bottom: 1px solid rgba(255, 255, 255, 0.72);
+}
+
+.ypw-video-date,
+.ypw-video-title {
+	display: block;
+	color: var(--ypw-text-color);
+	font-family: var(--ypw-body-font-family);
+}
+
+.ypw-video-date {
+	margin-bottom: 5px;
+	font-size: 0.74rem;
+	font-weight: 500;
+	opacity: 0.88;
+}
+
+.ypw-video-title {
+	font-size: clamp(0.95rem, 1.6vw, 1.08rem);
+	font-weight: 500;
+	line-height: 1.24;
+}
+
+.ypw-row-play {
+	position: relative;
+	display: inline-flex;
+	width: 24px;
+	height: 24px;
+	align-items: center;
+	justify-content: center;
+	border-radius: 999px;
+	background: var(--ypw-play-button-color);
+	color: var(--ypw-card-background);
+	flex: 0 0 auto;
+	transition:
+		filter 160ms ease,
+		transform 160ms ease;
+}
+
+.ypw-row-play::before {
+	width: 0;
+	height: 0;
+	margin-left: 2px;
+	border-top: 5px solid transparent;
+	border-bottom: 5px solid transparent;
+	border-left: 7px solid currentColor;
+	content: "";
+}
+
+.ypw-video-row:hover .ypw-row-play,
+.ypw-video-row:focus-visible .ypw-row-play {
+	filter: brightness(0.98);
+	transform: scale(1.08);
 }
 
 .ypw-cta {
 	display: inline-flex;
-	align-self: flex-start;
+	align-self: center;
 	align-items: center;
 	justify-content: center;
-	margin-top: 28px;
-	padding: 12px 20px;
-	border-radius: 999px;
-	background: var(--ypw-accent-color);
-	color: #ffffff;
+	margin-top: auto;
+	padding: 9px 15px;
+	border-radius: 3px;
+	background: #ffffff;
+	color: var(--ypw-accent-color);
 	font-family: var(--ypw-body-font-family);
-	font-size: 1rem;
+	font-size: 0.83rem;
 	font-weight: 700;
 	line-height: 1;
 	text-decoration: none;
 	transition:
-		filter 180ms ease,
-		transform 180ms ease;
+		filter 160ms ease,
+		transform 160ms ease;
 }
 
 .ypw-cta:hover,
 .ypw-cta:focus-visible {
-	color: #ffffff;
-	filter: brightness(0.94);
+	color: var(--ypw-accent-color);
+	filter: brightness(0.96);
 	transform: translateY(-1px);
 }
 
-.ypw-media:focus-visible,
+.ypw-content {
+	padding-top: 2px;
+	background: transparent;
+	box-shadow: none;
+}
+
+.ypw-content-title {
+	margin: 0 0 22px;
+	color: var(--ypw-accent-color);
+	font-family: var(--ypw-title-font-family);
+	font-size: clamp(2rem, 4vw, 2.8rem);
+	font-weight: 400;
+	line-height: 1.05;
+}
+
+.ypw-content-text {
+	max-width: 440px;
+	margin: 0;
+	color: #3f454d;
+	font-family: var(--ypw-body-font-family);
+	font-size: clamp(0.95rem, 1.5vw, 1.08rem);
+	font-weight: 500;
+	line-height: 1.47;
+}
+
+.ypw-thumbnail-link:focus-visible,
+.ypw-video-row:focus-visible,
 .ypw-cta:focus-visible {
-	outline: 3px solid color-mix(in srgb, var(--ypw-accent-color), #ffffff 24%);
+	outline: 3px solid color-mix(in srgb, var(--ypw-accent-color), #ffffff 28%);
 	outline-offset: 4px;
 }
 
@@ -185,33 +235,28 @@
 @media (max-width: 760px) {
 	.ypw-widget {
 		grid-template-columns: 1fr;
-		gap: 18px;
+		gap: 28px;
 		margin: 24px auto;
-		padding: 14px;
-		border-radius: 24px;
 	}
 
-	.ypw-media,
+	.ypw-card {
+		min-height: 0;
+		padding: 24px 18px 28px;
+	}
+
+	.ypw-card-intro {
+		grid-template-columns: 1fr;
+	}
+
+	.ypw-thumbnail {
+		max-width: 260px;
+	}
+
 	.ypw-content {
-		border-radius: 20px;
+		padding: 0 4px;
 	}
 
-	.ypw-media,
-	.ypw-thumbnail,
-	.ypw-content {
-		min-height: 220px;
-	}
-
-	.ypw-content {
-		padding: 26px 22px;
-	}
-
-	.ypw-title {
-		margin-bottom: 12px;
-		letter-spacing: -0.02em;
-	}
-
-	.ypw-cta {
-		margin-top: 22px;
+	.ypw-content-text {
+		max-width: none;
 	}
 }

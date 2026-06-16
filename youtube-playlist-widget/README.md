@@ -6,6 +6,8 @@ Reusable WordPress CMS module for adding a configurable YouTube playlist card to
 
 - Title
 - Description/text
+- Right-side heading and text
+- Video row dates and titles
 - YouTube playlist URL or playlist ID
 - Thumbnail/image from the Media Library or an external image URL
 - Layout (`Version 6 split layout` or stacked)
@@ -28,12 +30,14 @@ The title font can be switched from a Shadow-style preset to Baloo, or replaced 
 
 ## Design notes
 
-- The thumbnail remains the primary visual element of the widget.
-- The default layout uses a desktop split card and collapses to a mobile stacked card.
-- The play button is larger and closer to the YouTube logo style:
-  - white filled circle
-  - transparent play triangle cut out of the circle
-  - centered over the thumbnail with a prominent shadow
+- The design follows the provided reference structure:
+  - orange playlist card on the left
+  - handwritten white playlist title
+  - description text next to the thumbnail
+  - two video rows with dates, titles, dividers, and white circular play buttons
+  - "Alle Videos" CTA button
+  - handwritten coral heading and body text on the right
+- The thumbnail remains a core part of the widget.
 
 ## Installation
 
@@ -52,8 +56,10 @@ The title font can be switched from a Shadow-style preset to Baloo, or replaced 
 2. Editor launches Beaver Builder.
 3. Editor searches for or drags **YouTube Playlist Widget** into the layout from the YouTube category or WordPress Widgets group.
 4. Editor configures:
-   - title
+   - playlist card title
    - description/text
+   - right heading and right text
+   - video row dates and titles
    - YouTube playlist URL or playlist ID
    - Media Library thumbnail or external thumbnail URL
    - Version 6 split layout or stacked layout
@@ -75,6 +81,10 @@ If your Beaver Builder setup blocks third-party custom modules, use Beaver Build
 
 - Title
 - Description/Text
+- Right Heading
+- Right Text
+- Video 1 Date / Title
+- Video 2 Date / Title
 - YouTube Playlist URL
 - YouTube Playlist ID
 - Thumbnail/Image URL
@@ -110,17 +120,23 @@ Additional shortcode attributes:
 
 ```text
 playlist_url=""
-background_color="#f8f3ec"
+content_title="Hier ist eine Überschrift"
+content_text="Hast Du schon mal vom American Dream gehört? ..."
+video_one_date="3. März 2025"
+video_one_title="Schulalltag in Schweden | Experiment Vlog"
+video_two_date="18. Feb. 2025"
+video_two_title="Ein Wochenende in Stockholm | Experiment Vlog"
+background_color="#ff7f66"
 content_color="#ffffff"
-title_color="#1b1b1b"
-text_color="#3d3d3d"
-accent_color="#ff0000"
+title_color="#ffffff"
+text_color="#ffffff"
+accent_color="#ff6f61"
 play_button_color="#ffffff"
-title_font_family='"Baloo 2", Arial, sans-serif'
+title_font_family='"Shadows Into Light", cursive'
 body_font_family='Arial, Helvetica, sans-serif'
-title_font_size="clamp(2rem, 5vw, 4.5rem)"
+title_font_size="clamp(1.85rem, 3vw, 2.45rem)"
 description_font_size="clamp(1rem, 2vw, 1.25rem)"
-button_text="Playlist ansehen"
+button_text="Alle Videos"
 layout="split"
 open_in_new_tab="true"
 ```

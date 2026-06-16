@@ -60,19 +60,55 @@ if ( ! defined( 'YPW_BB_MODULE_REGISTERED' ) ) {
 						'fields' => array(
 							'title'       => array(
 								'type'    => 'text',
-								'label'   => __( 'Title', 'youtube-playlist-widget' ),
-								'default' => 'YouTube Playlist',
+								'label'   => __( 'Playlist Card Title', 'youtube-playlist-widget' ),
+								'default' => 'Vlogs aus dem Austausch',
 							),
 							'description' => array(
 								'type'    => 'textarea',
-								'label'   => __( 'Description/Text', 'youtube-playlist-widget' ),
+								'label'   => __( 'Playlist Card Description/Text', 'youtube-playlist-widget' ),
 								'rows'    => 4,
-								'default' => 'Hier findest Du unsere YouTube-Playlist abcdfeghijklmn',
+								'default' => "Video Description\ndescription description\ndescription\ndescription description\ndescription",
 							),
 							'button_text' => array(
 								'type'    => 'text',
 								'label'   => __( 'Button Text', 'youtube-playlist-widget' ),
-								'default' => 'Playlist ansehen',
+								'default' => 'Alle Videos',
+							),
+							'content_title' => array(
+								'type'    => 'text',
+								'label'   => __( 'Right Heading', 'youtube-playlist-widget' ),
+								'default' => 'Hier ist eine Überschrift',
+							),
+							'content_text'  => array(
+								'type'    => 'textarea',
+								'label'   => __( 'Right Text', 'youtube-playlist-widget' ),
+								'rows'    => 5,
+								'default' => 'Hast Du schon mal vom "American Dream" gehört? Er besagt, dass jede*r in den Vereinigten Staaten durch seine Fähigkeiten und Leistungen das individuelle Glück finden kann. Begib Dich mit uns auf die Reise Deines Lebens und erlebe Deinen ganz eigenen amerikanischen Traum in Deinem Schüleraustausch USA.',
+							),
+						),
+					),
+					'videos'   => array(
+						'title'  => __( 'Video Rows', 'youtube-playlist-widget' ),
+						'fields' => array(
+							'video_one_date'  => array(
+								'type'    => 'text',
+								'label'   => __( 'Video 1 Date', 'youtube-playlist-widget' ),
+								'default' => '3. März 2025',
+							),
+							'video_one_title' => array(
+								'type'    => 'text',
+								'label'   => __( 'Video 1 Title', 'youtube-playlist-widget' ),
+								'default' => 'Schulalltag in Schweden | Experiment Vlog',
+							),
+							'video_two_date'  => array(
+								'type'    => 'text',
+								'label'   => __( 'Video 2 Date', 'youtube-playlist-widget' ),
+								'default' => '18. Feb. 2025',
+							),
+							'video_two_title' => array(
+								'type'    => 'text',
+								'label'   => __( 'Video 2 Title', 'youtube-playlist-widget' ),
+								'default' => 'Ein Wochenende in Stockholm | Experiment Vlog',
 							),
 						),
 					),
@@ -141,8 +177,8 @@ if ( ! defined( 'YPW_BB_MODULE_REGISTERED' ) ) {
 						'fields' => array(
 							'background_color'  => array(
 								'type'       => 'color',
-								'label'      => __( 'Outer Background', 'youtube-playlist-widget' ),
-								'default'    => 'f8f3ec',
+								'label'      => __( 'Playlist Card Background', 'youtube-playlist-widget' ),
+								'default'    => 'ff7f66',
 								'show_reset' => true,
 							),
 							'content_color'     => array(
@@ -153,20 +189,20 @@ if ( ! defined( 'YPW_BB_MODULE_REGISTERED' ) ) {
 							),
 							'title_color'       => array(
 								'type'       => 'color',
-								'label'      => __( 'Title Color', 'youtube-playlist-widget' ),
-								'default'    => '1b1b1b',
+								'label'      => __( 'Card Title Color', 'youtube-playlist-widget' ),
+								'default'    => 'ffffff',
 								'show_reset' => true,
 							),
 							'text_color'        => array(
 								'type'       => 'color',
-								'label'      => __( 'Description Color', 'youtube-playlist-widget' ),
-								'default'    => '3d3d3d',
+								'label'      => __( 'Card Text Color', 'youtube-playlist-widget' ),
+								'default'    => 'ffffff',
 								'show_reset' => true,
 							),
 							'accent_color'      => array(
 								'type'       => 'color',
-								'label'      => __( 'CTA/Accent Color', 'youtube-playlist-widget' ),
-								'default'    => 'ff0000',
+								'label'      => __( 'Heading/Accent Color', 'youtube-playlist-widget' ),
+								'default'    => 'ff6f61',
 								'show_reset' => true,
 							),
 							'play_button_color' => array(
@@ -188,7 +224,7 @@ if ( ! defined( 'YPW_BB_MODULE_REGISTERED' ) ) {
 							'title_font_preset' => array(
 								'type'    => 'select',
 								'label'   => __( 'Title Font Preset', 'youtube-playlist-widget' ),
-								'default' => 'baloo',
+								'default' => 'shadow',
 								'options' => array(
 									'baloo'  => __( 'Baloo', 'youtube-playlist-widget' ),
 									'shadow' => __( 'Shadow', 'youtube-playlist-widget' ),
@@ -200,14 +236,14 @@ if ( ! defined( 'YPW_BB_MODULE_REGISTERED' ) ) {
 							'title_font_family' => array(
 								'type'        => 'text',
 								'label'       => __( 'Custom Title Font Family', 'youtube-playlist-widget' ),
-								'default'     => '"Baloo 2", "Arial Rounded MT Bold", Arial, sans-serif',
-								'placeholder' => '"Baloo 2", Arial, sans-serif',
+								'default'     => '"Shadows Into Light", "Comic Sans MS", cursive',
+								'placeholder' => '"Shadows Into Light", cursive',
 								'help'        => __( 'Used when the preset is set to Custom.', 'youtube-playlist-widget' ),
 							),
 							'title_font_size'   => array(
 								'type'    => 'text',
 								'label'   => __( 'Title Font Size', 'youtube-playlist-widget' ),
-								'default' => 'clamp(2rem, 5vw, 4.5rem)',
+								'default' => 'clamp(1.85rem, 3vw, 2.45rem)',
 								'help'    => __( 'Accepts CSS values such as 56px, 4rem, or clamp(...).', 'youtube-playlist-widget' ),
 							),
 						),

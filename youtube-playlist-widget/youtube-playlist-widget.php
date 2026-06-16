@@ -48,11 +48,35 @@ function ypw_get_block_attributes() {
 	return array(
 		'title'                => array(
 			'type'    => 'string',
-			'default' => 'YouTube Playlist',
+			'default' => 'Vlogs aus dem Austausch',
 		),
 		'description'          => array(
 			'type'    => 'string',
-			'default' => 'Hier findest Du unsere YouTube-Playlist abcdfeghijklmn',
+			'default' => "Video Description\ndescription description\ndescription\ndescription description\ndescription",
+		),
+		'contentTitle'         => array(
+			'type'    => 'string',
+			'default' => 'Hier ist eine Überschrift',
+		),
+		'contentText'          => array(
+			'type'    => 'string',
+			'default' => 'Hast Du schon mal vom "American Dream" gehört? Er besagt, dass jede*r in den Vereinigten Staaten durch seine Fähigkeiten und Leistungen das individuelle Glück finden kann. Begib Dich mit uns auf die Reise Deines Lebens und erlebe Deinen ganz eigenen amerikanischen Traum in Deinem Schüleraustausch USA.',
+		),
+		'videoOneDate'         => array(
+			'type'    => 'string',
+			'default' => '3. März 2025',
+		),
+		'videoOneTitle'        => array(
+			'type'    => 'string',
+			'default' => 'Schulalltag in Schweden | Experiment Vlog',
+		),
+		'videoTwoDate'         => array(
+			'type'    => 'string',
+			'default' => '18. Feb. 2025',
+		),
+		'videoTwoTitle'        => array(
+			'type'    => 'string',
+			'default' => 'Ein Wochenende in Stockholm | Experiment Vlog',
 		),
 		'playlistUrl'          => array(
 			'type'    => 'string',
@@ -72,7 +96,7 @@ function ypw_get_block_attributes() {
 		),
 		'backgroundColor'      => array(
 			'type'    => 'string',
-			'default' => '#f8f3ec',
+			'default' => '#ff7f66',
 		),
 		'contentColor'         => array(
 			'type'    => 'string',
@@ -80,15 +104,15 @@ function ypw_get_block_attributes() {
 		),
 		'titleColor'           => array(
 			'type'    => 'string',
-			'default' => '#1b1b1b',
+			'default' => '#ffffff',
 		),
 		'textColor'            => array(
 			'type'    => 'string',
-			'default' => '#3d3d3d',
+			'default' => '#ffffff',
 		),
 		'accentColor'          => array(
 			'type'    => 'string',
-			'default' => '#ff0000',
+			'default' => '#ff6f61',
 		),
 		'playButtonColor'      => array(
 			'type'    => 'string',
@@ -96,7 +120,7 @@ function ypw_get_block_attributes() {
 		),
 		'titleFontFamily'      => array(
 			'type'    => 'string',
-			'default' => '"Baloo 2", "Arial Rounded MT Bold", Arial, sans-serif',
+			'default' => '"Shadows Into Light", "Comic Sans MS", cursive',
 		),
 		'bodyFontFamily'       => array(
 			'type'    => 'string',
@@ -104,7 +128,7 @@ function ypw_get_block_attributes() {
 		),
 		'titleFontSize'        => array(
 			'type'    => 'string',
-			'default' => 'clamp(2rem, 5vw, 4.5rem)',
+			'default' => 'clamp(1.85rem, 3vw, 2.45rem)',
 		),
 		'descriptionFontSize'  => array(
 			'type'    => 'string',
@@ -112,7 +136,7 @@ function ypw_get_block_attributes() {
 		),
 		'buttonText'           => array(
 			'type'    => 'string',
-			'default' => 'Playlist ansehen',
+			'default' => 'Alle Videos',
 		),
 		'layout'               => array(
 			'type'    => 'string',
@@ -279,6 +303,12 @@ if ( class_exists( 'WP_Widget' ) && ! class_exists( 'YPW_WordPress_Widget' ) ) {
 
 			$this->render_text_field( 'title', __( 'Title', 'youtube-playlist-widget' ), $instance['title'] );
 			$this->render_textarea_field( 'description', __( 'Description/Text', 'youtube-playlist-widget' ), $instance['description'] );
+			$this->render_text_field( 'contentTitle', __( 'Right Heading', 'youtube-playlist-widget' ), $instance['contentTitle'] );
+			$this->render_textarea_field( 'contentText', __( 'Right Text', 'youtube-playlist-widget' ), $instance['contentText'] );
+			$this->render_text_field( 'videoOneDate', __( 'Video 1 Date', 'youtube-playlist-widget' ), $instance['videoOneDate'] );
+			$this->render_text_field( 'videoOneTitle', __( 'Video 1 Title', 'youtube-playlist-widget' ), $instance['videoOneTitle'] );
+			$this->render_text_field( 'videoTwoDate', __( 'Video 2 Date', 'youtube-playlist-widget' ), $instance['videoTwoDate'] );
+			$this->render_text_field( 'videoTwoTitle', __( 'Video 2 Title', 'youtube-playlist-widget' ), $instance['videoTwoTitle'] );
 			$this->render_text_field( 'playlistUrl', __( 'YouTube Playlist URL', 'youtube-playlist-widget' ), $instance['playlistUrl'] );
 			$this->render_text_field( 'playlistId', __( 'YouTube Playlist ID', 'youtube-playlist-widget' ), $instance['playlistId'] );
 			$this->render_text_field( 'thumbnailUrl', __( 'Thumbnail/Image URL', 'youtube-playlist-widget' ), $instance['thumbnailUrl'] );
@@ -325,20 +355,26 @@ if ( class_exists( 'WP_Widget' ) && ! class_exists( 'YPW_WordPress_Widget' ) ) {
 
 			$instance['title']               = sanitize_text_field( ypw_get_array_value( $new_instance, 'title' ) );
 			$instance['description']         = sanitize_textarea_field( ypw_get_array_value( $new_instance, 'description' ) );
+			$instance['contentTitle']        = sanitize_text_field( ypw_get_array_value( $new_instance, 'contentTitle' ) );
+			$instance['contentText']         = sanitize_textarea_field( ypw_get_array_value( $new_instance, 'contentText' ) );
+			$instance['videoOneDate']        = sanitize_text_field( ypw_get_array_value( $new_instance, 'videoOneDate' ) );
+			$instance['videoOneTitle']       = sanitize_text_field( ypw_get_array_value( $new_instance, 'videoOneTitle' ) );
+			$instance['videoTwoDate']        = sanitize_text_field( ypw_get_array_value( $new_instance, 'videoTwoDate' ) );
+			$instance['videoTwoTitle']       = sanitize_text_field( ypw_get_array_value( $new_instance, 'videoTwoTitle' ) );
 			$instance['playlistUrl']         = esc_url_raw( ypw_get_array_value( $new_instance, 'playlistUrl' ) );
 			$instance['playlistId']          = ypw_sanitize_playlist_id( ypw_get_array_value( $new_instance, 'playlistId' ) );
 			$instance['thumbnailUrl']        = esc_url_raw( ypw_get_array_value( $new_instance, 'thumbnailUrl' ) );
 			$instance['buttonText']          = sanitize_text_field( ypw_get_array_value( $new_instance, 'buttonText' ) );
 			$instance['layout']              = in_array( ypw_get_array_value( $new_instance, 'layout' ), array( 'split', 'stacked' ), true ) ? ypw_get_array_value( $new_instance, 'layout' ) : 'split';
-			$instance['backgroundColor']     = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'backgroundColor' ), '#f8f3ec' );
+			$instance['backgroundColor']     = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'backgroundColor' ), '#ff7f66' );
 			$instance['contentColor']        = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'contentColor' ), '#ffffff' );
-			$instance['titleColor']          = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'titleColor' ), '#1b1b1b' );
-			$instance['textColor']           = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'textColor' ), '#3d3d3d' );
-			$instance['accentColor']         = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'accentColor' ), '#ff0000' );
+			$instance['titleColor']          = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'titleColor' ), '#ffffff' );
+			$instance['textColor']           = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'textColor' ), '#ffffff' );
+			$instance['accentColor']         = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'accentColor' ), '#ff6f61' );
 			$instance['playButtonColor']     = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'playButtonColor' ), '#ffffff' );
-			$instance['titleFontPreset']     = ypw_sanitize_font_preset( ypw_get_array_value( $new_instance, 'titleFontPreset' ), 'baloo' );
-			$instance['titleFontFamily']     = ypw_sanitize_font_family( ypw_get_array_value( $new_instance, 'titleFontFamily' ), '"Baloo 2", "Arial Rounded MT Bold", Arial, sans-serif' );
-			$instance['titleFontSize']       = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'titleFontSize' ), 'clamp(2rem, 5vw, 4.5rem)' );
+			$instance['titleFontPreset']     = ypw_sanitize_font_preset( ypw_get_array_value( $new_instance, 'titleFontPreset' ), 'shadow' );
+			$instance['titleFontFamily']     = ypw_sanitize_font_family( ypw_get_array_value( $new_instance, 'titleFontFamily' ), '"Shadows Into Light", "Comic Sans MS", cursive' );
+			$instance['titleFontSize']       = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'titleFontSize' ), 'clamp(1.85rem, 3vw, 2.45rem)' );
 			$instance['bodyFontPreset']      = ypw_sanitize_font_preset( ypw_get_array_value( $new_instance, 'bodyFontPreset' ), 'sans' );
 			$instance['bodyFontFamily']      = ypw_sanitize_font_family( ypw_get_array_value( $new_instance, 'bodyFontFamily' ), 'Arial, Helvetica, sans-serif' );
 			$instance['descriptionFontSize'] = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'descriptionFontSize' ), 'clamp(1rem, 2vw, 1.25rem)' );
@@ -447,6 +483,12 @@ function ypw_render_shortcode( $atts ) {
 		array(
 			'title'                 => '',
 			'description'           => '',
+			'content_title'         => '',
+			'content_text'          => '',
+			'video_one_date'        => '',
+			'video_one_title'       => '',
+			'video_two_date'        => '',
+			'video_two_title'       => '',
 			'playlist_url'          => '',
 			'playlist_id'           => '',
 			'thumbnail_id'          => 0,
@@ -473,6 +515,12 @@ function ypw_render_shortcode( $atts ) {
 		array(
 			'title'               => $atts['title'],
 			'description'         => $atts['description'],
+			'contentTitle'        => $atts['content_title'],
+			'contentText'         => $atts['content_text'],
+			'videoOneDate'        => $atts['video_one_date'],
+			'videoOneTitle'       => $atts['video_one_title'],
+			'videoTwoDate'        => $atts['video_two_date'],
+			'videoTwoTitle'       => $atts['video_two_title'],
 			'playlistUrl'         => $atts['playlist_url'],
 			'playlistId'          => $atts['playlist_id'],
 			'thumbnailId'         => absint( $atts['thumbnail_id'] ),
@@ -506,6 +554,12 @@ function ypw_map_beaver_builder_settings( $settings ) {
 	return array(
 		'title'               => ypw_get_object_value( $settings, 'title' ),
 		'description'         => ypw_get_object_value( $settings, 'description' ),
+		'contentTitle'        => ypw_get_object_value( $settings, 'content_title' ),
+		'contentText'         => ypw_get_object_value( $settings, 'content_text' ),
+		'videoOneDate'        => ypw_get_object_value( $settings, 'video_one_date' ),
+		'videoOneTitle'       => ypw_get_object_value( $settings, 'video_one_title' ),
+		'videoTwoDate'        => ypw_get_object_value( $settings, 'video_two_date' ),
+		'videoTwoTitle'       => ypw_get_object_value( $settings, 'video_two_title' ),
 		'playlistUrl'         => ypw_get_object_value( $settings, 'playlist_url' ),
 		'playlistId'          => ypw_get_object_value( $settings, 'playlist_id' ),
 		'thumbnailId'         => absint( ypw_get_object_value( $settings, 'thumbnail' ) ),
@@ -541,7 +595,7 @@ function ypw_get_wordpress_widget_defaults() {
 	return array_merge(
 		ypw_get_default_attributes(),
 		array(
-			'titleFontPreset' => 'baloo',
+			'titleFontPreset' => 'shadow',
 			'bodyFontPreset'  => 'sans',
 		)
 	);
@@ -559,6 +613,12 @@ function ypw_map_wordpress_widget_instance( $instance ) {
 	return array(
 		'title'               => ypw_get_array_value( $instance, 'title' ),
 		'description'         => ypw_get_array_value( $instance, 'description' ),
+		'contentTitle'        => ypw_get_array_value( $instance, 'contentTitle' ),
+		'contentText'         => ypw_get_array_value( $instance, 'contentText' ),
+		'videoOneDate'        => ypw_get_array_value( $instance, 'videoOneDate' ),
+		'videoOneTitle'       => ypw_get_array_value( $instance, 'videoOneTitle' ),
+		'videoTwoDate'        => ypw_get_array_value( $instance, 'videoTwoDate' ),
+		'videoTwoTitle'       => ypw_get_array_value( $instance, 'videoTwoTitle' ),
 		'playlistUrl'         => ypw_get_array_value( $instance, 'playlistUrl' ),
 		'playlistId'          => ypw_get_array_value( $instance, 'playlistId' ),
 		'thumbnailId'         => 0,
@@ -570,7 +630,7 @@ function ypw_map_wordpress_widget_instance( $instance ) {
 		'accentColor'         => ypw_get_array_value( $instance, 'accentColor' ),
 		'playButtonColor'     => ypw_get_array_value( $instance, 'playButtonColor' ),
 		'titleFontFamily'     => ypw_resolve_font_family(
-			ypw_get_array_value( $instance, 'titleFontPreset', 'baloo' ),
+			ypw_get_array_value( $instance, 'titleFontPreset', 'shadow' ),
 			ypw_get_array_value( $instance, 'titleFontFamily' )
 		),
 		'bodyFontFamily'      => ypw_resolve_font_family(
@@ -611,46 +671,74 @@ function ypw_render_widget( $attributes ) {
 	$playlist_id  = ypw_get_playlist_id( $attributes['playlistUrl'], $attributes['playlistId'] );
 	$playlist_url = ypw_get_playlist_url( $playlist_id, $attributes['playlistUrl'] );
 	$thumbnail    = ypw_get_thumbnail_url( $attributes['thumbnailId'], $attributes['thumbnailUrl'] );
-	$mask_id      = wp_unique_id( 'ypw-play-mask-' );
 	$target       = $attributes['openInNewTab'] ? ' target="_blank" rel="noopener noreferrer"' : '';
 	$style        = ypw_build_inline_style( $attributes );
+	$videos       = array(
+		array(
+			'date'  => $attributes['videoOneDate'],
+			'title' => $attributes['videoOneTitle'],
+		),
+		array(
+			'date'  => $attributes['videoTwoDate'],
+			'title' => $attributes['videoTwoTitle'],
+		),
+	);
 
 	ob_start();
 	?>
 	<section class="ypw-widget ypw-layout-<?php echo esc_attr( $attributes['layout'] ); ?>" style="<?php echo esc_attr( $style ); ?>" aria-label="<?php echo esc_attr( $attributes['title'] ); ?>">
-		<a class="ypw-media" href="<?php echo esc_url( $playlist_url ); ?>"<?php echo $target; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
-			<?php if ( $thumbnail ) : ?>
-				<img class="ypw-thumbnail" src="<?php echo esc_url( $thumbnail ); ?>" alt="<?php echo esc_attr( $attributes['title'] ); ?>" loading="lazy" />
-			<?php else : ?>
-				<span class="ypw-thumbnail ypw-thumbnail-placeholder" aria-hidden="true"></span>
-			<?php endif; ?>
-			<span class="ypw-play-button" aria-hidden="true">
-				<svg viewBox="0 0 96 96" focusable="false" role="img" aria-hidden="true">
-					<defs>
-						<mask id="<?php echo esc_attr( $mask_id ); ?>">
-							<rect width="96" height="96" fill="white" />
-							<path d="M40 31 L67 48 L40 65 Z" fill="black" />
-						</mask>
-					</defs>
-					<circle cx="48" cy="48" r="43" fill="currentColor" mask="url(#<?php echo esc_attr( $mask_id ); ?>)" />
-				</svg>
-				<span class="screen-reader-text"><?php esc_html_e( 'Open YouTube playlist', 'youtube-playlist-widget' ); ?></span>
-			</span>
-		</a>
-
-		<div class="ypw-content">
+		<div class="ypw-card">
 			<?php if ( $attributes['title'] ) : ?>
-				<h2 class="ypw-title"><?php echo esc_html( $attributes['title'] ); ?></h2>
+				<h2 class="ypw-card-title"><?php echo esc_html( $attributes['title'] ); ?></h2>
 			<?php endif; ?>
 
-			<?php if ( $attributes['description'] ) : ?>
-				<p class="ypw-description"><?php echo wp_kses_post( nl2br( $attributes['description'] ) ); ?></p>
-			<?php endif; ?>
+			<div class="ypw-card-intro">
+				<?php if ( $attributes['description'] ) : ?>
+					<p class="ypw-description"><?php echo wp_kses_post( nl2br( $attributes['description'] ) ); ?></p>
+				<?php endif; ?>
 
-			<?php if ( $playlist_url ) : ?>
+				<a class="ypw-thumbnail-link" href="<?php echo esc_url( $playlist_url ); ?>"<?php echo $target; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+					<?php if ( $thumbnail ) : ?>
+						<img class="ypw-thumbnail" src="<?php echo esc_url( $thumbnail ); ?>" alt="<?php echo esc_attr( $attributes['title'] ); ?>" loading="lazy" />
+					<?php else : ?>
+						<span class="ypw-thumbnail ypw-thumbnail-placeholder" aria-hidden="true"></span>
+					<?php endif; ?>
+				</a>
+			</div>
+
+			<div class="ypw-video-list">
+				<?php foreach ( $videos as $video ) : ?>
+					<?php if ( $video['date'] || $video['title'] ) : ?>
+						<a class="ypw-video-row" href="<?php echo esc_url( $playlist_url ); ?>"<?php echo $target; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+							<span class="ypw-video-copy">
+								<?php if ( $video['date'] ) : ?>
+									<span class="ypw-video-date"><?php echo esc_html( $video['date'] ); ?></span>
+								<?php endif; ?>
+								<?php if ( $video['title'] ) : ?>
+									<span class="ypw-video-title"><?php echo esc_html( $video['title'] ); ?></span>
+								<?php endif; ?>
+							</span>
+							<span class="ypw-row-play" aria-hidden="true"></span>
+							<span class="screen-reader-text"><?php esc_html_e( 'Open YouTube playlist', 'youtube-playlist-widget' ); ?></span>
+						</a>
+					<?php endif; ?>
+				<?php endforeach; ?>
+			</div>
+
+			<?php if ( $playlist_url && $attributes['buttonText'] ) : ?>
 				<a class="ypw-cta" href="<?php echo esc_url( $playlist_url ); ?>"<?php echo $target; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 					<?php echo esc_html( $attributes['buttonText'] ); ?>
 				</a>
+			<?php endif; ?>
+		</div>
+
+		<div class="ypw-content">
+			<?php if ( $attributes['contentTitle'] ) : ?>
+				<h3 class="ypw-content-title"><?php echo esc_html( $attributes['contentTitle'] ); ?></h3>
+			<?php endif; ?>
+
+			<?php if ( $attributes['contentText'] ) : ?>
+				<p class="ypw-content-text"><?php echo wp_kses_post( nl2br( $attributes['contentText'] ) ); ?></p>
 			<?php endif; ?>
 		</div>
 	</section>
@@ -670,19 +758,25 @@ function ypw_normalize_attributes( $attributes ) {
 
 	$attributes['title']               = sanitize_text_field( $attributes['title'] );
 	$attributes['description']         = sanitize_textarea_field( $attributes['description'] );
+	$attributes['contentTitle']        = sanitize_text_field( $attributes['contentTitle'] );
+	$attributes['contentText']         = sanitize_textarea_field( $attributes['contentText'] );
+	$attributes['videoOneDate']        = sanitize_text_field( $attributes['videoOneDate'] );
+	$attributes['videoOneTitle']       = sanitize_text_field( $attributes['videoOneTitle'] );
+	$attributes['videoTwoDate']        = sanitize_text_field( $attributes['videoTwoDate'] );
+	$attributes['videoTwoTitle']       = sanitize_text_field( $attributes['videoTwoTitle'] );
 	$attributes['playlistUrl']         = esc_url_raw( $attributes['playlistUrl'] );
 	$attributes['playlistId']          = ypw_sanitize_playlist_id( $attributes['playlistId'] );
 	$attributes['thumbnailId']         = absint( $attributes['thumbnailId'] );
 	$attributes['thumbnailUrl']        = esc_url_raw( $attributes['thumbnailUrl'] );
-	$attributes['backgroundColor']     = ypw_sanitize_css_value( $attributes['backgroundColor'], '#f8f3ec' );
+	$attributes['backgroundColor']     = ypw_sanitize_css_value( $attributes['backgroundColor'], '#ff7f66' );
 	$attributes['contentColor']        = ypw_sanitize_css_value( $attributes['contentColor'], '#ffffff' );
-	$attributes['titleColor']          = ypw_sanitize_css_value( $attributes['titleColor'], '#1b1b1b' );
-	$attributes['textColor']           = ypw_sanitize_css_value( $attributes['textColor'], '#3d3d3d' );
-	$attributes['accentColor']         = ypw_sanitize_css_value( $attributes['accentColor'], '#ff0000' );
+	$attributes['titleColor']          = ypw_sanitize_css_value( $attributes['titleColor'], '#ffffff' );
+	$attributes['textColor']           = ypw_sanitize_css_value( $attributes['textColor'], '#ffffff' );
+	$attributes['accentColor']         = ypw_sanitize_css_value( $attributes['accentColor'], '#ff6f61' );
 	$attributes['playButtonColor']     = ypw_sanitize_css_value( $attributes['playButtonColor'], '#ffffff' );
-	$attributes['titleFontFamily']     = ypw_sanitize_font_family( $attributes['titleFontFamily'], '"Baloo 2", "Arial Rounded MT Bold", Arial, sans-serif' );
+	$attributes['titleFontFamily']     = ypw_sanitize_font_family( $attributes['titleFontFamily'], '"Shadows Into Light", "Comic Sans MS", cursive' );
 	$attributes['bodyFontFamily']      = ypw_sanitize_font_family( $attributes['bodyFontFamily'], 'Arial, Helvetica, sans-serif' );
-	$attributes['titleFontSize']       = ypw_sanitize_css_value( $attributes['titleFontSize'], 'clamp(2rem, 5vw, 4.5rem)' );
+	$attributes['titleFontSize']       = ypw_sanitize_css_value( $attributes['titleFontSize'], 'clamp(1.85rem, 3vw, 2.45rem)' );
 	$attributes['descriptionFontSize'] = ypw_sanitize_css_value( $attributes['descriptionFontSize'], 'clamp(1rem, 2vw, 1.25rem)' );
 	$attributes['buttonText']          = sanitize_text_field( $attributes['buttonText'] );
 	$attributes['layout']              = in_array( $attributes['layout'], array( 'split', 'stacked' ), true ) ? $attributes['layout'] : 'split';
@@ -699,7 +793,7 @@ function ypw_normalize_attributes( $attributes ) {
  */
 function ypw_build_inline_style( $attributes ) {
 	$variables = array(
-		'--ypw-background'            => $attributes['backgroundColor'],
+		'--ypw-card-background'       => $attributes['backgroundColor'],
 		'--ypw-content-background'    => $attributes['contentColor'],
 		'--ypw-title-color'           => $attributes['titleColor'],
 		'--ypw-text-color'            => $attributes['textColor'],
