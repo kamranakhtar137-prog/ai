@@ -1,6 +1,6 @@
 # YouTube Playlist Widget
 
-Reusable WordPress CMS module for adding a configurable YouTube playlist card to any page. The primary editor integration is a Beaver Builder widget/module named **YouTube Playlist Widget**, with Gutenberg block and shortcode fallbacks.
+Reusable WordPress CMS module for adding a configurable YouTube playlist card to any page. It provides a Beaver Builder custom module and a classic WordPress widget named **YouTube Playlist Widget**, with Gutenberg block and shortcode fallbacks.
 
 ## What editors can configure
 
@@ -41,14 +41,16 @@ The title font can be switched from a Shadow-style preset to Baloo, or replaced 
 2. Make sure Beaver Builder is installed and active.
 3. Activate **YouTube Playlist Widget** in WordPress admin.
 4. Edit any page with Beaver Builder.
-5. Open the Beaver Builder module panel, search for **YouTube Playlist Widget**, and add it from the YouTube category.
+5. Open the Beaver Builder module panel and search for **YouTube Playlist Widget**.
+   - Preferred: add it from the **YouTube** category.
+   - Fallback: add it from Beaver Builder's **WordPress Widgets** group.
 6. Configure the content, playlist, image, colors, and fonts in the module settings.
 
 ## Beaver Builder editor workflow
 
 1. Editor opens a page, for example the Student Exchange page.
 2. Editor launches Beaver Builder.
-3. Editor searches for or drags **YouTube Playlist Widget** into the layout.
+3. Editor searches for or drags **YouTube Playlist Widget** into the layout from the YouTube category or WordPress Widgets group.
 4. Editor configures:
    - title
    - description/text
@@ -67,15 +69,30 @@ The title font can be switched from a Shadow-style preset to Baloo, or replaced 
 4. Clear Beaver Builder cache from WordPress admin if available.
 5. Refresh/reopen the Beaver Builder editor and search for `YouTube` or `Playlist`.
 
-## Guaranteed Beaver Builder fallback
+## Full Beaver Builder fallback via WordPress Widgets
 
-If your Beaver Builder setup blocks third-party custom modules, use Beaver Builder's built-in **Shortcode** module or **HTML** module and paste this shortcode:
+If your Beaver Builder setup blocks third-party custom modules, use Beaver Builder's built-in **WordPress Widgets** group instead. The plugin registers a classic WordPress widget named **YouTube Playlist Widget** with the full configuration form:
+
+- Title
+- Description/Text
+- YouTube Playlist URL
+- YouTube Playlist ID
+- Thumbnail/Image URL
+- Colors
+- Fonts
+- Layout
+
+This is the best fallback because editors still get real form fields instead of editing shortcode text.
+
+## Shortcode emergency fallback
+
+If both custom modules and WordPress Widgets are unavailable in Beaver Builder, use Beaver Builder's built-in **Shortcode** module or **HTML** module and paste this shortcode:
 
 ```text
 [youtube_playlist_widget title="YouTube Playlist" description="Hier findest Du unsere YouTube-Playlist abcdfeghijklmn" playlist_id="PLxxxxxxxxxxxx" thumbnail_url="https://example.com/playlist.jpg"]
 ```
 
-This uses the same renderer and design as the Beaver Builder module.
+This uses the same renderer and design, but it is less editor-friendly than the Beaver module or WordPress widget.
 
 ## Gutenberg fallback
 

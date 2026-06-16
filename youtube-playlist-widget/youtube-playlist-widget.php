@@ -218,6 +218,223 @@ function ypw_show_beaver_builder_missing_notice() {
 add_action( 'admin_notices', 'ypw_show_beaver_builder_missing_notice' );
 
 /**
+ * Register a classic WordPress widget.
+ *
+ * Beaver Builder exposes registered WordPress widgets through its WordPress
+ * Widgets module group on many installs. This provides a second fully
+ * configurable editor path when custom Beaver modules are disabled or hidden.
+ */
+function ypw_register_classic_wordpress_widget() {
+	if ( class_exists( 'YPW_WordPress_Widget' ) ) {
+		register_widget( 'YPW_WordPress_Widget' );
+	}
+}
+add_action( 'widgets_init', 'ypw_register_classic_wordpress_widget' );
+
+if ( ! class_exists( 'WP_Widget' ) && defined( 'ABSPATH' ) && defined( 'WPINC' ) && file_exists( ABSPATH . WPINC . '/class-wp-widget.php' ) ) {
+	require_once ABSPATH . WPINC . '/class-wp-widget.php';
+}
+
+if ( class_exists( 'WP_Widget' ) && ! class_exists( 'YPW_WordPress_Widget' ) ) {
+	/**
+	 * Fully configurable WordPress widget for Beaver Builder's widget bridge.
+	 */
+	class YPW_WordPress_Widget extends WP_Widget {
+		/**
+		 * Constructor.
+		 */
+		public function __construct() {
+			parent::__construct(
+				'ypw_wordpress_widget',
+				__( 'YouTube Playlist Widget', 'youtube-playlist-widget' ),
+				array(
+					'classname'                   => 'ypw-wordpress-widget',
+					'description'                 => __( 'Configurable YouTube playlist card with thumbnail, colors, and fonts.', 'youtube-playlist-widget' ),
+					'customize_selective_refresh' => true,
+				)
+			);
+		}
+
+		/**
+		 * Render widget output.
+		 *
+		 * @param array<string,mixed> $args     Widget wrapper args.
+		 * @param array<string,mixed> $instance Saved widget instance.
+		 */
+		public function widget( $args, $instance ) {
+			wp_enqueue_style( 'ypw-widget' );
+
+			echo isset( $args['before_widget'] ) ? $args['before_widget'] : ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			echo ypw_render_widget( ypw_map_wordpress_widget_instance( $instance ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			echo isset( $args['after_widget'] ) ? $args['after_widget'] : ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		}
+
+		/**
+		 * Render widget admin form.
+		 *
+		 * @param array<string,mixed> $instance Saved widget instance.
+		 */
+		public function form( $instance ) {
+			$instance = wp_parse_args( (array) $instance, ypw_get_wordpress_widget_defaults() );
+
+			$this->render_text_field( 'title', __( 'Title', 'youtube-playlist-widget' ), $instance['title'] );
+			$this->render_textarea_field( 'description', __( 'Description/Text', 'youtube-playlist-widget' ), $instance['description'] );
+			$this->render_text_field( 'playlistUrl', __( 'YouTube Playlist URL', 'youtube-playlist-widget' ), $instance['playlistUrl'] );
+			$this->render_text_field( 'playlistId', __( 'YouTube Playlist ID', 'youtube-playlist-widget' ), $instance['playlistId'] );
+			$this->render_text_field( 'thumbnailUrl', __( 'Thumbnail/Image URL', 'youtube-playlist-widget' ), $instance['thumbnailUrl'] );
+			$this->render_text_field( 'buttonText', __( 'Button Text', 'youtube-playlist-widget' ), $instance['buttonText'] );
+			$this->render_select_field(
+				'layout',
+				__( 'Layout', 'youtube-playlist-widget' ),
+				$instance['layout'],
+				array(
+					'split'   => __( 'Version 6 split layout', 'youtube-playlist-widget' ),
+					'stacked' => __( 'Stacked', 'youtube-playlist-widget' ),
+				)
+			);
+
+			echo '<hr />';
+			echo '<p><strong>' . esc_html__( 'Colors', 'youtube-playlist-widget' ) . '</strong></p>';
+			$this->render_color_field( 'backgroundColor', __( 'Outer Background', 'youtube-playlist-widget' ), $instance['backgroundColor'] );
+			$this->render_color_field( 'contentColor', __( 'Content Background', 'youtube-playlist-widget' ), $instance['contentColor'] );
+			$this->render_color_field( 'titleColor', __( 'Title Color', 'youtube-playlist-widget' ), $instance['titleColor'] );
+			$this->render_color_field( 'textColor', __( 'Description Color', 'youtube-playlist-widget' ), $instance['textColor'] );
+			$this->render_color_field( 'accentColor', __( 'CTA/Accent Color', 'youtube-playlist-widget' ), $instance['accentColor'] );
+			$this->render_color_field( 'playButtonColor', __( 'Play Circle Color', 'youtube-playlist-widget' ), $instance['playButtonColor'] );
+
+			echo '<hr />';
+			echo '<p><strong>' . esc_html__( 'Fonts', 'youtube-playlist-widget' ) . '</strong></p>';
+			$this->render_select_field( 'titleFontPreset', __( 'Title Font Preset', 'youtube-playlist-widget' ), $instance['titleFontPreset'], ypw_get_font_preset_options() );
+			$this->render_text_field( 'titleFontFamily', __( 'Custom Title Font Family', 'youtube-playlist-widget' ), $instance['titleFontFamily'] );
+			$this->render_text_field( 'titleFontSize', __( 'Title Font Size', 'youtube-playlist-widget' ), $instance['titleFontSize'] );
+			$this->render_select_field( 'bodyFontPreset', __( 'Body Font Preset', 'youtube-playlist-widget' ), $instance['bodyFontPreset'], ypw_get_font_preset_options() );
+			$this->render_text_field( 'bodyFontFamily', __( 'Custom Body Font Family', 'youtube-playlist-widget' ), $instance['bodyFontFamily'] );
+			$this->render_text_field( 'descriptionFontSize', __( 'Description Font Size', 'youtube-playlist-widget' ), $instance['descriptionFontSize'] );
+			$this->render_checkbox_field( 'openInNewTab', __( 'Open playlist in a new tab', 'youtube-playlist-widget' ), ! empty( $instance['openInNewTab'] ) );
+		}
+
+		/**
+		 * Sanitize widget settings.
+		 *
+		 * @param array<string,mixed> $new_instance New widget instance.
+		 * @param array<string,mixed> $old_instance Previous widget instance.
+		 * @return array<string,mixed>
+		 */
+		public function update( $new_instance, $old_instance ) {
+			$instance = ypw_get_wordpress_widget_defaults();
+
+			$instance['title']               = sanitize_text_field( ypw_get_array_value( $new_instance, 'title' ) );
+			$instance['description']         = sanitize_textarea_field( ypw_get_array_value( $new_instance, 'description' ) );
+			$instance['playlistUrl']         = esc_url_raw( ypw_get_array_value( $new_instance, 'playlistUrl' ) );
+			$instance['playlistId']          = ypw_sanitize_playlist_id( ypw_get_array_value( $new_instance, 'playlistId' ) );
+			$instance['thumbnailUrl']        = esc_url_raw( ypw_get_array_value( $new_instance, 'thumbnailUrl' ) );
+			$instance['buttonText']          = sanitize_text_field( ypw_get_array_value( $new_instance, 'buttonText' ) );
+			$instance['layout']              = in_array( ypw_get_array_value( $new_instance, 'layout' ), array( 'split', 'stacked' ), true ) ? ypw_get_array_value( $new_instance, 'layout' ) : 'split';
+			$instance['backgroundColor']     = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'backgroundColor' ), '#f8f3ec' );
+			$instance['contentColor']        = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'contentColor' ), '#ffffff' );
+			$instance['titleColor']          = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'titleColor' ), '#1b1b1b' );
+			$instance['textColor']           = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'textColor' ), '#3d3d3d' );
+			$instance['accentColor']         = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'accentColor' ), '#ff0000' );
+			$instance['playButtonColor']     = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'playButtonColor' ), '#ffffff' );
+			$instance['titleFontPreset']     = ypw_sanitize_font_preset( ypw_get_array_value( $new_instance, 'titleFontPreset' ), 'baloo' );
+			$instance['titleFontFamily']     = ypw_sanitize_font_family( ypw_get_array_value( $new_instance, 'titleFontFamily' ), '"Baloo 2", "Arial Rounded MT Bold", Arial, sans-serif' );
+			$instance['titleFontSize']       = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'titleFontSize' ), 'clamp(2rem, 5vw, 4.5rem)' );
+			$instance['bodyFontPreset']      = ypw_sanitize_font_preset( ypw_get_array_value( $new_instance, 'bodyFontPreset' ), 'sans' );
+			$instance['bodyFontFamily']      = ypw_sanitize_font_family( ypw_get_array_value( $new_instance, 'bodyFontFamily' ), 'Arial, Helvetica, sans-serif' );
+			$instance['descriptionFontSize'] = ypw_sanitize_css_value( ypw_get_array_value( $new_instance, 'descriptionFontSize' ), 'clamp(1rem, 2vw, 1.25rem)' );
+			$instance['openInNewTab']        = ! empty( $new_instance['openInNewTab'] );
+
+			return $instance;
+		}
+
+		/**
+		 * Render a text input.
+		 *
+		 * @param string $key   Instance key.
+		 * @param string $label Field label.
+		 * @param string $value Field value.
+		 */
+		private function render_text_field( $key, $label, $value ) {
+			?>
+			<p>
+				<label for="<?php echo esc_attr( $this->get_field_id( $key ) ); ?>"><?php echo esc_html( $label ); ?></label>
+				<input class="widefat" id="<?php echo esc_attr( $this->get_field_id( $key ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( $key ) ); ?>" type="text" value="<?php echo esc_attr( $value ); ?>" />
+			</p>
+			<?php
+		}
+
+		/**
+		 * Render a textarea input.
+		 *
+		 * @param string $key   Instance key.
+		 * @param string $label Field label.
+		 * @param string $value Field value.
+		 */
+		private function render_textarea_field( $key, $label, $value ) {
+			?>
+			<p>
+				<label for="<?php echo esc_attr( $this->get_field_id( $key ) ); ?>"><?php echo esc_html( $label ); ?></label>
+				<textarea class="widefat" rows="4" id="<?php echo esc_attr( $this->get_field_id( $key ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( $key ) ); ?>"><?php echo esc_textarea( $value ); ?></textarea>
+			</p>
+			<?php
+		}
+
+		/**
+		 * Render a color input.
+		 *
+		 * @param string $key   Instance key.
+		 * @param string $label Field label.
+		 * @param string $value Field value.
+		 */
+		private function render_color_field( $key, $label, $value ) {
+			?>
+			<p>
+				<label for="<?php echo esc_attr( $this->get_field_id( $key ) ); ?>"><?php echo esc_html( $label ); ?></label>
+				<input id="<?php echo esc_attr( $this->get_field_id( $key ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( $key ) ); ?>" type="color" value="<?php echo esc_attr( $value ); ?>" />
+			</p>
+			<?php
+		}
+
+		/**
+		 * Render a select input.
+		 *
+		 * @param string               $key     Instance key.
+		 * @param string               $label   Field label.
+		 * @param string               $value   Selected value.
+		 * @param array<string,string> $options Select options.
+		 */
+		private function render_select_field( $key, $label, $value, $options ) {
+			?>
+			<p>
+				<label for="<?php echo esc_attr( $this->get_field_id( $key ) ); ?>"><?php echo esc_html( $label ); ?></label>
+				<select class="widefat" id="<?php echo esc_attr( $this->get_field_id( $key ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( $key ) ); ?>">
+					<?php foreach ( $options as $option_value => $option_label ) : ?>
+						<option value="<?php echo esc_attr( $option_value ); ?>" <?php selected( $value, $option_value ); ?>><?php echo esc_html( $option_label ); ?></option>
+					<?php endforeach; ?>
+				</select>
+			</p>
+			<?php
+		}
+
+		/**
+		 * Render a checkbox input.
+		 *
+		 * @param string $key     Instance key.
+		 * @param string $label   Field label.
+		 * @param bool   $checked Checked state.
+		 */
+		private function render_checkbox_field( $key, $label, $checked ) {
+			?>
+			<p>
+				<input id="<?php echo esc_attr( $this->get_field_id( $key ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( $key ) ); ?>" type="checkbox" value="1" <?php checked( $checked ); ?> />
+				<label for="<?php echo esc_attr( $this->get_field_id( $key ) ); ?>"><?php echo esc_html( $label ); ?></label>
+			</p>
+			<?php
+		}
+	}
+}
+
+/**
  * Render the shortcode version.
  *
  * @param array<string,string> $atts Shortcode attributes.
@@ -312,6 +529,74 @@ function ypw_map_beaver_builder_settings( $settings ) {
 		'buttonText'          => ypw_get_object_value( $settings, 'button_text' ),
 		'layout'              => ypw_get_object_value( $settings, 'layout' ),
 		'openInNewTab'        => 'yes' === ypw_get_object_value( $settings, 'open_in_new_tab', 'yes' ),
+	);
+}
+
+/**
+ * Get defaults for the classic WordPress widget.
+ *
+ * @return array<string,mixed>
+ */
+function ypw_get_wordpress_widget_defaults() {
+	return array_merge(
+		ypw_get_default_attributes(),
+		array(
+			'titleFontPreset' => 'baloo',
+			'bodyFontPreset'  => 'sans',
+		)
+	);
+}
+
+/**
+ * Map WordPress widget instance settings to renderer attributes.
+ *
+ * @param array<string,mixed> $instance Widget instance.
+ * @return array<string,mixed>
+ */
+function ypw_map_wordpress_widget_instance( $instance ) {
+	$instance = wp_parse_args( (array) $instance, ypw_get_wordpress_widget_defaults() );
+
+	return array(
+		'title'               => ypw_get_array_value( $instance, 'title' ),
+		'description'         => ypw_get_array_value( $instance, 'description' ),
+		'playlistUrl'         => ypw_get_array_value( $instance, 'playlistUrl' ),
+		'playlistId'          => ypw_get_array_value( $instance, 'playlistId' ),
+		'thumbnailId'         => 0,
+		'thumbnailUrl'        => ypw_get_array_value( $instance, 'thumbnailUrl' ),
+		'backgroundColor'     => ypw_get_array_value( $instance, 'backgroundColor' ),
+		'contentColor'        => ypw_get_array_value( $instance, 'contentColor' ),
+		'titleColor'          => ypw_get_array_value( $instance, 'titleColor' ),
+		'textColor'           => ypw_get_array_value( $instance, 'textColor' ),
+		'accentColor'         => ypw_get_array_value( $instance, 'accentColor' ),
+		'playButtonColor'     => ypw_get_array_value( $instance, 'playButtonColor' ),
+		'titleFontFamily'     => ypw_resolve_font_family(
+			ypw_get_array_value( $instance, 'titleFontPreset', 'baloo' ),
+			ypw_get_array_value( $instance, 'titleFontFamily' )
+		),
+		'bodyFontFamily'      => ypw_resolve_font_family(
+			ypw_get_array_value( $instance, 'bodyFontPreset', 'sans' ),
+			ypw_get_array_value( $instance, 'bodyFontFamily' )
+		),
+		'titleFontSize'       => ypw_get_array_value( $instance, 'titleFontSize' ),
+		'descriptionFontSize' => ypw_get_array_value( $instance, 'descriptionFontSize' ),
+		'buttonText'          => ypw_get_array_value( $instance, 'buttonText' ),
+		'layout'              => ypw_get_array_value( $instance, 'layout' ),
+		'openInNewTab'        => ! empty( $instance['openInNewTab'] ),
+	);
+}
+
+/**
+ * Get font preset labels.
+ *
+ * @return array<string,string>
+ */
+function ypw_get_font_preset_options() {
+	return array(
+		'baloo'  => __( 'Baloo', 'youtube-playlist-widget' ),
+		'shadow' => __( 'Shadow', 'youtube-playlist-widget' ),
+		'sans'   => __( 'System Sans', 'youtube-playlist-widget' ),
+		'serif'  => __( 'Serif', 'youtube-playlist-widget' ),
+		'custom' => __( 'Custom font-family value', 'youtube-playlist-widget' ),
 	);
 }
 
@@ -526,6 +811,18 @@ function ypw_get_object_value( $object, $property, $default = '' ) {
 }
 
 /**
+ * Safely read a value from an array.
+ *
+ * @param array<string,mixed> $array   Source array.
+ * @param string              $key     Array key.
+ * @param mixed               $default Default value.
+ * @return mixed
+ */
+function ypw_get_array_value( $array, $key, $default = '' ) {
+	return isset( $array[ $key ] ) ? $array[ $key ] : $default;
+}
+
+/**
  * Convert Beaver Builder color values into CSS color values.
  *
  * Beaver color fields commonly save hex colors without the leading #.
@@ -567,6 +864,19 @@ function ypw_resolve_font_family( $preset, $custom ) {
 	);
 
 	return isset( $fonts[ $preset ] ) ? $fonts[ $preset ] : $custom;
+}
+
+/**
+ * Sanitize font preset keys.
+ *
+ * @param mixed  $preset   Raw font preset.
+ * @param string $fallback Fallback preset.
+ * @return string
+ */
+function ypw_sanitize_font_preset( $preset, $fallback ) {
+	$preset = (string) $preset;
+
+	return array_key_exists( $preset, ypw_get_font_preset_options() ) ? $preset : $fallback;
 }
 
 /**
