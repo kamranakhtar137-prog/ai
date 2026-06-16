@@ -194,7 +194,7 @@ function ypw_register_beaver_builder_module() {
 		return;
 	}
 
-	require_once YPW_PLUGIN_DIR . 'beaver-builder/class-ypw-beaver-builder-module.php';
+	require_once YPW_PLUGIN_DIR . 'beaver-builder/modules/youtube-playlist-widget/youtube-playlist-widget.php';
 }
 add_action( 'init', 'ypw_register_beaver_builder_module', 20 );
 add_action( 'fl_builder_init_ui', 'ypw_register_beaver_builder_module', 1 );

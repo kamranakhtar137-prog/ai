@@ -41,7 +41,7 @@ The title font can be switched from a Shadow-style preset to Baloo, or replaced 
 2. Make sure Beaver Builder is installed and active.
 3. Activate **YouTube Playlist Widget** in WordPress admin.
 4. Edit any page with Beaver Builder.
-5. Open the Beaver Builder module panel, search for **YouTube Playlist Widget**, and add it from the Media category.
+5. Open the Beaver Builder module panel, search for **YouTube Playlist Widget**, and add it from the YouTube category.
 6. Configure the content, playlist, image, colors, and fonts in the module settings.
 
 ## Beaver Builder editor workflow
@@ -63,8 +63,19 @@ The title font can be switched from a Shadow-style preset to Baloo, or replaced 
 
 1. Confirm **Beaver Builder** is active.
 2. Confirm **YouTube Playlist Widget** is active under WordPress plugins.
-3. Clear Beaver Builder cache from WordPress admin if available.
-4. Refresh/reopen the Beaver Builder editor and search for `YouTube` or `Playlist`.
+3. Check Beaver Builder module settings and confirm third-party/custom modules are not disabled.
+4. Clear Beaver Builder cache from WordPress admin if available.
+5. Refresh/reopen the Beaver Builder editor and search for `YouTube` or `Playlist`.
+
+## Guaranteed Beaver Builder fallback
+
+If your Beaver Builder setup blocks third-party custom modules, use Beaver Builder's built-in **Shortcode** module or **HTML** module and paste this shortcode:
+
+```text
+[youtube_playlist_widget title="YouTube Playlist" description="Hier findest Du unsere YouTube-Playlist abcdfeghijklmn" playlist_id="PLxxxxxxxxxxxx" thumbnail_url="https://example.com/playlist.jpg"]
+```
+
+This uses the same renderer and design as the Beaver Builder module.
 
 ## Gutenberg fallback
 
