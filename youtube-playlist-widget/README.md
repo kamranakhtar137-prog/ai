@@ -59,6 +59,13 @@ The title font can be switched from a Shadow-style preset to Baloo, or replaced 
    - title/body font presets and custom font-family values
 5. Editor publishes the page.
 
+## If the widget does not appear in Beaver Builder search
+
+1. Confirm **Beaver Builder** is active.
+2. Confirm **YouTube Playlist Widget** is active under WordPress plugins.
+3. Clear Beaver Builder cache from WordPress admin if available.
+4. Refresh/reopen the Beaver Builder editor and search for `YouTube` or `Playlist`.
+
 ## Gutenberg fallback
 
 If a site also uses the block editor, the plugin registers a **YouTube Playlist Widget** block in the Media category using the same renderer and styling as the Beaver Builder module.

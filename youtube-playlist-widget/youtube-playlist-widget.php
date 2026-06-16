@@ -19,6 +19,27 @@ define( 'YPW_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'YPW_VERSION', '1.0.0' );
 
 /**
+ * Add this plugin's Beaver Builder modules directory to Beaver's scanner.
+ *
+ * Some Beaver Builder installs build the module list before a late direct
+ * registration runs. Supplying a module path lets Beaver load the module in
+ * the same way it loads built-in and third-party module folders.
+ *
+ * @param array<int,string> $paths Existing Beaver Builder module paths.
+ * @return array<int,string>
+ */
+function ypw_add_beaver_builder_module_path( $paths ) {
+	$module_path = YPW_PLUGIN_DIR . 'beaver-builder/modules/';
+
+	if ( is_dir( $module_path ) && ! in_array( $module_path, $paths, true ) ) {
+		$paths[] = $module_path;
+	}
+
+	return $paths;
+}
+add_filter( 'fl_builder_load_modules_paths', 'ypw_add_beaver_builder_module_path' );
+
+/**
  * Return the block attribute schema used by PHP and the editor script.
  *
  * @return array<string,array<string,mixed>>
@@ -176,6 +197,25 @@ function ypw_register_beaver_builder_module() {
 	require_once YPW_PLUGIN_DIR . 'beaver-builder/class-ypw-beaver-builder-module.php';
 }
 add_action( 'init', 'ypw_register_beaver_builder_module', 20 );
+add_action( 'fl_builder_init_ui', 'ypw_register_beaver_builder_module', 1 );
+
+/**
+ * Show a helpful admin notice if the plugin is active without Beaver Builder.
+ */
+function ypw_show_beaver_builder_missing_notice() {
+	if ( class_exists( 'FLBuilder' ) || ! current_user_can( 'activate_plugins' ) ) {
+		return;
+	}
+
+	?>
+	<div class="notice notice-warning">
+		<p>
+			<?php esc_html_e( 'YouTube Playlist Widget is active, but Beaver Builder is not active. Activate Beaver Builder to see the widget in the Beaver Builder module panel.', 'youtube-playlist-widget' ); ?>
+		</p>
+	</div>
+	<?php
+}
+add_action( 'admin_notices', 'ypw_show_beaver_builder_missing_notice' );
 
 /**
  * Render the shortcode version.
