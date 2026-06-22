@@ -79,6 +79,13 @@
 	transform: scale(1.035);
 }
 
+@media (hover: none) and (pointer: coarse) {
+	.ypw-media:active .ypw-thumbnail,
+	.ypw-media:focus .ypw-thumbnail {
+		transform: scale(1.08);
+	}
+}
+
 .ypw-play-button {
 	position: absolute;
 	top: 50%;
