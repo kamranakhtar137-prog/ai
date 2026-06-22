@@ -463,7 +463,7 @@ function ypw_get_playlist_url( $playlist_id, $playlist_url ) {
  */
 function ypw_get_thumbnail_url( $thumbnail_id, $thumbnail_url ) {
 	if ( $thumbnail_id ) {
-		$image = wp_get_attachment_image_url( $thumbnail_id, 'large' );
+		$image = wp_get_attachment_image_url( $thumbnail_id, 'full' );
 
 		if ( $image ) {
 			return $image;
