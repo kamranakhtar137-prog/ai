@@ -2,7 +2,7 @@
 /**
  * Plugin Name: YouTube Playlist Widget
  * Description: Reusable Beaver Builder widget/module for configurable YouTube playlist cards.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Cursor
  * Text Domain: youtube-playlist-widget
  *
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'YPW_PLUGIN_FILE', __FILE__ );
 define( 'YPW_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'YPW_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'YPW_VERSION', '1.0.0' );
+define( 'YPW_VERSION', '1.0.1' );
 
 /**
  * Return the block attribute schema used by PHP and the editor script.
@@ -48,6 +48,10 @@ function ypw_get_block_attributes() {
 		'thumbnailUrl'         => array(
 			'type'    => 'string',
 			'default' => '',
+		),
+		'thumbnailLoading'     => array(
+			'type'    => 'string',
+			'default' => 'auto',
 		),
 		'backgroundColor'      => array(
 			'type'    => 'string',
@@ -194,6 +198,7 @@ function ypw_render_shortcode( $atts ) {
 			'playlist_id'           => '',
 			'thumbnail_id'          => 0,
 			'thumbnail_url'         => '',
+			'thumbnail_loading'     => 'auto',
 			'background_color'      => '',
 			'content_color'         => '',
 			'title_color'           => '',
@@ -220,6 +225,7 @@ function ypw_render_shortcode( $atts ) {
 			'playlistId'          => $atts['playlist_id'],
 			'thumbnailId'         => absint( $atts['thumbnail_id'] ),
 			'thumbnailUrl'        => $atts['thumbnail_url'],
+			'thumbnailLoading'    => $atts['thumbnail_loading'],
 			'backgroundColor'     => $atts['background_color'],
 			'contentColor'        => $atts['content_color'],
 			'titleColor'          => $atts['title_color'],
@@ -253,6 +259,7 @@ function ypw_map_beaver_builder_settings( $settings ) {
 		'playlistId'          => ypw_get_object_value( $settings, 'playlist_id' ),
 		'thumbnailId'         => absint( ypw_get_object_value( $settings, 'thumbnail' ) ),
 		'thumbnailUrl'        => ypw_get_object_value( $settings, 'external_thumbnail_url', ypw_get_object_value( $settings, 'thumbnail_src' ) ),
+		'thumbnailLoading'    => ypw_get_object_value( $settings, 'thumbnail_loading' ),
 		'backgroundColor'     => ypw_format_beaver_builder_color( ypw_get_object_value( $settings, 'background_color' ) ),
 		'contentColor'        => ypw_format_beaver_builder_color( ypw_get_object_value( $settings, 'content_color' ) ),
 		'titleColor'          => ypw_format_beaver_builder_color( ypw_get_object_value( $settings, 'title_color' ) ),
@@ -285,7 +292,7 @@ function ypw_render_widget( $attributes ) {
 	$attributes   = ypw_normalize_attributes( $attributes );
 	$playlist_id  = ypw_get_playlist_id( $attributes['playlistUrl'], $attributes['playlistId'] );
 	$playlist_url = ypw_get_playlist_url( $playlist_id, $attributes['playlistUrl'] );
-	$thumbnail    = ypw_get_thumbnail_url( $attributes['thumbnailId'], $attributes['thumbnailUrl'] );
+	$thumbnail    = ypw_get_thumbnail_image_html( $attributes );
 	$mask_id      = wp_unique_id( 'ypw-play-mask-' );
 	$target       = $attributes['openInNewTab'] ? ' target="_blank" rel="noopener noreferrer"' : '';
 	$style        = ypw_build_inline_style( $attributes );
@@ -295,7 +302,7 @@ function ypw_render_widget( $attributes ) {
 	<section class="ypw-widget ypw-layout-<?php echo esc_attr( $attributes['layout'] ); ?>" style="<?php echo esc_attr( $style ); ?>" aria-label="<?php echo esc_attr( $attributes['title'] ); ?>">
 		<a class="ypw-media" href="<?php echo esc_url( $playlist_url ); ?>"<?php echo $target; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 			<?php if ( $thumbnail ) : ?>
-				<img class="ypw-thumbnail" src="<?php echo esc_url( $thumbnail ); ?>" alt="<?php echo esc_attr( $attributes['title'] ); ?>" loading="lazy" />
+				<?php echo $thumbnail; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 			<?php else : ?>
 				<span class="ypw-thumbnail ypw-thumbnail-placeholder" aria-hidden="true"></span>
 			<?php endif; ?>
@@ -349,6 +356,7 @@ function ypw_normalize_attributes( $attributes ) {
 	$attributes['playlistId']          = ypw_sanitize_playlist_id( $attributes['playlistId'] );
 	$attributes['thumbnailId']         = absint( $attributes['thumbnailId'] );
 	$attributes['thumbnailUrl']        = esc_url_raw( $attributes['thumbnailUrl'] );
+	$attributes['thumbnailLoading']    = ypw_sanitize_thumbnail_loading( $attributes['thumbnailLoading'] );
 	$attributes['backgroundColor']     = ypw_sanitize_css_value( $attributes['backgroundColor'], '#f8f3ec' );
 	$attributes['contentColor']        = ypw_sanitize_css_value( $attributes['contentColor'], '#ffffff' );
 	$attributes['titleColor']          = ypw_sanitize_css_value( $attributes['titleColor'], '#1b1b1b' );
@@ -406,6 +414,18 @@ function ypw_sanitize_playlist_id( $playlist_id ) {
 }
 
 /**
+ * Sanitize thumbnail loading mode.
+ *
+ * @param mixed $loading Raw loading mode.
+ * @return string
+ */
+function ypw_sanitize_thumbnail_loading( $loading ) {
+	$loading = (string) $loading;
+
+	return in_array( $loading, array( 'auto', 'lazy', 'eager' ), true ) ? $loading : 'auto';
+}
+
+/**
  * Extract the playlist ID from an ID field or common YouTube URL shapes.
  *
  * @param string $playlist_url YouTube URL.
@@ -455,6 +475,52 @@ function ypw_get_playlist_url( $playlist_id, $playlist_url ) {
 }
 
 /**
+ * Build optimized thumbnail image markup.
+ *
+ * @param array<string,mixed> $attributes Sanitized widget attributes.
+ * @return string
+ */
+function ypw_get_thumbnail_image_html( $attributes ) {
+	$image_attrs = array(
+		'class'    => 'ypw-thumbnail',
+		'alt'      => $attributes['title'],
+		'decoding' => 'async',
+		'sizes'    => '(max-width: 760px) calc(100vw - 28px), (max-width: 1180px) calc((100vw - 120px) * 0.55), 614px',
+	);
+
+	if ( 'auto' !== $attributes['thumbnailLoading'] ) {
+		$image_attrs['loading'] = $attributes['thumbnailLoading'];
+	}
+
+	if ( 'eager' === $attributes['thumbnailLoading'] ) {
+		$image_attrs['fetchpriority'] = 'high';
+	}
+
+	if ( $attributes['thumbnailId'] ) {
+		$image = wp_get_attachment_image( $attributes['thumbnailId'], 'large', false, $image_attrs );
+
+		if ( $image ) {
+			return $image;
+		}
+	}
+
+	if ( ! $attributes['thumbnailUrl'] ) {
+		return '';
+	}
+
+	// External images cannot use WordPress srcset, but dimensions reserve space.
+	if ( 'auto' === $attributes['thumbnailLoading'] ) {
+		$image_attrs['loading'] = 'lazy';
+	}
+
+	$image_attrs['src']    = $attributes['thumbnailUrl'];
+	$image_attrs['width']  = 1280;
+	$image_attrs['height'] = 800;
+
+	return sprintf( '<img %s />', ypw_build_html_attributes( $image_attrs ) );
+}
+
+/**
  * Get configured thumbnail URL.
  *
  * @param int    $thumbnail_id  Attachment ID.
@@ -471,6 +537,27 @@ function ypw_get_thumbnail_url( $thumbnail_id, $thumbnail_url ) {
 	}
 
 	return $thumbnail_url;
+}
+
+/**
+ * Build escaped HTML attributes from controlled attribute names.
+ *
+ * @param array<string,mixed> $attributes Attribute map.
+ * @return string
+ */
+function ypw_build_html_attributes( $attributes ) {
+	$output = array();
+
+	foreach ( $attributes as $name => $value ) {
+		if ( '' === $value || null === $value ) {
+			continue;
+		}
+
+		$escaped_value = 'src' === $name ? esc_url( $value ) : esc_attr( $value );
+		$output[]      = sprintf( '%s="%s"', esc_attr( $name ), $escaped_value );
+	}
+
+	return implode( ' ', $output );
 }
 
 /**

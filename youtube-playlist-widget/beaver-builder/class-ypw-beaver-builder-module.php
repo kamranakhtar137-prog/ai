@@ -104,6 +104,17 @@ FLBuilder::register_module(
 							'placeholder' => 'https://example.com/playlist.jpg',
 							'help'        => __( 'Optional fallback if no Media Library image is selected.', 'youtube-playlist-widget' ),
 						),
+						'thumbnail_loading'      => array(
+							'type'    => 'select',
+							'label'   => __( 'Thumbnail Loading', 'youtube-playlist-widget' ),
+							'default' => 'auto',
+							'help'    => __( 'Use eager only when this widget image is visible near the top of the page.', 'youtube-playlist-widget' ),
+							'options' => array(
+								'auto'  => __( 'Auto', 'youtube-playlist-widget' ),
+								'lazy'  => __( 'Lazy', 'youtube-playlist-widget' ),
+								'eager' => __( 'Eager / high priority', 'youtube-playlist-widget' ),
+							),
+						),
 					),
 				),
 				'layout'   => array(

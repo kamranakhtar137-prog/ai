@@ -8,6 +8,7 @@ Reusable WordPress CMS module for adding a configurable YouTube playlist card to
 - Description/text
 - YouTube playlist URL or playlist ID
 - Thumbnail/image from the Media Library or an external image URL
+- Thumbnail loading mode (`auto`, `lazy`, or `eager`)
 - Layout (`Version 6 split layout` or stacked)
 - Colors:
   - outer background
@@ -25,6 +26,13 @@ Reusable WordPress CMS module for adding a configurable YouTube playlist card to
   - description font size
 
 The title font can be switched from a Shadow-style preset to Baloo, or replaced with any project font-family stack.
+
+## Performance notes
+
+- Prefer a Media Library thumbnail over an external image URL. WordPress can then output responsive `srcset`/`sizes` image markup and apply its image loading heuristics automatically.
+- Leave thumbnail loading set to `auto` for most placements.
+- Set thumbnail loading to `eager` only when the widget image is visible in the first viewport and is likely to be the Largest Contentful Paint (LCP) image on mobile. This adds high fetch priority for that thumbnail.
+- Keep below-the-fold widgets on `auto` or `lazy` so they do not compete with the hero image.
 
 ## Design notes
 
@@ -75,6 +83,7 @@ Additional shortcode attributes:
 
 ```text
 playlist_url=""
+thumbnail_loading="auto"
 background_color="#f8f3ec"
 content_color="#ffffff"
 title_color="#1b1b1b"

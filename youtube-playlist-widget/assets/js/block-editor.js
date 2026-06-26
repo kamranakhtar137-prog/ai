@@ -127,6 +127,17 @@
 			style: getStyle( attributes ),
 		} );
 		var thumbnail = attributes.thumbnailUrl;
+		var imageProps = thumbnail
+			? {
+					className: 'ypw-thumbnail',
+					src: thumbnail,
+					alt: attributes.title || __( 'Playlist thumbnail', 'youtube-playlist-widget' ),
+			  }
+			: null;
+
+		if ( imageProps && 'auto' !== attributes.thumbnailLoading ) {
+			imageProps.loading = attributes.thumbnailLoading;
+		}
 
 		return createElement(
 			'section',
@@ -135,11 +146,7 @@
 				'a',
 				{ className: 'ypw-media', href: getPlaylistUrl( attributes ), onClick: function ( event ) { event.preventDefault(); } },
 				thumbnail
-					? createElement( 'img', {
-							className: 'ypw-thumbnail',
-							src: thumbnail,
-							alt: attributes.title || __( 'Playlist thumbnail', 'youtube-playlist-widget' ),
-					  } )
+					? createElement( 'img', imageProps )
 					: createElement( 'span', { className: 'ypw-thumbnail ypw-thumbnail-placeholder', 'aria-hidden': true } ),
 				previewPlayButton( maskId )
 			),
@@ -296,6 +303,7 @@
 			playlistId: { type: 'string', default: defaults.playlistId },
 			thumbnailId: { type: 'number', default: defaults.thumbnailId },
 			thumbnailUrl: { type: 'string', default: defaults.thumbnailUrl },
+			thumbnailLoading: { type: 'string', default: defaults.thumbnailLoading },
 			backgroundColor: { type: 'string', default: defaults.backgroundColor },
 			contentColor: { type: 'string', default: defaults.contentColor },
 			titleColor: { type: 'string', default: defaults.titleColor },
@@ -430,6 +438,19 @@
 							value: attributes.thumbnailUrl,
 							onChange: function ( value ) {
 								setAttributes( { thumbnailId: 0, thumbnailUrl: value } );
+							},
+						} ),
+						createElement( SelectControl, {
+							label: __( 'Thumbnail loading', 'youtube-playlist-widget' ),
+							value: attributes.thumbnailLoading,
+							help: __( 'Use eager only when this widget image is visible near the top of the page.', 'youtube-playlist-widget' ),
+							options: [
+								{ label: __( 'Auto', 'youtube-playlist-widget' ), value: 'auto' },
+								{ label: __( 'Lazy', 'youtube-playlist-widget' ), value: 'lazy' },
+								{ label: __( 'Eager / high priority', 'youtube-playlist-widget' ), value: 'eager' },
+							],
+							onChange: function ( value ) {
+								setAttributes( { thumbnailLoading: value } );
 							},
 						} )
 					),
