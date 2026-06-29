@@ -90,8 +90,27 @@ Layout column widths can also be set in the certificate sidebar under **Certific
 
 | Field | Shortcode | Notes |
 |-------|-----------|-------|
+| Full layout | `[ldcc_certificate]` | Renders the complete dynamic certificate design |
 | Anzahl Lektionen | `[ldcc_lesson_count]` | Counts `sfwd-lessons` only |
 | Themen | `[ldcc_course_topics]` | Lists LearnDash topics (`sfwd-topic`) |
+
+#### `[ldcc_certificate]`
+
+Renders the full Teilnahmezertifikat layout with all dynamic fields:
+
+```
+[ldcc_certificate]
+[ldcc_certificate topics_source="topics" topics_limit="8"]
+[ldcc_certificate topics_source="custom"]
+```
+
+| Attribute | Default | Description |
+|-----------|---------|-------------|
+| `topics_source` | `topics` | `topics`, `lessons`, or `custom` |
+| `topics_limit` | `0` | Max topic lines (`0` = no limit) |
+| `text_width` | `42` | Right text column width (%) |
+| `image_width` | `58` | Left photo column width (%) |
+| `course_id` | auto | Override course ID |
 
 #### `[ldcc_lesson_count]`
 
@@ -158,6 +177,20 @@ Adjust column widths in `templates/certificate-content.html` if your final artwo
 1. Edit the course → **Settings** → enable **Certificate**.
 2. Select the certificate post created above.
 3. When a user completes the course, LearnDash issues the certificate automatically.
+4. The plugin shows a **Zertifikat herunterladen** button on lesson/course pages after the course is formally completed.
+
+### Important: click „Beenden Kurs“
+
+LearnDash distinguishes between:
+
+- **100% progress** (all lessons done)
+- **Course completed** (user clicked **Beenden Kurs** / Finish Course)
+
+The certificate button only appears after the course status is **completed**. If progress is 100% but the button is missing, click **Beenden Kurs** first.
+
+If all lessons are done but the course is not finished yet, the plugin shows a yellow notice:
+
+> Alle Lektionen sind abgeschlossen. Klicken Sie auf „Beenden Kurs“, um Ihr Zertifikat freizuschalten.
 
 ## Troubleshooting (`sfwd-certificates`)
 
