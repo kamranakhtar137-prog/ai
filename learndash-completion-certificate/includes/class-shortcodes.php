@@ -69,7 +69,8 @@ class LDCC_Shortcodes {
 				'course_id' => 0,
 				'source'    => 'topics',
 				'limit'     => 0,
-				'prefix'    => '- ',
+				'prefix'    => '– ',
+				'bullet'    => 'svg',
 			),
 			$atts,
 			'ldcc_course_topics'
@@ -82,6 +83,7 @@ class LDCC_Shortcodes {
 
 		$limit  = max( 0, (int) $atts['limit'] );
 		$source = sanitize_key( $atts['source'] );
+		$bullet = sanitize_key( $atts['bullet'] );
 		$items  = self::get_topic_items( $course_id, $source );
 
 		if ( empty( $items ) ) {
@@ -94,7 +96,11 @@ class LDCC_Shortcodes {
 
 		$lines = array();
 		foreach ( $items as $item ) {
-			$lines[] = esc_html( $atts['prefix'] . $item );
+			if ( 'svg' === $bullet && class_exists( 'LDCC_SVG_Icons' ) ) {
+				$lines[] = '<span style="display:block;margin:0 0 6px 0;line-height:1.6;">' . LDCC_SVG_Icons::topic_dash() . esc_html( $item ) . '</span>';
+			} else {
+				$lines[] = esc_html( $atts['prefix'] . $item );
+			}
 		}
 
 		return implode( '<br />', $lines );

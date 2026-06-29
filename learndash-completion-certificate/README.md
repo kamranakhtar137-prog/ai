@@ -100,7 +100,7 @@ Layout column widths can also be set in the certificate sidebar under **Certific
 | Vorname | `[usermeta field="first_name"]` |
 | Nachname | `[usermeta field="last_name"]` |
 | Kursname | `[courseinfo show="course_title"]` |
-| Abschlussdatum | `[courseinfo show="completed_on" format="d.m.Y"]` |
+| Abschlussdatum | `[courseinfo show="completed_on" format="d. F Y"]` |
 
 ### Custom shortcodes (this plugin)
 

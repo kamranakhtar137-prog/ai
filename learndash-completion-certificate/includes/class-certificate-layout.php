@@ -24,10 +24,6 @@ class LDCC_Certificate_Layout {
 	/**
 	 * Render the complete certificate body.
 	 *
-	 * Usage:
-	 *   [ldcc_certificate]
-	 *   [ldcc_certificate topics_source="lessons" topics_limit="5"]
-	 *
 	 * @param array<string,string>|string $atts Shortcode attributes.
 	 * @return string
 	 */
@@ -65,10 +61,10 @@ class LDCC_Certificate_Layout {
 			}
 		}
 
+		$course_attr = $course_id > 0 ? " course_id='" . esc_attr( (string) $course_id ) . "'" : '';
 		$topics_html = self::render_topics( $course_id, $atts );
-
-		$font_stack = "Verdana, Geneva, sans-serif";
-		$cell_style = sprintf(
+		$font_stack  = 'Verdana, Geneva, sans-serif';
+		$cell_style  = sprintf(
 			'padding:%1$dpx %2$dpx %3$dpx %4$dpx;color:#ffffff;font-family:%5$s;',
 			(int) $atts['padding_top'],
 			(int) $atts['padding_right'],
@@ -83,41 +79,82 @@ class LDCC_Certificate_Layout {
 	<tr>
 		<td width="<?php echo esc_attr( (string) $image_width ); ?>%">&nbsp;</td>
 		<td width="<?php echo esc_attr( (string) $text_width ); ?>%" valign="top" style="<?php echo esc_attr( $cell_style ); ?>">
-			<p style="margin:0 0 32px 0;font-size:36px;line-height:1.1;font-weight:bold;color:#ffffff;letter-spacing:0.02em;">Teilnahmezertifikat</p>
 
-			<p style="margin:0 0 20px 0;font-size:22px;line-height:1.3;font-weight:bold;color:#ffffff;">Herzlichen Gl&uuml;ckwunsch!</p>
+			<table cellpadding="0" cellspacing="0" border="0" width="100%">
+				<tr>
+					<td style="padding:0;margin:0;">
+						<?php echo LDCC_SVG_Icons::certificate_badge(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						<span style="font-size:34px;line-height:1.1;font-weight:bold;color:#ffffff;letter-spacing:0.03em;">Teilnahmezertifikat</span>
+					</td>
+				</tr>
+				<tr>
+					<td style="padding:0;">
+						<?php echo LDCC_SVG_Icons::title_divider(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					</td>
+				</tr>
+				<tr>
+					<td style="padding:0 0 18px 0;font-size:21px;line-height:1.3;font-weight:bold;color:#ffffff;">
+						Herzlichen Gl&uuml;ckwunsch!
+					</td>
+				</tr>
+				<tr>
+					<td style="padding:0 0 16px 0;font-size:15px;line-height:1.6;color:#f2f2f2;">
+						Sie haben den Kurs &bdquo;[courseinfo show='course_title'<?php echo $course_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>]&ldquo; erfolgreich abgeschlossen.
+					</td>
+				</tr>
+				<tr>
+					<td style="padding:0 0 28px 0;font-size:15px;line-height:1.6;color:#f2f2f2;">
+						Dieses Zertifikat best&auml;tigt Ihre erfolgreiche Teilnahme an der Schulung.
+					</td>
+				</tr>
+				<tr>
+					<td style="padding:0 0 30px 0;font-size:14px;line-height:1.5;color:#e8e8e8;">
+						<span style="font-weight:600;color:#ffffff;">Name:</span>
+						[usermeta field='first_name'] [usermeta field='last_name']
+						<?php echo LDCC_SVG_Icons::meta_dot(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						<span style="font-weight:600;color:#ffffff;">Datum:</span>
+						[courseinfo show='completed_on' format='d. F Y'<?php echo $course_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>]
+					</td>
+				</tr>
+				<tr>
+					<td style="padding:0;">
+						<?php echo LDCC_SVG_Icons::section_divider(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					</td>
+				</tr>
+				<tr>
+					<td style="padding:0 0 14px 0;font-size:17px;line-height:1.35;font-weight:bold;color:#ffffff;">
+						Kursinformationen
+					</td>
+				</tr>
+				<tr>
+					<td style="padding:0 0 8px 0;font-size:14px;line-height:1.55;color:#f2f2f2;">
+						<span style="font-weight:600;color:#ffffff;">Kurs:</span>
+						[courseinfo show='course_title'<?php echo $course_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>]
+					</td>
+				</tr>
+				<tr>
+					<td style="padding:0 0 8px 0;font-size:14px;line-height:1.55;color:#f2f2f2;">
+						<span style="font-weight:600;color:#ffffff;">Lektionen:</span>
+						[ldcc_lesson_count<?php echo $course_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>]
+					</td>
+				</tr>
+				<tr>
+					<td style="padding:0 0 6px 0;font-size:14px;line-height:1.55;color:#f2f2f2;font-weight:600;">
+						Themen:
+					</td>
+				</tr>
+				<tr>
+					<td style="padding:0 0 28px 12px;font-size:14px;line-height:1.7;color:#f2f2f2;">
+						<?php echo $topics_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					</td>
+				</tr>
+				<tr>
+					<td style="padding:0;font-size:13px;line-height:1.65;color:#dddddd;">
+						Wir bedanken uns f&uuml;r Ihre Teilnahme und w&uuml;nschen Ihnen viel Erfolg bei der Anwendung der erworbenen Kenntnisse.
+					</td>
+				</tr>
+			</table>
 
-			<p style="margin:0 0 20px 0;font-size:15px;line-height:1.6;color:#f2f2f2;">
-				Sie haben den Kurs &bdquo;[courseinfo show='course_title'<?php echo $course_id > 0 ? " course_id='" . esc_attr( (string) $course_id ) . "'" : ''; ?>]&ldquo; erfolgreich abgeschlossen.
-			</p>
-
-			<p style="margin:0 0 30px 0;font-size:15px;line-height:1.6;color:#f2f2f2;">
-				Dieses Zertifikat best&auml;tigt Ihre erfolgreiche Teilnahme an der Schulung.
-			</p>
-
-			<p style="margin:0 0 36px 0;font-size:14px;line-height:1.5;color:#e8e8e8;">
-				Name: [usermeta field='first_name'] [usermeta field='last_name'] &middot; Datum: [courseinfo show='completed_on' format='d.m.Y'<?php echo $course_id > 0 ? " course_id='" . esc_attr( (string) $course_id ) . "'" : ''; ?>]
-			</p>
-
-			<p style="margin:0 0 14px 0;font-size:17px;line-height:1.35;font-weight:bold;color:#ffffff;">Kursinformationen</p>
-
-			<p style="margin:0 0 10px 0;font-size:14px;line-height:1.55;color:#f2f2f2;">
-				Kurs: [courseinfo show='course_title'<?php echo $course_id > 0 ? " course_id='" . esc_attr( (string) $course_id ) . "'" : ''; ?>]
-			</p>
-
-			<p style="margin:0 0 10px 0;font-size:14px;line-height:1.55;color:#f2f2f2;">
-				Lektionen: [ldcc_lesson_count<?php echo $course_id > 0 ? " course_id='" . esc_attr( (string) $course_id ) . "'" : ''; ?>]
-			</p>
-
-			<p style="margin:0 0 8px 0;font-size:14px;line-height:1.55;color:#f2f2f2;">Themen:</p>
-
-			<p style="margin:0 0 30px 0;font-size:14px;line-height:1.7;color:#f2f2f2;">
-				<?php echo $topics_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-			</p>
-
-			<p style="margin:0;font-size:13px;line-height:1.65;color:#dddddd;">
-				Wir bedanken uns f&uuml;r Ihre Teilnahme und w&uuml;nschen Ihnen viel Erfolg bei der Anwendung der erworbenen Kenntnisse.
-			</p>
 		</td>
 	</tr>
 </table>
@@ -138,7 +175,7 @@ class LDCC_Certificate_Layout {
 		$source = sanitize_key( $atts['topics_source'] );
 		$limit  = max( 0, (int) $atts['topics_limit'] );
 
-		$shortcode = "[ldcc_course_topics source='{$source}' prefix='- '";
+		$shortcode = "[ldcc_course_topics source='{$source}' bullet='svg' prefix='– '";
 		if ( $course_id > 0 ) {
 			$shortcode .= " course_id='{$course_id}'";
 		}
@@ -153,7 +190,7 @@ class LDCC_Certificate_Layout {
 	/**
 	 * Clamp a percentage value.
 	 *
-	 * @param mixed $value        Raw value.
+	 * @param mixed $value         Raw value.
 	 * @param int   $default_value Fallback.
 	 * @return int
 	 */
