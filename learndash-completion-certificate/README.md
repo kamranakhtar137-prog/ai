@@ -49,6 +49,22 @@ python3 scripts/convert-certificate-image.py --placeholder
 3. In WordPress, upload `assets/certificate.jpg` to the Media Library.
 4. Set it as the **Featured Image** on the certificate post.
 
+### Import a JPG uploaded via FTP
+
+If Media Library upload fails, upload the JPG with FTP to:
+
+```
+wp-content/uploads/2026/06/certificate-bg.jpg
+```
+
+Then on the certificate post sidebar (**Certificate Settings**), enter:
+
+```
+2026/06/certificate-bg.jpg
+```
+
+Click **Update**. The plugin imports the file into the Media Library and sets it as the **Featured Image** automatically.
+
 ## LearnDash Certificate Settings
 
 | Setting | Value |

@@ -103,6 +103,31 @@ class LDCC_Certificate_Admin {
 		echo '<p style="font-size:12px;color:#646970;">';
 		esc_html_e( 'Paste only [ldcc_certificate] into the certificate content area. The layout and dynamic fields are generated automatically.', 'learndash-completion-certificate' );
 		echo '</p>';
+
+		$ftp_path = get_post_meta( $post->ID, 'ldcc_ftp_image_path', true );
+		$thumb_id = get_post_thumbnail_id( $post->ID );
+
+		echo '<hr style="margin:16px 0;" />';
+		echo '<p><strong>';
+		esc_html_e( 'Import JPG from FTP uploads folder', 'learndash-completion-certificate' );
+		echo '</strong></p>';
+		echo '<p style="font-size:12px;color:#646970;">';
+		esc_html_e( 'If you uploaded via FTP and the image is not visible in Media Library, enter the path relative to wp-content/uploads and click Update.', 'learndash-completion-certificate' );
+		echo '</p>';
+		printf(
+			'<input type="text" name="ldcc_ftp_image_path" id="ldcc_ftp_image_path" value="%1$s" placeholder="2026/06/certificate-bg.jpg" style="width:100%%;" />',
+			esc_attr( (string) $ftp_path )
+		);
+
+		if ( $thumb_id ) {
+			echo '<p style="margin-top:10px;font-size:12px;color:#2271b1;">';
+			printf(
+				/* translators: %d: attachment ID */
+				esc_html__( 'Current Featured Image attachment ID: %d', 'learndash-completion-certificate' ),
+				(int) $thumb_id
+			);
+			echo '</p>';
+		}
 	}
 
 	/**
@@ -151,6 +176,13 @@ class LDCC_Certificate_Admin {
 			update_post_meta( $post_id, 'ldcc_layout_text_width', $text_width );
 		} else {
 			delete_post_meta( $post_id, 'ldcc_layout_text_width' );
+		}
+
+		$ftp_path = isset( $_POST['ldcc_ftp_image_path'] ) ? sanitize_text_field( wp_unslash( $_POST['ldcc_ftp_image_path'] ) ) : '';
+		if ( '' !== $ftp_path ) {
+			update_post_meta( $post_id, 'ldcc_ftp_image_path', $ftp_path );
+			$result = LDCC_Certificate_Media_Import::import_and_set_featured_image( $ftp_path, $post_id );
+			LDCC_Certificate_Media_Import::store_admin_notice( $post_id, $result );
 		}
 	}
 }
