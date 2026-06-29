@@ -1,5 +1,6 @@
-# YouTube Playlist Widget
+# WordPress LMS & Widget Plugins
 
-This repository contains a reusable WordPress CMS module/plugin for adding a configurable YouTube Playlist Widget to pages. It includes a Beaver Builder widget/module named **YouTube Playlist Widget** plus Gutenberg block and shortcode fallbacks.
+This repository contains reusable WordPress plugins:
 
-See [`youtube-playlist-widget/README.md`](youtube-playlist-widget/README.md) for installation, editor configuration, shortcode usage, and test-page instructions.
+- **LearnDash Completion Certificate** — German Teilnahmezertifikat with custom shortcodes for lesson count and topics. See [`learndash-completion-certificate/README.md`](learndash-completion-certificate/README.md).
+- **YouTube Playlist Widget** — Configurable YouTube playlist cards for Beaver Builder, Gutenberg, and shortcodes. See [`youtube-playlist-widget/README.md`](youtube-playlist-widget/README.md).

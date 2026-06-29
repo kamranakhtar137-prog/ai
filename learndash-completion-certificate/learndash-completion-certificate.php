@@ -1,0 +1,44 @@
+<?php
+/**
+ * Plugin Name: LearnDash Completion Certificate
+ * Description: Custom shortcodes and assets for the German Teilnahmezertifikat (lesson count, topics list).
+ * Version: 1.0.0
+ * Author: Cursor
+ * Text Domain: learndash-completion-certificate
+ * Requires Plugins: sfwd-lms
+ *
+ * @package LearnDashCompletionCertificate
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+define( 'LDCC_PLUGIN_FILE', __FILE__ );
+define( 'LDCC_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'LDCC_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+define( 'LDCC_VERSION', '1.0.0' );
+
+require_once LDCC_PLUGIN_DIR . 'includes/class-course-context.php';
+require_once LDCC_PLUGIN_DIR . 'includes/class-shortcodes.php';
+
+/**
+ * Bootstrap plugin components.
+ */
+function ldcc_bootstrap() {
+	if ( ! class_exists( 'SFWD_LMS' ) ) {
+		add_action(
+			'admin_notices',
+			static function () {
+				echo '<div class="notice notice-error"><p>';
+				echo esc_html__( 'LearnDash Completion Certificate requires LearnDash LMS to be active.', 'learndash-completion-certificate' );
+				echo '</p></div>';
+			}
+		);
+		return;
+	}
+
+	LDCC_Course_Context::init();
+	LDCC_Shortcodes::init();
+}
+add_action( 'plugins_loaded', 'ldcc_bootstrap' );

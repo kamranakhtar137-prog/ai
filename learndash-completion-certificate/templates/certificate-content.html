@@ -1,0 +1,56 @@
+<!--
+  LearnDash Certificate Content
+  Paste this HTML into the certificate post editor (sfwd-certificates).
+
+  Background: upload assets/certificate.jpg as the Featured Image.
+  PDF settings: A4, Portrait.
+
+  Shortcodes used:
+  - [usermeta field="first_name"] / [usermeta field="last_name"]
+  - [courseinfo show="course_title"]
+  - [courseinfo show="completed_on" format="d.m.Y"]
+  - [ldcc_lesson_count]
+  - [ldcc_course_topics]
+-->
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+	<tr>
+		<td width="58%" style="font-size:1px;line-height:1px;">&nbsp;</td>
+		<td width="42%" valign="top" style="padding:72px 56px 56px 24px;color:#ffffff;font-family:'Verdana Pro',Verdana,Geneva,sans-serif;">
+			<p style="margin:0 0 28px 0;font-size:34px;line-height:1.15;font-weight:700;letter-spacing:0.02em;color:#ffffff;">Teilnahmezertifikat</p>
+
+			<p style="margin:0 0 18px 0;font-size:20px;line-height:1.35;font-weight:700;color:#ffffff;">Herzlichen Glückwunsch!</p>
+
+			<p style="margin:0 0 18px 0;font-size:15px;line-height:1.55;font-weight:400;color:#f2f2f2;">
+				Sie haben den Kurs „[courseinfo show="course_title"]" erfolgreich abgeschlossen.
+			</p>
+
+			<p style="margin:0 0 28px 0;font-size:15px;line-height:1.55;font-weight:400;color:#f2f2f2;">
+				Dieses Zertifikat bestätigt Ihre erfolgreiche Teilnahme an der Schulung.
+			</p>
+
+			<p style="margin:0 0 34px 0;font-size:14px;line-height:1.5;font-weight:400;color:#e6e6e6;">
+				Name: [usermeta field="first_name"] [usermeta field="last_name"] · Datum: [courseinfo show="completed_on" format="d.m.Y"]
+			</p>
+
+			<p style="margin:0 0 12px 0;font-size:16px;line-height:1.4;font-weight:700;color:#ffffff;">Kursinformationen</p>
+
+			<p style="margin:0 0 8px 0;font-size:14px;line-height:1.5;font-weight:400;color:#f2f2f2;">
+				Kurs: [courseinfo show="course_title"]
+			</p>
+
+			<p style="margin:0 0 8px 0;font-size:14px;line-height:1.5;font-weight:400;color:#f2f2f2;">
+				Lektionen: [ldcc_lesson_count]
+			</p>
+
+			<p style="margin:0 0 6px 0;font-size:14px;line-height:1.5;font-weight:400;color:#f2f2f2;">Themen:</p>
+
+			<p style="margin:0 0 28px 0;font-size:14px;line-height:1.65;font-weight:400;color:#f2f2f2;">
+				[ldcc_course_topics source="topics"]
+			</p>
+
+			<p style="margin:0;font-size:13px;line-height:1.6;font-weight:400;color:#e0e0e0;">
+				Wir bedanken uns für Ihre Teilnahme und wünschen Ihnen viel Erfolg bei der Anwendung der erworbenen Kenntnisse.
+			</p>
+		</td>
+	</tr>
+</table>
