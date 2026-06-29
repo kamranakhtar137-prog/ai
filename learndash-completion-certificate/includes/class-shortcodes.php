@@ -40,23 +40,12 @@ class LDCC_Shortcodes {
 		);
 		$course_id = LDCC_Course_Context::get_course_id( (int) $atts['course_id'] );
 
-		if ( $course_id <= 0 || ! function_exists( 'learndash_get_course_steps' ) ) {
+		if ( $course_id <= 0 ) {
 			return '';
 		}
 
-		$steps = learndash_get_course_steps( $course_id, array( 'sfwd-lessons' ) );
-		if ( empty( $steps ) || ! is_array( $steps ) ) {
-			return '0';
-		}
-
-		$lesson_count = 0;
-		foreach ( $steps as $step_id ) {
-			if ( 'sfwd-lessons' === get_post_type( $step_id ) ) {
-				++$lesson_count;
-			}
-		}
-
-		return (string) $lesson_count;
+		$lesson_ids = self::get_step_ids_by_type( $course_id, 'sfwd-lessons' );
+		return (string) count( $lesson_ids );
 	}
 
 	/**
@@ -80,7 +69,7 @@ class LDCC_Shortcodes {
 				'course_id' => 0,
 				'source'    => 'topics',
 				'limit'     => 0,
-				'prefix'    => '– ',
+				'prefix'    => '- ',
 			),
 			$atts,
 			'ldcc_course_topics'
@@ -112,6 +101,56 @@ class LDCC_Shortcodes {
 	}
 
 	/**
+	 * Get step IDs for a course and post type.
+	 *
+	 * @param int    $course_id Course ID.
+	 * @param string $post_type LearnDash step post type.
+	 * @return array<int,int>
+	 */
+	private static function get_step_ids_by_type( $course_id, $post_type ) {
+		if ( function_exists( 'learndash_course_get_steps_by_type' ) ) {
+			$steps = learndash_course_get_steps_by_type( $course_id, $post_type );
+			if ( is_array( $steps ) ) {
+				return array_values( array_map( 'absint', $steps ) );
+			}
+		}
+
+		if ( ! function_exists( 'learndash_get_course_steps' ) ) {
+			return array();
+		}
+
+		$steps = learndash_get_course_steps( $course_id, array( $post_type ) );
+		return self::flatten_step_ids( $steps, $post_type );
+	}
+
+	/**
+	 * Flatten hierarchical LearnDash step arrays.
+	 *
+	 * @param mixed  $steps     Step tree or list.
+	 * @param string $post_type Expected post type.
+	 * @return array<int,int>
+	 */
+	private static function flatten_step_ids( $steps, $post_type ) {
+		if ( empty( $steps ) || ! is_array( $steps ) ) {
+			return array();
+		}
+
+		$ids = array();
+		foreach ( $steps as $key => $value ) {
+			$step_id = is_numeric( $key ) ? absint( $value ) : absint( $key );
+			if ( $step_id > 0 && get_post_type( $step_id ) === $post_type ) {
+				$ids[] = $step_id;
+			}
+
+			if ( is_array( $value ) ) {
+				$ids = array_merge( $ids, self::flatten_step_ids( $value, $post_type ) );
+			}
+		}
+
+		return array_values( array_unique( $ids ) );
+	}
+
+	/**
 	 * Build topic labels for a course.
 	 *
 	 * @param int    $course_id Course ID.
@@ -123,26 +162,11 @@ class LDCC_Shortcodes {
 			return self::get_custom_topics( $course_id );
 		}
 
-		if ( ! function_exists( 'learndash_get_course_steps' ) ) {
-			return array();
-		}
-
 		$post_type = ( 'lessons' === $source ) ? 'sfwd-lessons' : 'sfwd-topic';
-		$steps     = learndash_get_course_steps(
-			$course_id,
-			array( 'sfwd-lessons', 'sfwd-topic' )
-		);
-
-		if ( empty( $steps ) || ! is_array( $steps ) ) {
-			return array();
-		}
+		$step_ids  = self::get_step_ids_by_type( $course_id, $post_type );
 
 		$items = array();
-		foreach ( $steps as $step_id ) {
-			if ( get_post_type( $step_id ) !== $post_type ) {
-				continue;
-			}
-
+		foreach ( $step_ids as $step_id ) {
 			$title = get_the_title( $step_id );
 			if ( '' !== $title ) {
 				$items[] = html_entity_decode( $title, ENT_QUOTES, get_bloginfo( 'charset' ) );

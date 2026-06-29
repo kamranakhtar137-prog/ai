@@ -143,6 +143,28 @@ Adjust column widths in `templates/certificate-content.html` if your final artwo
 2. Select the certificate post created above.
 3. When a user completes the course, LearnDash issues the certificate automatically.
 
+## Troubleshooting (`sfwd-certificates`)
+
+Certificates only work when LearnDash can detect the **course** and **user** during PDF generation. If shortcodes show blank values:
+
+1. **Assign the certificate to a course** under Course Settings → Certificate. `[courseinfo]` and the custom shortcodes only work for course-linked certificates.
+2. **Use the HTML template in Text/Code mode**, not the block editor. LearnDash disables the visual editor for `sfwd-certificates`; blocks can break shortcodes.
+3. **Paste the updated HTML** from `templates/certificate-content.html` (single quotes inside shortcodes, no HTML comments).
+4. **Set a preview course** on the certificate post (sidebar meta box **Certificate Preview Course**) if testing from the admin screen.
+5. **Download the certificate from the completed course page**, not by opening the bare certificate permalink. The download URL must include `user_id` and ideally `course_id` (the plugin adds `course_id` automatically).
+6. **Featured image must be JPG** and set on the certificate post. PNG backgrounds are not supported by LearnDash.
+7. **PDF settings** on the certificate post: A4, Portrait.
+
+### Test URL format
+
+A working download URL looks like:
+
+```
+https://yoursite.com/certificates/teilnahmezertifikat/?course_id=123&user_id=45&ld_certificate=67
+```
+
+Replace IDs with your course, user, and certificate post IDs.
+
 ## WP-CLI example (custom topics)
 
 ```bash
