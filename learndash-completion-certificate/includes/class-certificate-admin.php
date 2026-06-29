@@ -28,7 +28,7 @@ class LDCC_Certificate_Admin {
 	public static function register_meta_box() {
 		add_meta_box(
 			'ldcc-certificate-preview',
-			__( 'Certificate Preview Course', 'learndash-completion-certificate' ),
+			__( 'Certificate Settings', 'learndash-completion-certificate' ),
 			array( __CLASS__, 'render_meta_box' ),
 			'sfwd-certificates',
 			'side',
@@ -45,6 +45,8 @@ class LDCC_Certificate_Admin {
 		wp_nonce_field( 'ldcc_save_certificate_preview', 'ldcc_certificate_preview_nonce' );
 
 		$selected_course = absint( get_post_meta( $post->ID, 'ldcc_preview_course_id', true ) );
+		$text_width      = absint( get_post_meta( $post->ID, 'ldcc_layout_text_width', true ) );
+		$image_width     = absint( get_post_meta( $post->ID, 'ldcc_layout_image_width', true ) );
 		$courses         = get_posts(
 			array(
 				'post_type'      => 'sfwd-courses',
@@ -75,6 +77,32 @@ class LDCC_Certificate_Admin {
 		}
 
 		echo '</select>';
+
+		echo '<p style="margin-top:16px;"><strong>';
+		esc_html_e( 'Layout split (match your background image)', 'learndash-completion-certificate' );
+		echo '</strong></p>';
+
+		echo '<p><label for="ldcc_layout_image_width">';
+		esc_html_e( 'Photo column width (%)', 'learndash-completion-certificate' );
+		echo '</label><br />';
+		printf(
+			'<input type="number" min="20" max="80" step="1" name="ldcc_layout_image_width" id="ldcc_layout_image_width" value="%1$d" style="width:100%%;" placeholder="58" />',
+			$image_width > 0 ? $image_width : 58
+		);
+		echo '</p>';
+
+		echo '<p><label for="ldcc_layout_text_width">';
+		esc_html_e( 'Text column width (%)', 'learndash-completion-certificate' );
+		echo '</label><br />';
+		printf(
+			'<input type="number" min="20" max="80" step="1" name="ldcc_layout_text_width" id="ldcc_layout_text_width" value="%1$d" style="width:100%%;" placeholder="42" />',
+			$text_width > 0 ? $text_width : 42
+		);
+		echo '</p>';
+
+		echo '<p style="font-size:12px;color:#646970;">';
+		esc_html_e( 'Paste only [ldcc_certificate] into the certificate content area. The layout and dynamic fields are generated automatically.', 'learndash-completion-certificate' );
+		echo '</p>';
 	}
 
 	/**
@@ -108,6 +136,21 @@ class LDCC_Certificate_Admin {
 			update_post_meta( $post_id, 'ldcc_preview_course_id', $course_id );
 		} else {
 			delete_post_meta( $post_id, 'ldcc_preview_course_id' );
+		}
+
+		$image_width = isset( $_POST['ldcc_layout_image_width'] ) ? absint( wp_unslash( $_POST['ldcc_layout_image_width'] ) ) : 0;
+		$text_width  = isset( $_POST['ldcc_layout_text_width'] ) ? absint( wp_unslash( $_POST['ldcc_layout_text_width'] ) ) : 0;
+
+		if ( $image_width >= 20 && $image_width <= 80 ) {
+			update_post_meta( $post_id, 'ldcc_layout_image_width', $image_width );
+		} else {
+			delete_post_meta( $post_id, 'ldcc_layout_image_width' );
+		}
+
+		if ( $text_width >= 20 && $text_width <= 80 ) {
+			update_post_meta( $post_id, 'ldcc_layout_text_width', $text_width );
+		} else {
+			delete_post_meta( $post_id, 'ldcc_layout_text_width' );
 		}
 	}
 }

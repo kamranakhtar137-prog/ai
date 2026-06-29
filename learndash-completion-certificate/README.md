@@ -57,7 +57,23 @@ python3 scripts/convert-certificate-image.py --placeholder
 | PDF Orientation | Portrait |
 | Featured Image | `certificate.jpg` |
 
-Certificate content: copy everything from `templates/certificate-content.html` into the certificate post editor (Text/HTML mode).
+Certificate content: paste this single line into the certificate post editor (Text/HTML mode):
+
+```
+[ldcc_certificate]
+```
+
+The plugin renders the full wireframe layout dynamically (photo left, text on black panel right, all German copy and LearnDash fields).
+
+Optional variants:
+
+```
+[ldcc_certificate topics_source="lessons"]
+[ldcc_certificate topics_source="custom" topics_limit="5"]
+[ldcc_certificate text_width="42" image_width="58"]
+```
+
+Layout column widths can also be set in the certificate sidebar under **Certificate Settings**.
 
 ## Shortcodes
 
