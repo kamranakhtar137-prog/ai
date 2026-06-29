@@ -85,12 +85,12 @@ class LDCC_Certificate_Layout {
 				'course_id'      => 0,
 				'topics_source'  => 'auto',
 				'topics_limit'   => 0,
-				'text_width'     => 42,
-				'image_width'    => 58,
+				'text_width'     => 50,
+				'image_width'    => 50,
 				'padding_top'    => 42,
-				'padding_right'  => 32,
+				'padding_right'  => 18,
 				'padding_bottom' => 32,
-				'padding_left'   => 14,
+				'padding_left'   => 8,
 			),
 			$atts,
 			'ldcc_certificate'
@@ -98,8 +98,8 @@ class LDCC_Certificate_Layout {
 
 		$course_id   = LDCC_Course_Context::get_course_id( (int) $atts['course_id'] );
 		$cert_id     = LDCC_Course_Context::get_certificate_post_id();
-		$text_width  = self::sanitize_percent( $atts['text_width'], 42 );
-		$image_width = self::sanitize_percent( $atts['image_width'], 58 );
+		$text_width  = self::sanitize_percent( $atts['text_width'], 50 );
+		$image_width = self::sanitize_percent( $atts['image_width'], 50 );
 
 		if ( $cert_id > 0 ) {
 			$stored_text_width = get_post_meta( $cert_id, 'ldcc_layout_text_width', true );
@@ -111,6 +111,11 @@ class LDCC_Certificate_Layout {
 			if ( '' !== $stored_image_width ) {
 				$image_width = self::sanitize_percent( $stored_image_width, $image_width );
 			}
+		}
+
+		if ( 42 === $text_width && 58 === $image_width ) {
+			$text_width  = 50;
+			$image_width = 50;
 		}
 
 		$course_attr = $course_id > 0 ? " course_id='" . esc_attr( (string) $course_id ) . "'" : '';
@@ -131,11 +136,12 @@ class LDCC_Certificate_Layout {
 	<tr>
 		<td width="<?php echo esc_attr( (string) $image_width ); ?>%">&nbsp;</td>
 		<td width="<?php echo esc_attr( (string) $text_width ); ?>%" valign="top" style="<?php echo esc_attr( $cell_style ); ?>">
-			<p style="margin:0 0 8pt 0;font-size:28pt;line-height:1.1;font-weight:bold;color:#ffffff;">Teilnahmezertifikat</p>
-			<p style="margin:0 0 8pt 0;font-size:18pt;line-height:1.2;font-weight:bold;color:#ffffff;">Herzlichen Gl&uuml;ckwunsch!</p>
+			<p style="margin:0 0 8pt 0;font-size:26pt;line-height:1.1;font-weight:bold;color:#ffffff;white-space:nowrap;">Teilnahmezertifikat</p>
+			<p style="margin:0 0 8pt 0;font-size:17pt;line-height:1.2;font-weight:bold;color:#ffffff;white-space:nowrap;">Herzlichen Gl&uuml;ckwunsch!</p>
 			<p style="margin:0 0 6pt 0;font-size:13pt;line-height:1.45;color:#f2f2f2;">Sie haben den Kurs &bdquo;[courseinfo show='course_title'<?php echo $course_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>]&ldquo; erfolgreich abgeschlossen.</p>
 			<p style="margin:0 0 10pt 0;font-size:13pt;line-height:1.45;color:#f2f2f2;">Dieses Zertifikat best&auml;tigt Ihre erfolgreiche Teilnahme an der Schulung.</p>
-			<p style="margin:0 0 12pt 0;font-size:12pt;line-height:1.4;color:#ececec;"><strong style="color:#ffffff;font-size:12pt;">Name:</strong> [usermeta field='first_name'] [usermeta field='last_name'] <span style="color:#cccccc;">|</span> <strong style="color:#ffffff;font-size:12pt;">Datum:</strong> [courseinfo show='completed_on' format='d. F Y'<?php echo $course_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>]</p>
+			<p style="margin:0 0 4pt 0;font-size:12pt;line-height:1.4;color:#ececec;"><strong style="color:#ffffff;font-size:12pt;">Name:</strong> [usermeta field='first_name'] [usermeta field='last_name']</p>
+			<p style="margin:0 0 12pt 0;font-size:12pt;line-height:1.4;color:#ececec;"><strong style="color:#ffffff;font-size:12pt;">Datum:</strong> [courseinfo show='completed_on' format='d. F Y'<?php echo $course_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>]</p>
 			<p style="margin:0 0 6pt 0;font-size:16pt;line-height:1.25;font-weight:bold;color:#ffffff;">Kursinformationen</p>
 			<p style="margin:0 0 4pt 0;font-size:12pt;line-height:1.4;color:#f2f2f2;"><strong style="color:#ffffff;font-size:12pt;">Kurs:</strong> [courseinfo show='course_title'<?php echo $course_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>]</p>
 			<p style="margin:0 0 4pt 0;font-size:12pt;line-height:1.4;color:#f2f2f2;"><strong style="color:#ffffff;font-size:12pt;">Lektionen:</strong> [ldcc_lesson_count<?php echo $course_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>]</p>

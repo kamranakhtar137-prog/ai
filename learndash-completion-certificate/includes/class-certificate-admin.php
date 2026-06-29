@@ -86,8 +86,8 @@ class LDCC_Certificate_Admin {
 		esc_html_e( 'Photo column width (%)', 'learndash-completion-certificate' );
 		echo '</label><br />';
 		printf(
-			'<input type="number" min="20" max="80" step="1" name="ldcc_layout_image_width" id="ldcc_layout_image_width" value="%1$d" style="width:100%%;" placeholder="58" />',
-			$image_width > 0 ? $image_width : 58
+			'<input type="number" min="20" max="80" step="1" name="ldcc_layout_image_width" id="ldcc_layout_image_width" value="%1$d" style="width:100%%;" placeholder="50" />',
+			$image_width > 0 ? $image_width : 50
 		);
 		echo '</p>';
 
@@ -95,8 +95,8 @@ class LDCC_Certificate_Admin {
 		esc_html_e( 'Text column width (%)', 'learndash-completion-certificate' );
 		echo '</label><br />';
 		printf(
-			'<input type="number" min="20" max="80" step="1" name="ldcc_layout_text_width" id="ldcc_layout_text_width" value="%1$d" style="width:100%%;" placeholder="42" />',
-			$text_width > 0 ? $text_width : 42
+			'<input type="number" min="20" max="80" step="1" name="ldcc_layout_text_width" id="ldcc_layout_text_width" value="%1$d" style="width:100%%;" placeholder="50" />',
+			$text_width > 0 ? $text_width : 50
 		);
 		echo '</p>';
 
