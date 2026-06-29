@@ -85,11 +85,7 @@ class LDCC_Shortcodes {
 
 		$lines = array();
 		foreach ( $items as $item ) {
-			if ( 'svg' === $bullet ) {
-				$lines[] = '<span style="display:block;margin:0 0 8px 0;line-height:1.5;">' . LDCC_SVG_Icons::topic_dash() . esc_html( $item ) . '</span>';
-			} else {
-				$lines[] = esc_html( $atts['prefix'] . $item );
-			}
+			$lines[] = esc_html( $atts['prefix'] . $item );
 		}
 
 		return implode( '<br />', $lines );

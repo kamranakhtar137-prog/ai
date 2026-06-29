@@ -122,7 +122,7 @@ Renders the full Teilnahmezertifikat layout with all dynamic fields:
 
 | Attribute | Default | Description |
 |-----------|---------|-------------|
-| `topics_source` | `topics` | `topics`, `lessons`, or `custom` |
+| `topics_source` | `auto` | `auto` (topics then lessons), `topics`, `lessons`, `all`, or `custom` |
 | `topics_limit` | `0` | Max topic lines (`0` = no limit) |
 | `text_width` | `42` | Right text column width (%) |
 | `image_width` | `58` | Left photo column width (%) |
