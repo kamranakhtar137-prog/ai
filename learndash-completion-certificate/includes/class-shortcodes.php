@@ -25,8 +25,6 @@ class LDCC_Shortcodes {
 	/**
 	 * Output the number of lessons in the current course.
 	 *
-	 * Usage: [ldcc_lesson_count] or [ldcc_lesson_count course_id="123"]
-	 *
 	 * @param array<string,string>|string $atts Shortcode attributes.
 	 * @return string
 	 */
@@ -51,15 +49,6 @@ class LDCC_Shortcodes {
 	/**
 	 * Output a bullet list of course topics.
 	 *
-	 * Usage:
-	 *   [ldcc_course_topics]
-	 *   [ldcc_course_topics source="topics" limit="10"]
-	 *   [ldcc_course_topics source="lessons"]
-	 *   [ldcc_course_topics source="custom"]
-	 *
-	 * `source="custom"` reads the course meta field `ldcc_certificate_topics`
-	 * (one topic per line). Use this when topics should be hardcoded per course.
-	 *
 	 * @param array<string,string>|string $atts Shortcode attributes.
 	 * @return string
 	 */
@@ -67,10 +56,10 @@ class LDCC_Shortcodes {
 		$atts = shortcode_atts(
 			array(
 				'course_id' => 0,
-				'source'    => 'topics',
+				'source'    => 'auto',
 				'limit'     => 0,
 				'prefix'    => '– ',
-				'bullet'    => 'svg',
+				'bullet'    => 'text',
 			),
 			$atts,
 			'ldcc_course_topics'
@@ -96,8 +85,8 @@ class LDCC_Shortcodes {
 
 		$lines = array();
 		foreach ( $items as $item ) {
-			if ( 'svg' === $bullet && class_exists( 'LDCC_SVG_Icons' ) ) {
-				$lines[] = '<span style="display:block;margin:0 0 6px 0;line-height:1.6;">' . LDCC_SVG_Icons::topic_dash() . esc_html( $item ) . '</span>';
+			if ( 'svg' === $bullet ) {
+				$lines[] = '<span style="display:block;margin:0 0 8px 0;line-height:1.5;">' . LDCC_SVG_Icons::topic_dash() . esc_html( $item ) . '</span>';
 			} else {
 				$lines[] = esc_html( $atts['prefix'] . $item );
 			}
@@ -114,9 +103,28 @@ class LDCC_Shortcodes {
 	 * @return array<int,int>
 	 */
 	private static function get_step_ids_by_type( $course_id, $post_type ) {
+		if ( 'sfwd-lessons' === $post_type && function_exists( 'learndash_get_course_lessons_list' ) ) {
+			$lessons = learndash_get_course_lessons_list( $course_id );
+			if ( is_array( $lessons ) && ! empty( $lessons ) ) {
+				$ids = array();
+				foreach ( $lessons as $lesson ) {
+					if ( is_object( $lesson ) && isset( $lesson->ID ) ) {
+						$ids[] = absint( $lesson->ID );
+					} elseif ( is_array( $lesson ) && ! empty( $lesson['post']->ID ) ) {
+						$ids[] = absint( $lesson['post']->ID );
+					} elseif ( is_numeric( $lesson ) ) {
+						$ids[] = absint( $lesson );
+					}
+				}
+				if ( ! empty( $ids ) ) {
+					return array_values( array_unique( $ids ) );
+				}
+			}
+		}
+
 		if ( function_exists( 'learndash_course_get_steps_by_type' ) ) {
 			$steps = learndash_course_get_steps_by_type( $course_id, $post_type );
-			if ( is_array( $steps ) ) {
+			if ( is_array( $steps ) && ! empty( $steps ) ) {
 				return array_values( array_map( 'absint', $steps ) );
 			}
 		}
@@ -160,7 +168,7 @@ class LDCC_Shortcodes {
 	 * Build topic labels for a course.
 	 *
 	 * @param int    $course_id Course ID.
-	 * @param string $source    topics|lessons|custom.
+	 * @param string $source    auto|topics|lessons|all|custom.
 	 * @return array<int,string>
 	 */
 	private static function get_topic_items( $course_id, $source ) {
@@ -168,10 +176,46 @@ class LDCC_Shortcodes {
 			return self::get_custom_topics( $course_id );
 		}
 
-		$post_type = ( 'lessons' === $source ) ? 'sfwd-lessons' : 'sfwd-topic';
-		$step_ids  = self::get_step_ids_by_type( $course_id, $post_type );
+		if ( 'auto' === $source ) {
+			$topics = self::collect_items_by_type( $course_id, 'sfwd-topic' );
+			if ( ! empty( $topics ) ) {
+				return $topics;
+			}
 
-		$items = array();
+			$lessons = self::collect_items_by_type( $course_id, 'sfwd-lessons' );
+			if ( ! empty( $lessons ) ) {
+				return $lessons;
+			}
+
+			return self::get_custom_topics( $course_id );
+		}
+
+		if ( 'all' === $source ) {
+			$topics  = self::collect_items_by_type( $course_id, 'sfwd-topic' );
+			$lessons = self::collect_items_by_type( $course_id, 'sfwd-lessons' );
+			$merged  = array_merge( $topics, $lessons );
+			if ( ! empty( $merged ) ) {
+				return array_values( array_unique( $merged ) );
+			}
+
+			return self::get_custom_topics( $course_id );
+		}
+
+		$post_type = ( 'lessons' === $source ) ? 'sfwd-lessons' : 'sfwd-topic';
+		return self::collect_items_by_type( $course_id, $post_type );
+	}
+
+	/**
+	 * Collect ordered titles for a step post type.
+	 *
+	 * @param int    $course_id Course ID.
+	 * @param string $post_type Step post type.
+	 * @return array<int,string>
+	 */
+	private static function collect_items_by_type( $course_id, $post_type ) {
+		$step_ids = self::get_step_ids_by_type( $course_id, $post_type );
+		$items    = array();
+
 		foreach ( $step_ids as $step_id ) {
 			$title = get_the_title( $step_id );
 			if ( '' !== $title ) {
@@ -179,7 +223,55 @@ class LDCC_Shortcodes {
 			}
 		}
 
-		return $items;
+		if ( ! empty( $items ) ) {
+			return $items;
+		}
+
+		if ( 'sfwd-topic' === $post_type ) {
+			return self::collect_topics_from_lessons( $course_id );
+		}
+
+		return array();
+	}
+
+	/**
+	 * Fallback: collect topics nested under each lesson.
+	 *
+	 * @param int $course_id Course ID.
+	 * @return array<int,string>
+	 */
+	private static function collect_topics_from_lessons( $course_id ) {
+		if ( ! function_exists( 'learndash_get_topic_list' ) ) {
+			return array();
+		}
+
+		$items      = array();
+		$lesson_ids = self::get_step_ids_by_type( $course_id, 'sfwd-lessons' );
+
+		foreach ( $lesson_ids as $lesson_id ) {
+			$topics = learndash_get_topic_list( $lesson_id, $course_id );
+			if ( empty( $topics ) || ! is_array( $topics ) ) {
+				continue;
+			}
+
+			foreach ( $topics as $topic ) {
+				$topic_id = 0;
+				if ( is_object( $topic ) && isset( $topic->ID ) ) {
+					$topic_id = absint( $topic->ID );
+				} elseif ( is_numeric( $topic ) ) {
+					$topic_id = absint( $topic );
+				}
+
+				if ( $topic_id > 0 ) {
+					$title = get_the_title( $topic_id );
+					if ( '' !== $title ) {
+						$items[] = html_entity_decode( $title, ENT_QUOTES, get_bloginfo( 'charset' ) );
+					}
+				}
+			}
+		}
+
+		return array_values( array_unique( $items ) );
 	}
 
 	/**

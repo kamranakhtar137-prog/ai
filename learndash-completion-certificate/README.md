@@ -108,7 +108,7 @@ Layout column widths can also be set in the certificate sidebar under **Certific
 |-------|-----------|-------|
 | Full layout | `[ldcc_certificate]` | Renders the complete dynamic certificate design |
 | Anzahl Lektionen | `[ldcc_lesson_count]` | Counts `sfwd-lessons` only |
-| Themen | `[ldcc_course_topics]` | Lists LearnDash topics (`sfwd-topic`) |
+| Themen | `[ldcc_course_topics]` | Auto-fetches topics, falls back to lesson titles |
 
 #### `[ldcc_certificate]`
 
