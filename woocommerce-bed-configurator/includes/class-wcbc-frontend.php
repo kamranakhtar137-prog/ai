@@ -22,6 +22,7 @@ class WCBC_Frontend {
 	 * Init hooks.
 	 */
 	public static function init() {
+		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_assets_early' ), 20 );
 		add_action( 'woocommerce_before_single_product', array( __CLASS__, 'setup_product_layout' ), 1 );
 		add_action( 'woocommerce_before_single_product_summary', array( __CLASS__, 'render_media' ), 5 );
 		add_action( 'woocommerce_single_product_summary', array( __CLASS__, 'render_options' ), 6 );
@@ -140,6 +141,27 @@ class WCBC_Frontend {
 	}
 
 	/**
+	 * Enqueue on product pages before template renders.
+	 */
+	public static function enqueue_assets_early() {
+		if ( ! is_product() ) {
+			return;
+		}
+
+		global $product;
+		if ( ! $product instanceof WC_Product ) {
+			$product = wc_get_product( get_queried_object_id() );
+		}
+
+		if ( ! $product || ! self::is_enabled( $product->get_id() ) ) {
+			return;
+		}
+
+		$config = WCBC_Config::get_product_config( $product->get_id() );
+		self::enqueue_assets( $product->get_id(), $config );
+	}
+
+	/**
 	 * Enqueue assets and data.
 	 *
 	 * @param int                 $product_id Product ID.
@@ -147,6 +169,7 @@ class WCBC_Frontend {
 	 */
 	private static function enqueue_assets( $product_id, $config ) {
 		wp_enqueue_style( 'wcbc-configurator' );
+		wp_enqueue_script( 'wcbc-accordion' );
 		wp_enqueue_script( 'wcbc-configurator' );
 		wp_localize_script(
 			'wcbc-configurator',

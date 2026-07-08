@@ -1,5 +1,5 @@
 /**
- * WooCommerce Bed Configurator frontend logic.
+ * WooCommerce Bed Configurator — options, pricing, cart.
  */
 (function ($) {
 	'use strict';
@@ -68,18 +68,15 @@
 		});
 	}
 
-	function onSelectionChange(groupId, optionId, $label) {
+	function onSelectionChange(groupId, optionId) {
 		state.selections[groupId] = optionId;
 		syncHiddenFields();
 
 		$('input.wcbc-radio[data-group="' + groupId + '"]').each(function () {
-			$(this).prop('checked', $(this).val() === optionId);
-			$(this).closest('li').find('label').toggleClass('is-checked', $(this).val() === optionId);
+			var isMatch = $(this).val() === optionId;
+			$(this).prop('checked', isMatch);
+			$(this).closest('li').find('label').toggleClass('is-checked', isMatch);
 		});
-
-		if ($label && $label.length) {
-			$label.addClass('is-checked');
-		}
 
 		calculate().done(function (response) {
 			if (!response || !response.success) {
@@ -91,43 +88,24 @@
 		});
 	}
 
-	function bindAccordian() {
-		$(document).on('click', '.wcbc-accordian-head', function (e) {
-			e.preventDefault();
-			var tabId = $(this).data('tabid');
-			var $body = $('dd.wcbc-accordian-body[data-tabid="' + tabId + '"]');
-			var isOpen = $(this).hasClass('isopen');
-
-			$('.wcbc-accordian-head').removeClass('isopen');
-			$('.wcbc-accordian-head .ev_ln_filter_chevron').addClass('ev_ln_filter_chevron_closed');
-			$('.wcbc-accordian-body').removeClass('isopen').slideUp(180);
-
-			if (!isOpen) {
-				$(this).addClass('isopen');
-				$(this).find('.ev_ln_filter_chevron').removeClass('ev_ln_filter_chevron_closed');
-				$body.addClass('isopen').slideDown(180);
-			}
-		});
-	}
-
 	function bindOptions() {
 		$(document).on('change', 'input.wcbc-radio', function () {
-			onSelectionChange($(this).data('group'), $(this).val(), $(this).closest('li').find('label'));
+			onSelectionChange($(this).data('group'), $(this).val());
 		});
 
 		$(document).on('click', '.wcbc-option label', function (e) {
 			e.preventDefault();
 			var $radio = $(this).closest('li').find('input.wcbc-radio');
-			if (!$radio.length) {
-				return;
+			if ($radio.length) {
+				$radio.prop('checked', true).trigger('change');
 			}
-			$radio.prop('checked', true).trigger('change');
 		});
 	}
 
 	function bindHeadboardFilters() {
 		$(document).on('click', '.wcbc-filter-btn', function (e) {
 			e.preventDefault();
+			e.stopPropagation();
 			var filter = $(this).data('filter');
 			var $section = $(this).closest('dd');
 
@@ -137,8 +115,7 @@
 			$section.find('.wcbc-headboard-grid li').each(function () {
 				var shape = $(this).data('shape') || '';
 				var isSelected = $(this).find('input.wcbc-radio').is(':checked');
-				var show = shape === filter || isSelected;
-				$(this).toggleClass('wcbc-filter-hidden', !show);
+				$(this).toggleClass('wcbc-filter-hidden', shape !== filter && !isSelected);
 			});
 		});
 	}
@@ -171,7 +148,7 @@
 		var $btn = $form.find('.single_add_to_cart_button').first();
 		var $qty = $form.find('.quantity');
 
-		if ($wrap.length && $btn.length) {
+		if ($wrap.length && $btn.length && !$wrap.find('.single_add_to_cart_button').length) {
 			$btn.detach()
 				.appendTo($wrap)
 				.addClass('wcbc-add-to-cart action checkout w-full text-base')
@@ -182,7 +159,7 @@
 			return true;
 		}
 
-		return false;
+		return $wrap.find('.single_add_to_cart_button').length > 0;
 	}
 
 	function relocateAddToCart() {
@@ -190,7 +167,6 @@
 			return;
 		}
 
-		// WooCommerce may render the cart form after our script init.
 		var attempts = 0;
 		var timer = window.setInterval(function () {
 			attempts += 1;
@@ -202,7 +178,6 @@
 
 	$(function () {
 		initSelections();
-		bindAccordian();
 		bindOptions();
 		bindHeadboardFilters();
 		bindDrawerToggle();

@@ -223,18 +223,50 @@
 	border-radius: 10px;
 	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 	overflow: hidden;
+	position: relative;
+	z-index: 20;
+	pointer-events: auto;
 }
 
 .wcbc-accordian {
 	margin: 0;
+	position: relative;
+	z-index: 20;
+}
+
+.wcbc-accordian-item {
+	margin: 0;
+	padding: 0;
+	border-bottom: 1px solid #ebecef;
+}
+
+button.wcbc-accordian-head {
+	display: block;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	text-align: left;
+	cursor: pointer;
+	font: inherit;
+	color: inherit;
+	position: relative;
+	z-index: 21;
+	pointer-events: auto;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+button.wcbc-accordian-head:focus-visible {
+	outline: 2px solid #6961a6;
+	outline-offset: 2px;
 }
 
 .wcbc-accordian dt {
 	padding: 0;
 	margin: 0;
-	border-bottom: 1px solid #ebecef;
-	cursor: pointer;
-	font-weight: 400;
+	border-bottom: 0;
 }
 
 .wcbc-accordian-head-inner {

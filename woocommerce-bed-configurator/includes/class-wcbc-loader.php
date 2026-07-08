@@ -69,9 +69,16 @@ class WCBC_Loader {
 			WCBC_VERSION
 		);
 		wp_register_script(
+			'wcbc-accordion',
+			WCBC_PLUGIN_URL . 'assets/js/accordion.js',
+			array(),
+			WCBC_VERSION,
+			true
+		);
+		wp_register_script(
 			'wcbc-configurator',
 			WCBC_PLUGIN_URL . 'assets/js/configurator.js',
-			array( 'jquery', 'wc-single-product' ),
+			array( 'jquery', 'wcbc-accordion' ),
 			WCBC_VERSION,
 			true
 		);

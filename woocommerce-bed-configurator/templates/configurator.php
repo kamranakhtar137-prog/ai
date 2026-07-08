@@ -106,7 +106,13 @@ if ( 'options' === $part ) : ?>
 							$icon_url = isset( $icons[ $icon_key ] ) ? $icons[ $icon_key ] : $icons['size'];
 							$count    = count( $group['options'] );
 							?>
-							<dt class="wcbc-accordian-head <?php echo $is_open ? 'isopen' : ''; ?>" data-tabid="<?php echo esc_attr( $gid ); ?>">
+							<dt class="wcbc-accordian-item">
+								<button
+									type="button"
+									class="wcbc-accordian-head <?php echo $is_open ? 'isopen' : ''; ?>"
+									data-tabid="<?php echo esc_attr( $gid ); ?>"
+									aria-expanded="<?php echo $is_open ? 'true' : 'false'; ?>"
+								>
 								<div class="wcbc-accordian-head-inner">
 									<div class="wcbc-accordian-icon iconwrap">
 										<img width="50" height="50" alt="" src="<?php echo esc_url( $icon_url ); ?>" />
@@ -131,6 +137,7 @@ if ( 'options' === $part ) : ?>
 										</div>
 									</div>
 								</div>
+								</button>
 							</dt>
 							<dd data-tabid="<?php echo esc_attr( $gid ); ?>" class="wcbc-accordian-body <?php echo $is_open ? 'isopen' : ''; ?>" <?php echo $is_open ? '' : 'style="display:none"'; ?>>
 								<div class="input-box">
