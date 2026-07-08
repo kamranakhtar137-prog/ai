@@ -179,8 +179,9 @@ class WCBC_Frontend {
 				'nonce'     => wp_create_nonce( 'wcbc_configurator' ),
 				'productId' => $product_id,
 				'config'    => $config,
-				'layers'    => WCBC_Config::get_layers(),
-				'currency'  => get_woocommerce_currency_symbol(),
+				'layers'      => WCBC_Config::get_layers(),
+				'layerBase'   => WCBC_PLUGIN_URL . 'demo-images/layers/',
+				'currency'    => get_woocommerce_currency_symbol(),
 				'i18n'      => array(
 					'optionsAvailable' => __( '%d options available', 'wc-bed-configurator' ),
 					'now'              => __( 'Now', 'wc-bed-configurator' ),

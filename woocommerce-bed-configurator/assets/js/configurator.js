@@ -1,5 +1,5 @@
 /**
- * WooCommerce Bed Configurator — options, pricing, cart.
+ * WooCommerce Bed Configurator — options, pricing, cart, live preview layers.
  */
 (function ($) {
 	'use strict';
@@ -15,6 +15,56 @@
 		drawersOpen: false,
 	};
 
+	function pick(selections, key) {
+		var defaults = wcbcData.config.defaults || {};
+		return selections[key] || defaults[key] || '';
+	}
+
+	function headboardShape(headboardId) {
+		if (!headboardId || headboardId.indexOf('no-headboard') !== -1) {
+			return 'none';
+		}
+		if (headboardId.indexOf('dudley') !== -1) {
+			return 'dudley';
+		}
+		if (headboardId.indexOf('victor') !== -1) {
+			return 'victor';
+		}
+		return 'cornell';
+	}
+
+	function hasDrawers(storageId) {
+		return storageId === '2-drawers' || storageId === '4-drawers' || storageId === 'end-drawer';
+	}
+
+	function buildLayers(selections) {
+		var base = wcbcData.layerBase || '';
+		var size = pick(selections, 'size') || 'small-double';
+		var colour = pick(selections, 'colour') || 'beige-velvet';
+		var headboard = pick(selections, 'headboard');
+		var baseDepth = pick(selections, 'base_depth') || '14-inch';
+		var storage = pick(selections, 'storage') || 'no-drawers';
+		var shape = headboardShape(headboard);
+		var drawerSuffix = hasDrawers(storage) ? '-drawers' : '';
+
+		var layers = {
+			shadow: base + 'shadow-only.png',
+			legs: base + 'legs/' + size + '.png',
+			storage_back: base + 'transparent.png',
+			base: base + 'base/' + size + '/' + colour + '/' + baseDepth + drawerSuffix + '.png',
+			headboard: base + 'transparent.png',
+			storage_1: base + 'transparent.png',
+			storage_2: base + 'transparent.png',
+			storage_3: base + 'transparent.png',
+		};
+
+		if (shape !== 'none') {
+			layers.headboard = base + 'headboard/' + size + '/' + shape + '/' + colour + '.png';
+		}
+
+		return layers;
+	}
+
 	function initSelections() {
 		wcbcData.config.groups.forEach(function (group) {
 			var def = wcbcData.config.defaults[group.id] || '';
@@ -22,6 +72,7 @@
 			state.selections[group.id] = $checked.length ? $checked.val() : def;
 		});
 		syncHiddenFields();
+		refreshPreview();
 	}
 
 	function syncHiddenFields() {
@@ -44,11 +95,16 @@
 			return;
 		}
 		wcbcData.layers.forEach(function (layer) {
-			if (layers[layer]) {
-				var $img = $('#dynamic_' + layer);
-				if ($img.attr('src') !== layers[layer]) {
-					$img.attr('src', layers[layer]);
-				}
+			if (!layers[layer]) {
+				return;
+			}
+			var $img = $('#dynamic_' + layer);
+			if (!$img.length) {
+				return;
+			}
+			var nextSrc = layers[layer];
+			if ($img.attr('src') !== nextSrc) {
+				$img.attr('src', nextSrc);
 			}
 		});
 	}
@@ -57,6 +113,10 @@
 		if (priceHtml) {
 			$('.wcbc-live-price').html(priceHtml);
 		}
+	}
+
+	function refreshPreview() {
+		updateLayers(buildLayers(state.selections));
 	}
 
 	function calculate() {
@@ -78,12 +138,17 @@
 			$(this).closest('li').find('label').toggleClass('is-checked', isMatch);
 		});
 
+		// Update bed preview immediately from local layer map.
+		refreshPreview();
+
 		calculate().done(function (response) {
 			if (!response || !response.success) {
 				return;
 			}
 			updatePrices(response.data.price_html);
-			updateLayers(response.data.layers);
+			if (response.data.layers) {
+				updateLayers(response.data.layers);
+			}
 			updateLabels(response.data.labels);
 		});
 	}

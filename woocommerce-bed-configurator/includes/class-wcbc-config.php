@@ -222,7 +222,6 @@ class WCBC_Config {
 	 */
 	public static function calculate( $config, $selections ) {
 		$price  = (float) $config['base_price'];
-		$layers = $config['layers'];
 		$labels = array();
 
 		foreach ( $config['groups'] as $group ) {
@@ -234,19 +233,9 @@ class WCBC_Config {
 			}
 			$price += (float) $option['price'];
 			$labels[ $gid ] = trim( $option['label'] . ( $option['sublabel'] ? ' ' . $option['sublabel'] : '' ) );
-			if ( ! empty( $option['layers'] ) ) {
-				foreach ( $option['layers'] as $layer_key => $url ) {
-					if ( isset( $layers[ $layer_key ] ) || array_key_exists( $layer_key, $layers ) ) {
-						$layers[ $layer_key ] = $url;
-					}
-				}
-			}
 		}
 
-		// Headboard none hides headboard layer.
-		if ( isset( $selections['headboard'] ) && 'no-headboard' === $selections['headboard'] ) {
-			$layers['headboard'] = $config['layers']['headboard'] ?? WCBC_PLUGIN_URL . 'demo-images/layers/headboard-none.png';
-		}
+		$layers = WCBC_Layer_Builder::build( $config, $selections );
 
 		return array(
 			'price'  => max( 0, $price ),

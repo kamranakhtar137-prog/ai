@@ -97,6 +97,16 @@
 	pointer-events: none;
 }
 
+/* Layer stacking order (bottom to top) */
+.dynamic_shadow { z-index: 1; }
+.dynamic_legs { z-index: 2; }
+.dynamic_storage_back { z-index: 3; }
+.dynamic_base { z-index: 4; }
+.dynamic_headboard { z-index: 5; }
+.dynamic_storage_1 { z-index: 6; }
+.dynamic_storage_2 { z-index: 7; }
+.dynamic_storage_3 { z-index: 8; }
+
 .wcbc-preview.wcbc-drawers-open .dynamic_storage_1,
 .wcbc-preview.wcbc-drawers-open .dynamic_storage_2,
 .wcbc-preview.wcbc-drawers-open .dynamic_storage_3 {
