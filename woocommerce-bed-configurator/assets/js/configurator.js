@@ -222,7 +222,8 @@
 			$btn.detach()
 				.appendTo($wrap)
 				.addClass('wcbc-add-to-cart action checkout w-full text-base')
-				.attr('type', 'submit');
+				.attr('type', 'submit')
+				.attr('form', FORM_ID);
 
 			$qty.addClass('wcbc-qty-hidden').hide();
 			$form.addClass('wcbc-form-relocated');

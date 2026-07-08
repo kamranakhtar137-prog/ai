@@ -24,8 +24,7 @@ class WCBC_Frontend {
 	public static function init() {
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_assets_early' ), 20 );
 		add_action( 'woocommerce_before_single_product', array( __CLASS__, 'setup_product_layout' ), 1 );
-		add_action( 'woocommerce_before_single_product_summary', array( __CLASS__, 'render_media' ), 5 );
-		add_action( 'woocommerce_single_product_summary', array( __CLASS__, 'render_options' ), 6 );
+		add_action( 'woocommerce_before_single_product_summary', array( __CLASS__, 'render_layout' ), 5 );
 		add_action( 'woocommerce_before_add_to_cart_button', array( __CLASS__, 'render_hidden_fields' ) );
 		add_filter( 'body_class', array( __CLASS__, 'body_class' ) );
 		add_filter( 'woocommerce_product_single_add_to_cart_text', array( __CLASS__, 'add_to_cart_text' ), 10, 2 );
@@ -79,22 +78,8 @@ class WCBC_Frontend {
 		remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_excerpt', 20 );
 		remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_meta', 40 );
 
-		add_action( 'woocommerce_single_product_summary', array( __CLASS__, 'render_product_title' ), 4 );
 		add_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_excerpt', 45 );
 		add_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_meta', 46 );
-	}
-
-	/**
-	 * Render compact product title inside configurator column.
-	 */
-	public static function render_product_title() {
-		global $product;
-		if ( ! $product ) {
-			return;
-		}
-		echo '<div class="wcbc-product-title-wrap">';
-		echo '<h1 class="product_title entry-title wcbc-product-title">' . esc_html( $product->get_name() ) . '</h1>';
-		echo '</div>';
 	}
 
 	/**
@@ -180,9 +165,9 @@ class WCBC_Frontend {
 				'nonce'     => wp_create_nonce( 'wcbc_configurator' ),
 				'productId' => $product_id,
 				'config'    => $config,
-				'layers'      => WCBC_Config::get_layers(),
-				'layerBase'   => WCBC_PLUGIN_URL . 'demo-images/layers/',
-				'currency'    => get_woocommerce_currency_symbol(),
+				'layers'    => WCBC_Config::get_layers(),
+				'layerBase' => WCBC_PLUGIN_URL . 'demo-images/layers/',
+				'currency'  => get_woocommerce_currency_symbol(),
 				'i18n'      => array(
 					'optionsAvailable' => __( '%d options available', 'wc-bed-configurator' ),
 					'now'              => __( 'Now', 'wc-bed-configurator' ),
@@ -198,31 +183,32 @@ class WCBC_Frontend {
 	}
 
 	/**
-	 * Render preview column.
+	 * Render unified 50/50 configurator layout.
 	 */
-	public static function render_media() {
+	public static function render_layout() {
 		global $product;
 		if ( ! $product || ! self::is_enabled( $product->get_id() ) ) {
 			return;
 		}
 
-		$args         = self::get_template_args();
+		$args = self::get_template_args();
+
+		echo '<div class="wcbc-layout" id="wcbc-layout">';
+
+		echo '<div class="wcbc-layout__col wcbc-layout__col--media">';
 		$args['part'] = 'media';
 		wc_get_template( 'configurator.php', $args, '', WCBC_PLUGIN_DIR . 'templates/' );
-	}
+		echo '</div>';
 
-	/**
-	 * Render options column inside summary.
-	 */
-	public static function render_options() {
-		global $product;
-		if ( ! $product || ! self::is_enabled( $product->get_id() ) ) {
-			return;
-		}
-
-		$args         = self::get_template_args();
+		echo '<div class="wcbc-layout__col wcbc-layout__col--options">';
+		echo '<div class="wcbc-product-title-wrap">';
+		echo '<h1 class="product_title entry-title wcbc-product-title">' . esc_html( $product->get_name() ) . '</h1>';
+		echo '</div>';
 		$args['part'] = 'options';
 		wc_get_template( 'configurator.php', $args, '', WCBC_PLUGIN_DIR . 'templates/' );
+		echo '</div>';
+
+		echo '</div>';
 	}
 
 	/**
