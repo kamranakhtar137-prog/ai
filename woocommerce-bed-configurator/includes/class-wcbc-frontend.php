@@ -57,6 +57,7 @@ class WCBC_Frontend {
 			if ( $product && self::is_enabled( $product->get_id() ) ) {
 				$classes[] = 'wcbc-configurator-active';
 				$classes[] = 'product-build-your-own-bed';
+				$classes[] = 'wcbc-has-configurator';
 			}
 		}
 		return $classes;

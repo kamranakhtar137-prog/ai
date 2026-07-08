@@ -103,9 +103,14 @@
 				return;
 			}
 			var nextSrc = layers[layer];
+			var isTransparent = nextSrc.indexOf('transparent.png') !== -1;
 			if ($img.attr('src') !== nextSrc) {
 				$img.attr('src', nextSrc);
 			}
+			$img.css({
+				opacity: isTransparent ? 0 : 1,
+				visibility: isTransparent ? 'hidden' : 'visible',
+			});
 		});
 	}
 

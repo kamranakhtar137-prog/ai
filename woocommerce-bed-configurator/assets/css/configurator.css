@@ -1,44 +1,75 @@
 /* WooCommerce Bed Configurator - Happy Beds inspired styles */
 
+/* ── Reset theme floats / widths on configurator products ── */
+.wcbc-configurator-active div.product,
+.wcbc-configurator-active .woocommerce div.product {
+	display: grid !important;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	grid-template-areas: "wcbc-media wcbc-options";
+	align-items: start;
+	float: none !important;
+	clear: both !important;
+	width: 100% !important;
+	max-width: 1200px;
+	margin: 0 auto 2rem !important;
+	padding: 0 !important;
+	box-sizing: border-box;
+	background: #f6f8fb;
+	border-radius: 10px;
+	overflow: hidden;
+	position: relative;
+	isolation: isolate;
+}
+
+.wcbc-configurator-active div.product::before,
+.wcbc-configurator-active div.product::after {
+	display: none !important;
+	content: none !important;
+}
+
 .wcbc-configurator-active .woocommerce-product-gallery,
 .wcbc-configurator-active .summary > .price {
 	display: none !important;
 }
 
-.wcbc-configurator-active div.product {
-	display: flex !important;
-	flex-wrap: wrap;
-	align-items: stretch;
-	background: linear-gradient(90deg, #cbcbcd 53%, rgba(238, 238, 238, 0.99) 74%);
-	border-radius: 10px;
-	overflow: hidden;
-	max-width: 1200px;
-	margin: 0 auto 2rem;
-	box-sizing: border-box;
-}
-
-.wcbc-configurator-active div.product > .woocommerce-product-gallery,
+/* Left column – bed preview */
 .wcbc-configurator-active div.product > .wcbc-media-wrap {
-	width: 100%;
-	flex: 0 0 100%;
+	grid-area: wcbc-media;
+	width: 100% !important;
+	max-width: 100% !important;
+	float: none !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	position: relative;
+	z-index: 1;
+	background: linear-gradient(180deg, #d8d8da 0%, #cbcbcd 100%);
+	align-self: stretch;
+	overflow: hidden;
 	box-sizing: border-box;
 }
 
-.wcbc-configurator-active div.product > .summary.entry-summary {
-	width: 100%;
-	flex: 0 0 100%;
-	background: #f6f8fb;
-	padding: 0 !important;
-	margin: 0 !important;
+/* Right column – options / summary */
+.wcbc-configurator-active div.product > .summary.entry-summary,
+.wcbc-configurator-active div.product > div.summary {
+	grid-area: wcbc-options;
+	width: 100% !important;
+	max-width: 100% !important;
 	float: none !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	position: relative;
+	z-index: 2;
+	background: #f6f8fb;
 	box-sizing: border-box;
+	min-width: 0;
 }
 
 .wcbc-media-wrap,
 #ev-mediaproddetails {
 	position: relative;
-	z-index: 5;
+	z-index: 1;
 	width: 100%;
+	height: 100%;
 }
 
 .wcbc-media.product.media {
@@ -46,10 +77,11 @@
 	margin: 0;
 	width: 100%;
 	border: 0;
+	float: none !important;
 }
 
 .wcbc-product-title-wrap {
-	padding: 12px 14px 0;
+	padding: 14px 14px 0;
 }
 
 .wcbc-product-title {
@@ -63,13 +95,24 @@
 	width: 100%;
 	padding: 0 0 1rem;
 	background: transparent;
+	position: relative;
+	z-index: 2;
 }
 
 .byobed-in {
 	display: block;
-	position: sticky;
-	top: 90px;
+	position: relative;
+	top: auto;
 	padding: 1.25rem;
+	z-index: 1;
+}
+
+/* Sticky preview only on desktop, contained in left column */
+@media (min-width: 768px) {
+	.byobed-in {
+		position: sticky;
+		top: 80px;
+	}
 }
 
 .dynamic_product_images,
@@ -77,11 +120,14 @@
 	position: relative;
 	width: 100%;
 	display: block;
-	min-height: 380px;
-	aspect-ratio: 4 / 3;
-	background: #f6f8fb;
-	border-radius: 8px;
+	min-height: 340px;
+	height: 0;
+	padding-bottom: 75%;
+	background: transparent;
+	border-radius: 0;
 	overflow: hidden;
+	isolation: isolate;
+	contain: layout paint;
 }
 
 .dynamic_image_items,
@@ -89,15 +135,27 @@
 	position: absolute;
 	left: 0;
 	top: 0;
+	right: 0;
+	bottom: 0;
 	width: 100%;
 	height: 100%;
+	max-width: 100%;
+	margin: 0;
 	object-fit: contain;
 	object-position: center bottom;
 	border-radius: 0;
 	pointer-events: none;
+	display: block;
 }
 
-/* Layer stacking order (bottom to top) */
+/* Hide empty / transparent layers so they don't ghost-overlap */
+.wcbc-layer[src*="transparent.png"],
+.dynamic_image_items[src*="transparent.png"] {
+	opacity: 0 !important;
+	visibility: hidden !important;
+}
+
+/* Layer stacking order (bottom → top) */
 .dynamic_shadow { z-index: 1; }
 .dynamic_legs { z-index: 2; }
 .dynamic_storage_back { z-index: 3; }
@@ -232,16 +290,16 @@
 	margin: 0 10px;
 	border-radius: 10px;
 	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-	overflow: hidden;
+	overflow: visible;
 	position: relative;
-	z-index: 20;
+	z-index: 3;
 	pointer-events: auto;
 }
 
 .wcbc-accordian {
 	margin: 0;
 	position: relative;
-	z-index: 20;
+	z-index: 3;
 }
 
 .wcbc-accordian-item {
@@ -262,7 +320,7 @@ button.wcbc-accordian-head {
 	font: inherit;
 	color: inherit;
 	position: relative;
-	z-index: 21;
+	z-index: 4;
 	pointer-events: auto;
 	-webkit-appearance: none;
 	appearance: none;
@@ -573,49 +631,31 @@ button.wcbc-add-to-cart,
 	letter-spacing: 0.02em;
 }
 
-@media (min-width: 992px) {
-	.wcbc-configurator-active div.product > .woocommerce-product-gallery,
-	.wcbc-configurator-active div.product > .wcbc-media-wrap {
-		width: 50% !important;
-		flex: 0 0 50%;
+@media (max-width: 767.98px) {
+	.wcbc-configurator-active div.product,
+	.wcbc-configurator-active .woocommerce div.product {
+		grid-template-columns: 1fr;
+		grid-template-areas:
+			"wcbc-media"
+			"wcbc-options";
+		border-radius: 0;
 	}
 
-	.wcbc-configurator-active div.product > .summary.entry-summary {
-		width: 50% !important;
-		flex: 0 0 50%;
-	}
-
-	.wcbc-top-bar .wcbc-delivery,
-	.wcbc-top-bar .wcbc-sticky-price,
-	.wcbc-price-wrap .w-full,
-	.wcbc-price-wrap .wcbc-cart-button-wrap {
-		flex: 1 1 calc(50% - 6px);
-		max-width: calc(50% - 6px);
-	}
-}
-
-@media (max-width: 991.98px) {
 	.byobed-in {
 		position: relative;
-		top: 0;
+		top: auto;
 	}
 
-	.wcbc-configurator-active div.product {
-		border-radius: 0;
+	.dynamic_product_images,
+	.wcbc-preview {
+		min-height: 280px;
+		padding-bottom: 70%;
 	}
 
 	.options-list > li,
 	.wcbc-headboard-grid.options-list > li {
 		flex: 0 0 33.333%;
 		max-width: 33.333%;
-	}
-}
-
-@media (max-width: 568px) {
-	.options-list > li,
-	.wcbc-headboard-grid.options-list > li {
-		flex: 0 0 50%;
-		max-width: 50%;
 	}
 
 	.wcbc-accordian-summary {
@@ -627,4 +667,26 @@ button.wcbc-add-to-cart,
 		width: 100%;
 		justify-content: space-between;
 	}
+}
+
+@media (max-width: 568px) {
+	.options-list > li,
+	.wcbc-headboard-grid.options-list > li {
+		flex: 0 0 50%;
+		max-width: 50%;
+	}
+}
+
+/* Theme overrides – Storefront, Astra, etc. */
+.wcbc-configurator-active .woocommerce-product-gallery__wrapper,
+.wcbc-configurator-active .woocommerce-product-gallery {
+	display: none !important;
+	width: 0 !important;
+	height: 0 !important;
+	overflow: hidden !important;
+}
+
+.wcbc-configurator-active .site-main .content-area,
+.wcbc-configurator-active #primary {
+	overflow: visible;
 }
