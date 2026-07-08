@@ -54,9 +54,13 @@ def draw_shadow(draw: ImageDraw.ImageDraw, left: int, right: int) -> None:
 
 
 def draw_legs(draw: ImageDraw.ImageDraw, left: int, right: int, y_top: int) -> None:
-    leg_w = 22
-    for x in (left + 40, right - 40 - leg_w):
-        draw.rounded_rectangle((x, y_top, x + leg_w, y_top + 70), radius=4, fill=(90, 90, 95, 255))
+    """Draw bed legs below the base frame so they are not hidden by the base layer."""
+    leg_w = 26
+    leg_h = 78
+    wood = (72, 68, 64, 255)
+    for x in (left + 36, right - 36 - leg_w):
+        draw.rounded_rectangle((x, y_top, x + leg_w, y_top + leg_h), radius=5, fill=wood)
+        draw.rounded_rectangle((x + 3, y_top + 3, x + leg_w - 3, y_top + leg_h - 3), radius=4, fill=(98, 92, 86, 255))
 
 
 def draw_base(draw: ImageDraw.ImageDraw, left: int, right: int, color: tuple, height: int, drawers: int = 0) -> int:
@@ -115,11 +119,12 @@ def main() -> None:
     save(shadow, ROOT / "layers" / "shadow-only.png")
     save(transparent(), ROOT / "layers" / "transparent.png")
 
-    # Legs layer (generic, scales visually with bed)
+    # Legs layer — positioned below base bottom (y=470) so base layer does not cover them
+    base_bottom = 470
     for size, (left, right) in SIZES.items():
         legs = transparent()
         d = ImageDraw.Draw(legs)
-        draw_legs(d, left, right, 400)
+        draw_legs(d, left, right, base_bottom + 2)
         save(legs, ROOT / "layers" / "legs" / f"{size}.png")
 
     # Base layers per size / colour / depth / drawers

@@ -282,14 +282,14 @@
 }
 
 /* Layer stacking order (bottom → top) */
-.dynamic_shadow { z-index: 1; }
-.dynamic_legs { z-index: 2; }
-.dynamic_storage_back { z-index: 3; }
-.dynamic_base { z-index: 4; }
-.dynamic_headboard { z-index: 5; }
-.dynamic_storage_1 { z-index: 6; }
-.dynamic_storage_2 { z-index: 7; }
-.dynamic_storage_3 { z-index: 8; }
+.dynamic_shadow { z-index: 1 !important; }
+.dynamic_legs { z-index: 5 !important; }
+.dynamic_storage_back { z-index: 3 !important; }
+.dynamic_base { z-index: 4 !important; }
+.dynamic_headboard { z-index: 6 !important; }
+.dynamic_storage_1 { z-index: 7 !important; }
+.dynamic_storage_2 { z-index: 8 !important; }
+.dynamic_storage_3 { z-index: 9 !important; }
 
 .wcbc-preview.wcbc-drawers-open .dynamic_storage_1,
 .wcbc-preview.wcbc-drawers-open .dynamic_storage_2,
