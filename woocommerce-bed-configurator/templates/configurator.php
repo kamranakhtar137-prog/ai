@@ -1,0 +1,205 @@
+<?php
+/**
+ * Bed configurator template.
+ *
+ * @package WCBedConfigurator
+ * @var WC_Product $product
+ * @var array $config
+ * @var array $selections
+ * @var array $calc
+ * @var string $plugin_url
+ * @var string $part media|options
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+$part  = isset( $part ) ? $part : 'full';
+$icons = array(
+	'size'      => $plugin_url . 'assets/icons/size.svg',
+	'colour'    => $plugin_url . 'assets/icons/colour.svg',
+	'headboard' => $plugin_url . 'assets/icons/headboard.svg',
+	'depth'     => $plugin_url . 'assets/icons/depth.svg',
+	'storage'   => $plugin_url . 'assets/icons/storage.svg',
+);
+
+if ( 'media' === $part ) : ?>
+	<div id="ev-mediaproddetails" class="wcbc-media-wrap" data-product-id="<?php echo esc_attr( $product->get_id() ); ?>">
+		<div class="product media wcbc-media">
+			<div class="byobed-in">
+				<div class="leftpart">
+					<div id="dynamic_product_images" class="dynamic_product_images wcbc-preview">
+						<?php foreach ( WCBC_Config::get_layers() as $layer ) : ?>
+							<?php $src = isset( $calc['layers'][ $layer ] ) ? $calc['layers'][ $layer ] : ''; ?>
+							<img
+								loading="lazy"
+								class="dynamic_image_items dynamic_<?php echo esc_attr( $layer ); ?> wcbc-layer"
+								id="dynamic_<?php echo esc_attr( $layer ); ?>"
+								data-layer="<?php echo esc_attr( $layer ); ?>"
+								alt="<?php echo esc_attr( $layer ); ?>"
+								src="<?php echo esc_url( $src ); ?>"
+							/>
+						<?php endforeach; ?>
+					</div>
+					<div id="draw_toggler" class="wcbc-draw-toggler">
+						<div class="toggle_label"><?php echo esc_html__( 'Drawers', 'wc-bed-configurator' ); ?></div>
+						<div id="open_close_toggle">
+							<label class="switch-light draw-light switch-candy">
+								<input id="drawer_checkbox" type="checkbox" checked />
+								<span>
+									<span><?php echo esc_html__( 'Closed', 'wc-bed-configurator' ); ?></span>
+									<span><?php echo esc_html__( 'Open', 'wc-bed-configurator' ); ?></span>
+									<a></a>
+								</span>
+							</label>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<?php
+	return;
+endif;
+
+if ( 'options' === $part ) : ?>
+	<div class="product-info-main wcbc-options-column">
+		<div class="wcbc-top-bar old-row flex flex-wrap items-center">
+			<div class="w-full md:w-1/2 wcbc-delivery">
+				<div class="pp-order-info">
+					<div class="leadtime line font-bold"><?php echo esc_html__( 'Free Next Day Delivery', 'wc-bed-configurator' ); ?></div>
+					<div class="line"><?php echo esc_html__( 'UK Mainland', 'wc-bed-configurator' ); ?></div>
+				</div>
+			</div>
+			<div class="w-full md:w-1/2 wcbc-sticky-price text-right">
+				<div class="price-box price-final_price">
+					<span class="normal-price">
+						<span class="price-container">
+							<span class="price-label"><?php echo esc_html__( 'Now', 'wc-bed-configurator' ); ?></span>
+							<span class="price-wrapper">
+								<span class="price wcbc-live-price"><?php echo wp_kses_post( wc_price( $calc['price'] ) ); ?></span>
+							</span>
+						</span>
+					</span>
+				</div>
+			</div>
+		</div>
+
+		<div id="product-options-wrapper" class="product-options-wrapper">
+			<div id="tabs-container">
+				<div class="tab">
+					<dl class="tab-content byob-accordian wcbc-accordian">
+						<?php foreach ( $config['groups'] as $index => $group ) : ?>
+							<?php
+							$gid       = $group['id'];
+							$is_open   = ( 2 === $index );
+							$selected  = isset( $selections[ $gid ] ) ? $selections[ $gid ] : '';
+							$sel_label = '';
+							foreach ( $group['options'] as $opt ) {
+								if ( $opt['id'] === $selected ) {
+									$sel_label = $opt['label'];
+									break;
+								}
+							}
+							$icon_key = isset( $group['icon'] ) ? $group['icon'] : 'size';
+							$icon_url = isset( $icons[ $icon_key ] ) ? $icons[ $icon_key ] : $icons['size'];
+							$count    = count( $group['options'] );
+							?>
+							<dt class="old-row flex flex-wrap items-center wcbc-accordian-head <?php echo $is_open ? 'isopen' : ''; ?>" data-tabid="<?php echo esc_attr( $gid ); ?>">
+								<div class="w-2/12 iconwrap">
+									<img width="50" height="50" alt="" src="<?php echo esc_url( $icon_url ); ?>" />
+								</div>
+								<label class="required w-10/12">
+									<div class="old-row flex flex-wrap items-center grid grid-cols-12 pr-2 gap-1">
+										<div class="title_in_wrap col-span-6">
+											<?php echo esc_html( $group['label'] ); ?>
+											<span class="ev_sel_size wcbc-selected-label" data-group="<?php echo esc_attr( $gid ); ?>"><?php echo esc_html( $sel_label ); ?></span>
+										</div>
+										<div class="col-span-5 text-center">
+											<span class="options-available-pill rounded-3xl inline-block text-white">
+												<?php
+												printf(
+													esc_html__( '%d options available', 'wc-bed-configurator' ),
+													(int) $count
+												);
+												?>
+											</span>
+										</div>
+										<span class="col-span-1 text-center ev_ln_filter_chevron <?php echo $is_open ? '' : 'ev_ln_filter_chevron_closed'; ?>">
+											<svg class="ac-accordion__expand-chevron" width="20" height="18" viewBox="0 0 24 24"><path d="M23.23 6.173l.646.746a.5.5 0 0 1-.045.7l-11.5 10.254a.5.5 0 0 1-.665 0L.166 7.62a.5.5 0 0 1-.044-.701l.644-.743a.5.5 0 0 1 .71-.045l10.19 9.09a.5.5 0 0 0 .665 0L22.52 6.126a.5.5 0 0 1 .71-.046z"></path></svg>
+										</span>
+									</div>
+								</label>
+							</dt>
+							<dd data-tabid="<?php echo esc_attr( $gid ); ?>" class="wcbc-accordian-body <?php echo $is_open ? 'isopen' : ''; ?>" <?php echo $is_open ? '' : 'style="display:none"'; ?>>
+								<div class="input-box">
+									<?php if ( ! empty( $group['filter_type'] ) && ! empty( $group['filters'] ) ) : ?>
+										<h2><?php echo esc_html__( 'Choose Shape', 'wc-bed-configurator' ); ?></h2>
+										<div class="button-group filters-button-group wcbc-headboard-filters">
+											<?php foreach ( $group['filters'] as $fi => $filter ) : ?>
+												<button type="button" class="button wcbc-filter-btn <?php echo 0 === $fi ? 'is-checked' : ''; ?>" data-filter="<?php echo esc_attr( $filter['filter'] ); ?>">
+													<?php echo esc_html( $filter['label'] ); ?>
+												</button>
+											<?php endforeach; ?>
+										</div>
+										<h2 class="wcbc-style-heading"><?php echo esc_html__( 'Choose Style', 'wc-bed-configurator' ); ?></h2>
+									<?php endif; ?>
+
+									<ul class="options-list wcbc-options-grid <?php echo ! empty( $group['filter_type'] ) ? 'wcbc-headboard-grid grid grid-cols-3' : ''; ?>">
+										<?php foreach ( $group['options'] as $option ) : ?>
+											<?php
+											$shape   = ! empty( $option['layers']['shape'] ) ? $option['layers']['shape'] : '';
+											$checked = $option['id'] === $selected;
+											$hidden  = ! empty( $group['filter_type'] ) && $shape && 'cornell' !== $shape && ! $checked;
+											?>
+											<li id="<?php echo esc_attr( $option['id'] ); ?>" class="wcbc-option <?php echo $shape ? 'wcbc-shape-' . esc_attr( $shape ) : ''; ?> <?php echo $hidden ? 'wcbc-filter-hidden' : ''; ?>" data-shape="<?php echo esc_attr( $shape ); ?>">
+												<input style="display:none;" type="radio" class="wcbc-radio product-custom-option" name="wcbc_ui_<?php echo esc_attr( $gid ); ?>" id="wcbc_<?php echo esc_attr( $gid . '_' . $option['id'] ); ?>" value="<?php echo esc_attr( $option['id'] ); ?>" data-group="<?php echo esc_attr( $gid ); ?>" data-price="<?php echo esc_attr( $option['price'] ); ?>" <?php checked( $checked ); ?> />
+												<label for="wcbc_<?php echo esc_attr( $gid . '_' . $option['id'] ); ?>" class="<?php echo $checked ? 'is-checked' : ''; ?>">
+													<div class="swatchContainer">
+														<div class="swatch45 product-option divswatch">
+															<?php if ( ! empty( $option['image'] ) ) : ?>
+																<img class="colourspan" loading="lazy" alt="<?php echo esc_attr( $option['label'] ); ?>" src="<?php echo esc_url( $option['image'] ); ?>" />
+															<?php endif; ?>
+															<div class="option-name option-name-custom small-color-font">
+																<?php echo esc_html( $option['label'] ); ?>
+																<?php if ( ! empty( $option['sublabel'] ) ) : ?>
+																	<span class="bespoke-sub-size"><?php echo esc_html( $option['sublabel'] ); ?></span>
+																<?php endif; ?>
+															</div>
+															<?php if ( ! empty( $option['badge'] ) ) : ?>
+																<span class="options-available-pill wcbc-badge"><?php echo esc_html( $option['badge'] ); ?></span>
+															<?php endif; ?>
+														</div>
+													</div>
+												</label>
+											</li>
+										<?php endforeach; ?>
+									</ul>
+								</div>
+								<div class="ev_acc_linebreak"></div>
+							</dd>
+						<?php endforeach; ?>
+					</dl>
+				</div>
+			</div>
+		</div>
+
+		<div id="byob_price_wrap" class="wcbc-price-wrap container">
+			<div class="old-row flex flex-wrap items-center m-0 text-right">
+				<div class="w-full md:w-1/2">
+					<div class="price-box price-final_price">
+						<span class="normal-price">
+							<span class="price-container">
+								<span class="price-label"><?php echo esc_html__( 'Now', 'wc-bed-configurator' ); ?></span>
+								<span class="price wcbc-live-price"><?php echo wp_kses_post( wc_price( $calc['price'] ) ); ?></span>
+							</span>
+						</span>
+					</div>
+				</div>
+				<div class="w-full md:w-1/2 wcbc-cart-button-wrap"></div>
+			</div>
+		</div>
+	</div>
+	<?php
+endif;
