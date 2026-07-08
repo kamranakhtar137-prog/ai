@@ -71,7 +71,7 @@ class WCBC_Loader {
 		wp_register_script(
 			'wcbc-configurator',
 			WCBC_PLUGIN_URL . 'assets/js/configurator.js',
-			array( 'jquery' ),
+			array( 'jquery', 'wc-single-product' ),
 			WCBC_VERSION,
 			true
 		);

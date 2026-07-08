@@ -42,7 +42,7 @@ class WCBC_Config {
 			'base_price' => 299.99,
 			'layers'     => array(
 				'shadow'       => $base . 'layers/shadow-only.png',
-				'legs'         => $base . 'layers/base-beige.png',
+				'legs'         => $base . 'layers/transparent.png',
 				'storage_back' => $base . 'layers/transparent.png',
 				'base'         => $base . 'layers/base-beige.png',
 				'headboard'    => $base . 'layers/headboard-cornell.png',

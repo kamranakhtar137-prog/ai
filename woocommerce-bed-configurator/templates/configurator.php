@@ -65,14 +65,14 @@ endif;
 
 if ( 'options' === $part ) : ?>
 	<div class="product-info-main wcbc-options-column">
-		<div class="wcbc-top-bar old-row flex flex-wrap items-center">
-			<div class="w-full md:w-1/2 wcbc-delivery">
+		<div class="wcbc-top-bar">
+			<div class="wcbc-delivery">
 				<div class="pp-order-info">
 					<div class="leadtime line font-bold"><?php echo esc_html__( 'Free Next Day Delivery', 'wc-bed-configurator' ); ?></div>
 					<div class="line"><?php echo esc_html__( 'UK Mainland', 'wc-bed-configurator' ); ?></div>
 				</div>
 			</div>
-			<div class="w-full md:w-1/2 wcbc-sticky-price text-right">
+			<div class="wcbc-sticky-price">
 				<div class="price-box price-final_price">
 					<span class="normal-price">
 						<span class="price-container">
@@ -106,17 +106,17 @@ if ( 'options' === $part ) : ?>
 							$icon_url = isset( $icons[ $icon_key ] ) ? $icons[ $icon_key ] : $icons['size'];
 							$count    = count( $group['options'] );
 							?>
-							<dt class="old-row flex flex-wrap items-center wcbc-accordian-head <?php echo $is_open ? 'isopen' : ''; ?>" data-tabid="<?php echo esc_attr( $gid ); ?>">
-								<div class="w-2/12 iconwrap">
-									<img width="50" height="50" alt="" src="<?php echo esc_url( $icon_url ); ?>" />
-								</div>
-								<label class="required w-10/12">
-									<div class="old-row flex flex-wrap items-center grid grid-cols-12 pr-2 gap-1">
-										<div class="title_in_wrap col-span-6">
+							<dt class="wcbc-accordian-head <?php echo $is_open ? 'isopen' : ''; ?>" data-tabid="<?php echo esc_attr( $gid ); ?>">
+								<div class="wcbc-accordian-head-inner">
+									<div class="wcbc-accordian-icon iconwrap">
+										<img width="50" height="50" alt="" src="<?php echo esc_url( $icon_url ); ?>" />
+									</div>
+									<div class="wcbc-accordian-summary">
+										<div class="title_in_wrap">
 											<?php echo esc_html( $group['label'] ); ?>
 											<span class="ev_sel_size wcbc-selected-label" data-group="<?php echo esc_attr( $gid ); ?>"><?php echo esc_html( $sel_label ); ?></span>
 										</div>
-										<div class="col-span-5 text-center">
+										<div class="wcbc-accordian-meta">
 											<span class="options-available-pill rounded-3xl inline-block text-white">
 												<?php
 												printf(
@@ -125,12 +125,12 @@ if ( 'options' === $part ) : ?>
 												);
 												?>
 											</span>
+											<span class="ev_ln_filter_chevron <?php echo $is_open ? '' : 'ev_ln_filter_chevron_closed'; ?>">
+												<svg class="ac-accordion__expand-chevron" width="20" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23.23 6.173l.646.746a.5.5 0 0 1-.045.7l-11.5 10.254a.5.5 0 0 1-.665 0L.166 7.62a.5.5 0 0 1-.044-.701l.644-.743a.5.5 0 0 1 .71-.045l10.19 9.09a.5.5 0 0 0 .665 0L22.52 6.126a.5.5 0 0 1 .71-.046z"></path></svg>
+											</span>
 										</div>
-										<span class="col-span-1 text-center ev_ln_filter_chevron <?php echo $is_open ? '' : 'ev_ln_filter_chevron_closed'; ?>">
-											<svg class="ac-accordion__expand-chevron" width="20" height="18" viewBox="0 0 24 24"><path d="M23.23 6.173l.646.746a.5.5 0 0 1-.045.7l-11.5 10.254a.5.5 0 0 1-.665 0L.166 7.62a.5.5 0 0 1-.044-.701l.644-.743a.5.5 0 0 1 .71-.045l10.19 9.09a.5.5 0 0 0 .665 0L22.52 6.126a.5.5 0 0 1 .71-.046z"></path></svg>
-										</span>
 									</div>
-								</label>
+								</div>
 							</dt>
 							<dd data-tabid="<?php echo esc_attr( $gid ); ?>" class="wcbc-accordian-body <?php echo $is_open ? 'isopen' : ''; ?>" <?php echo $is_open ? '' : 'style="display:none"'; ?>>
 								<div class="input-box">
@@ -185,9 +185,9 @@ if ( 'options' === $part ) : ?>
 			</div>
 		</div>
 
-		<div id="byob_price_wrap" class="wcbc-price-wrap container">
-			<div class="old-row flex flex-wrap items-center m-0 text-right">
-				<div class="w-full md:w-1/2">
+		<div id="byob_price_wrap" class="wcbc-price-wrap">
+			<div class="wcbc-price-row">
+				<div class="wcbc-price-col">
 					<div class="price-box price-final_price">
 						<span class="normal-price">
 							<span class="price-container">
@@ -197,7 +197,7 @@ if ( 'options' === $part ) : ?>
 						</span>
 					</div>
 				</div>
-				<div class="w-full md:w-1/2 wcbc-cart-button-wrap"></div>
+				<div class="wcbc-cart-button-wrap"></div>
 			</div>
 		</div>
 	</div>

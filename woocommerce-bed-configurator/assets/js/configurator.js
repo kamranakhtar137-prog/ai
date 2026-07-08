@@ -8,9 +8,11 @@
 		return;
 	}
 
+	var FORM_ID = 'wcbc-product-form';
+
 	var state = {
 		selections: {},
-		drawersOpen: true,
+		drawersOpen: false,
 	};
 
 	function initSelections() {
@@ -28,11 +30,6 @@
 		});
 	}
 
-	function formatMoney(amount) {
-		var symbol = wcbcData.currency || '£';
-		return symbol + parseFloat(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-	}
-
 	function updateLabels(labels) {
 		if (!labels) {
 			return;
@@ -48,13 +45,18 @@
 		}
 		wcbcData.layers.forEach(function (layer) {
 			if (layers[layer]) {
-				$('#dynamic_' + layer).attr('src', layers[layer]);
+				var $img = $('#dynamic_' + layer);
+				if ($img.attr('src') !== layers[layer]) {
+					$img.attr('src', layers[layer]);
+				}
 			}
 		});
 	}
 
-	function updatePrices(priceHtml, formatted) {
-		$('.wcbc-live-price').html(priceHtml || formatMoney(formatted));
+	function updatePrices(priceHtml) {
+		if (priceHtml) {
+			$('.wcbc-live-price').html(priceHtml);
+		}
 	}
 
 	function calculate() {
@@ -71,73 +73,131 @@
 		syncHiddenFields();
 
 		$('input.wcbc-radio[data-group="' + groupId + '"]').each(function () {
-			$(this).closest('li').find('label').removeClass('is-checked');
+			$(this).prop('checked', $(this).val() === optionId);
+			$(this).closest('li').find('label').toggleClass('is-checked', $(this).val() === optionId);
 		});
-		$label.addClass('is-checked');
+
+		if ($label && $label.length) {
+			$label.addClass('is-checked');
+		}
 
 		calculate().done(function (response) {
-			if (!response.success) {
+			if (!response || !response.success) {
 				return;
 			}
-			updatePrices(response.data.price_html, response.data.formatted);
+			updatePrices(response.data.price_html);
 			updateLayers(response.data.layers);
 			updateLabels(response.data.labels);
 		});
 	}
 
 	function bindAccordian() {
-		$('.wcbc-accordian-head').on('click', function () {
+		$(document).on('click', '.wcbc-accordian-head', function (e) {
+			e.preventDefault();
 			var tabId = $(this).data('tabid');
-			var $body = $('dd[data-tabid="' + tabId + '"]');
+			var $body = $('dd.wcbc-accordian-body[data-tabid="' + tabId + '"]');
 			var isOpen = $(this).hasClass('isopen');
 
 			$('.wcbc-accordian-head').removeClass('isopen');
 			$('.wcbc-accordian-head .ev_ln_filter_chevron').addClass('ev_ln_filter_chevron_closed');
-			$('.wcbc-accordian-body').removeClass('isopen').hide();
+			$('.wcbc-accordian-body').removeClass('isopen').slideUp(180);
 
 			if (!isOpen) {
 				$(this).addClass('isopen');
 				$(this).find('.ev_ln_filter_chevron').removeClass('ev_ln_filter_chevron_closed');
-				$body.addClass('isopen').show();
+				$body.addClass('isopen').slideDown(180);
 			}
 		});
 	}
 
 	function bindOptions() {
 		$(document).on('change', 'input.wcbc-radio', function () {
-			var groupId = $(this).data('group');
-			onSelectionChange(groupId, $(this).val(), $(this).closest('li').find('label'));
+			onSelectionChange($(this).data('group'), $(this).val(), $(this).closest('li').find('label'));
+		});
+
+		$(document).on('click', '.wcbc-option label', function (e) {
+			e.preventDefault();
+			var $radio = $(this).closest('li').find('input.wcbc-radio');
+			if (!$radio.length) {
+				return;
+			}
+			$radio.prop('checked', true).trigger('change');
 		});
 	}
 
 	function bindHeadboardFilters() {
-		$('.wcbc-filter-btn').on('click', function () {
+		$(document).on('click', '.wcbc-filter-btn', function (e) {
+			e.preventDefault();
 			var filter = $(this).data('filter');
-			$('.wcbc-filter-btn').removeClass('is-checked');
+			var $section = $(this).closest('dd');
+
+			$section.find('.wcbc-filter-btn').removeClass('is-checked');
 			$(this).addClass('is-checked');
 
-			$('.wcbc-headboard-grid li').each(function () {
-				var shape = $(this).data('shape');
-				var show = filter === shape || $(this).find('input').is(':checked');
-				$(this).toggleClass('wcbc-filter-hidden', !show && shape !== filter);
+			$section.find('.wcbc-headboard-grid li').each(function () {
+				var shape = $(this).data('shape') || '';
+				var isSelected = $(this).find('input.wcbc-radio').is(':checked');
+				var show = shape === filter || isSelected;
+				$(this).toggleClass('wcbc-filter-hidden', !show);
 			});
 		});
 	}
 
 	function bindDrawerToggle() {
-		$('#drawer_checkbox').on('change', function () {
+		var $checkbox = $('#drawer_checkbox');
+		if (!$checkbox.length) {
+			return;
+		}
+
+		state.drawersOpen = $checkbox.is(':checked');
+		$('.wcbc-preview').toggleClass('wcbc-drawers-open', state.drawersOpen);
+
+		$checkbox.on('change', function () {
 			state.drawersOpen = $(this).is(':checked');
 			$('.wcbc-preview').toggleClass('wcbc-drawers-open', state.drawersOpen);
 		});
 	}
 
-	function relocateAddToCart() {
-		var $btn = $('form.cart .single_add_to_cart_button');
-		var $qty = $('form.cart .quantity');
-		if ($btn.length && $('.wcbc-cart-button-wrap').length) {
-			$btn.appendTo('.wcbc-cart-button-wrap').addClass('wcbc-add-to-cart action checkout w-full text-base');
-			$qty.hide();
+	function setupCartForm() {
+		var $form = $('form.cart').first();
+		if (!$form.length) {
+			return false;
 		}
+
+		$form.attr('id', FORM_ID);
+		$form.addClass('wcbc-cart-form');
+
+		var $wrap = $('.wcbc-cart-button-wrap');
+		var $btn = $form.find('.single_add_to_cart_button').first();
+		var $qty = $form.find('.quantity');
+
+		if ($wrap.length && $btn.length) {
+			$btn.detach()
+				.appendTo($wrap)
+				.addClass('wcbc-add-to-cart action checkout w-full text-base')
+				.attr('type', 'submit');
+
+			$qty.addClass('wcbc-qty-hidden').hide();
+			$form.addClass('wcbc-form-relocated');
+			return true;
+		}
+
+		return false;
+	}
+
+	function relocateAddToCart() {
+		if (setupCartForm()) {
+			return;
+		}
+
+		// WooCommerce may render the cart form after our script init.
+		var attempts = 0;
+		var timer = window.setInterval(function () {
+			attempts += 1;
+			if (setupCartForm() || attempts >= 20) {
+				window.clearInterval(timer);
+			}
+		}, 150);
 	}
 
 	$(function () {
@@ -148,4 +208,6 @@
 		bindDrawerToggle();
 		relocateAddToCart();
 	});
+
+	$(window).on('load', relocateAddToCart);
 })(jQuery);

@@ -27,6 +27,21 @@ class WCBC_Frontend {
 		add_action( 'woocommerce_single_product_summary', array( __CLASS__, 'render_options' ), 6 );
 		add_action( 'woocommerce_before_add_to_cart_button', array( __CLASS__, 'render_hidden_fields' ) );
 		add_filter( 'body_class', array( __CLASS__, 'body_class' ) );
+		add_filter( 'woocommerce_product_single_add_to_cart_text', array( __CLASS__, 'add_to_cart_text' ), 10, 2 );
+	}
+
+	/**
+	 * Custom add-to-cart button label.
+	 *
+	 * @param string     $text Button text.
+	 * @param WC_Product $product Product.
+	 * @return string
+	 */
+	public static function add_to_cart_text( $text, $product ) {
+		if ( self::is_enabled( $product->get_id() ) ) {
+			return __( 'Add To Basket', 'wc-bed-configurator' );
+		}
+		return $text;
 	}
 
 	/**
@@ -58,6 +73,26 @@ class WCBC_Frontend {
 		remove_action( 'woocommerce_before_single_product_summary', 'woocommerce_show_product_sale_flash', 10 );
 		remove_action( 'woocommerce_before_single_product_summary', 'woocommerce_show_product_images', 20 );
 		remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_price', 10 );
+		remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_title', 5 );
+		remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_excerpt', 20 );
+		remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_meta', 40 );
+
+		add_action( 'woocommerce_single_product_summary', array( __CLASS__, 'render_product_title' ), 4 );
+		add_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_excerpt', 45 );
+		add_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_meta', 46 );
+	}
+
+	/**
+	 * Render compact product title inside configurator column.
+	 */
+	public static function render_product_title() {
+		global $product;
+		if ( ! $product ) {
+			return;
+		}
+		echo '<div class="wcbc-product-title-wrap">';
+		echo '<h1 class="product_title entry-title wcbc-product-title">' . esc_html( $product->get_name() ) . '</h1>';
+		echo '</div>';
 	}
 
 	/**
