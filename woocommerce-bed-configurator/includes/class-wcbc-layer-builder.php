@@ -21,6 +21,118 @@ class WCBC_Layer_Builder {
 	}
 
 	/**
+	 * Happy Beds imported layer base URL.
+	 *
+	 * @return string
+	 */
+	private static function happybeds_base() {
+		return WCBC_PLUGIN_URL . 'demo-images/happybeds-layers/';
+	}
+
+	/**
+	 * Happy Beds imported layer directory.
+	 *
+	 * @return string
+	 */
+	private static function happybeds_dir() {
+		return WCBC_PLUGIN_DIR . 'demo-images/happybeds-layers/';
+	}
+
+	/**
+	 * Whether imported Happy Beds manifest exists.
+	 *
+	 * @return bool
+	 */
+	public static function has_happybeds_manifest() {
+		return file_exists( self::happybeds_dir() . 'manifest.json' );
+	}
+
+	/**
+	 * Map plugin size id to Happy Beds API size slug.
+	 *
+	 * @param string $size Size id.
+	 * @return string
+	 */
+	private static function happybeds_size( $size ) {
+		$map = array(
+			'small-single' => 'small-single',
+			'single'       => 'single',
+			'small-double' => 'small-double',
+			'double'       => 'double',
+			'king'         => 'king',
+			'super-king'   => 'super-king',
+		);
+		return isset( $map[ $size ] ) ? $map[ $size ] : 'small-double';
+	}
+
+	/**
+	 * Drawer state for Happy Beds API (1 = closed, 0 = ottoman open).
+	 *
+	 * @param string $storage Storage id.
+	 * @param array<string,string> $selections Selections.
+	 * @return int
+	 */
+	private static function drawer_state( $storage, $selections ) {
+		if ( 'ottoman' !== $storage ) {
+			return 1;
+		}
+		if ( isset( $selections['drawers_open'] ) && '1' === (string) $selections['drawers_open'] ) {
+			return 0;
+		}
+		return 1;
+	}
+
+	/**
+	 * Build layers from imported Happy Beds manifest.
+	 *
+	 * @param array<string,mixed>  $config Config.
+	 * @param array<string,string> $selections Selections.
+	 * @return array<string,string>|null
+	 */
+	private static function build_from_manifest( $config, $selections ) {
+		$path = self::happybeds_dir() . 'manifest.json';
+		$json = json_decode( (string) file_get_contents( $path ), true );
+		if ( empty( $json['combinations'] ) ) {
+			return null;
+		}
+
+		$defaults = isset( $config['defaults'] ) ? $config['defaults'] : array();
+		$size       = self::pick( $selections, $defaults, 'size' );
+		$colour     = self::pick( $selections, $defaults, 'colour' );
+		$headboard  = self::pick( $selections, $defaults, 'headboard' );
+		$base_depth = self::pick( $selections, $defaults, 'base_depth' );
+		$storage    = self::pick( $selections, $defaults, 'storage' );
+
+		$key = implode(
+			'|',
+			array(
+				self::happybeds_size( $size ),
+				$colour,
+				$headboard,
+				$base_depth,
+				$storage,
+				(string) self::drawer_state( $storage, $selections ),
+			)
+		);
+
+		if ( empty( $json['combinations'][ $key ] ) ) {
+			return null;
+		}
+
+		$base_url = self::happybeds_base();
+		$layers   = array();
+		foreach ( $json['combinations'][ $key ] as $layer => $relative ) {
+			if ( ! $relative || false !== strpos( $relative, 'FFFFFF-0' ) ) {
+				$layers[ $layer ] = self::layer_base() . 'transparent.png';
+				continue;
+			}
+			$layers[ $layer ] = $base_url . ltrim( $relative, '/' );
+		}
+
+		return $layers;
+	}
+
+	/**
 	 * Resolve a selection with fallback to config defaults.
 	 *
 	 * @param array<string,string> $selections Selections.
@@ -72,6 +184,13 @@ class WCBC_Layer_Builder {
 	 * @return array<string,string>
 	 */
 	public static function build( $config, $selections ) {
+		if ( self::has_happybeds_manifest() ) {
+			$imported = self::build_from_manifest( $config, $selections );
+			if ( $imported ) {
+				return $imported;
+			}
+		}
+
 		$defaults = isset( $config['defaults'] ) ? $config['defaults'] : array();
 		$base     = self::layer_base();
 

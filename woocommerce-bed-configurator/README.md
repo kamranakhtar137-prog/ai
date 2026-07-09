@@ -49,6 +49,32 @@ The standard product gallery is hidden on configurator products; the layered pre
 
 ### Demo images
 
+Bundled demo layers are generated at **1000×750** to match Happy Beds preview proportions. Regenerate anytime:
+
+```bash
+python3 scripts/generate-demo-images.py
+```
+
+### Use real Happy Beds layer images (optional)
+
+Happy Beds blocks automated downloads (Cloudflare). To use their **exact** preview PNGs:
+
+1. Open [happybeds.co.uk/build-your-own-bed](https://www.happybeds.co.uk/build-your-own-bed) in Chrome.
+2. Open **DevTools → Console**.
+3. Paste the contents of `scripts/extract-happybeds-layers.js` and press Enter.
+4. Wait for `happybeds-manifest.json` and PNG downloads (several minutes for all plugin combinations).
+5. Move downloads into a folder and run:
+
+```bash
+python3 scripts/import-happybeds-layers.py /path/to/downloads
+```
+
+6. The plugin auto-detects `demo-images/happybeds-layers/manifest.json` and uses those layers instead of generated demos.
+
+**Quick test (6 images only):** in the console run `wcbcHbExtractMode = "quick"` then paste the script again.
+
+> Only use Happy Beds assets for private testing unless you have a licence from Happy Beds.
+
 Bundled test assets live in:
 
 ```
