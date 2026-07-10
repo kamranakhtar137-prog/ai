@@ -65,13 +65,25 @@
   border-radius: 50%;
   border: 2px solid rgba(255, 255, 255, 0.9);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
-  background-repeat: no-repeat;
   background-color: rgba(0, 0, 0, 0.25);
   overflow: hidden;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.15s ease;
   z-index: 5;
+  transform: translateZ(0);
+}
+.zoom-container .zoom-lens__img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: none;
+  max-height: none;
+  width: auto;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 .zoom-container .zoom-lens.is-active {
   opacity: 1;
@@ -133,12 +145,24 @@
   border-radius: 50%;
   border: 2px solid rgba(255, 255, 255, 0.9);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
-  background-repeat: no-repeat;
   background-color: rgba(0, 0, 0, 0.4);
   overflow: hidden;
   opacity: 0;
   visibility: hidden;
   z-index: 1000001;
+  transform: translateZ(0);
+}
+.product-lightbox__lens-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: none;
+  max-height: none;
+  width: auto;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 .product-lightbox__lens.is-active {
   opacity: 1;
@@ -240,7 +264,9 @@
       <img class="product-lightbox__image" src="" alt="">
     </div>
   </div>
-  <div class="product-lightbox__lens" aria-hidden="true"></div>
+  <div class="product-lightbox__lens" aria-hidden="true">
+    <img class="product-lightbox__lens-img" src="" alt="" draggable="false">
+  </div>
   <div class="product-lightbox__hint"></div>
   <div class="product-lightbox__zoom-level" aria-live="polite"></div>
 </div>
@@ -265,6 +291,7 @@
     var content = lightbox.querySelector('.product-lightbox__content');
     var image = lightbox.querySelector('.product-lightbox__image');
     var lens = lightbox.querySelector('.product-lightbox__lens');
+    var lensImg = lightbox.querySelector('.product-lightbox__lens-img');
     var hint = lightbox.querySelector('.product-lightbox__hint');
     var zoomLevel = lightbox.querySelector('.product-lightbox__zoom-level');
     var closeBtn = lightbox.querySelector('.product-lightbox__close');
@@ -423,7 +450,7 @@
     }
 
     function updateLens(clientX, clientY) {
-      if (scale > 1.05 || !image.src) {
+      if (scale > 1.05 || !image.src || !image.complete) {
         lens.classList.remove('is-active');
         return;
       }
@@ -440,27 +467,24 @@
         return;
       }
 
-      var clampedX = Math.min(renderBox.width, Math.max(0, imageX));
-      var clampedY = Math.min(renderBox.height, Math.max(0, imageY));
       var magnifiedW = renderBox.width * lensRatio;
       var magnifiedH = renderBox.height * lensRatio;
-      var bgX = -(clampedX * lensRatio - lensRadius);
-      var bgY = -(clampedY * lensRatio - lensRadius);
-      var maxBgX = lensRadius;
-      var minBgX = lensRadius - magnifiedW;
-      var maxBgY = lensRadius;
-      var minBgY = lensRadius - magnifiedH;
-
-      bgX = Math.min(maxBgX, Math.max(minBgX, bgX));
-      bgY = Math.min(maxBgY, Math.max(minBgY, bgY));
+      var imgLeft = lensRadius - (imageX * lensRatio);
+      var imgTop = lensRadius - (imageY * lensRatio);
 
       lens.style.width = lensSize + 'px';
       lens.style.height = lensSize + 'px';
       lens.style.left = (clientX - lensRadius) + 'px';
       lens.style.top = (clientY - lensRadius) + 'px';
-      lens.style.backgroundImage = 'url("' + image.src + '")';
-      lens.style.backgroundSize = magnifiedW + 'px ' + magnifiedH + 'px';
-      lens.style.backgroundPosition = bgX + 'px ' + bgY + 'px';
+
+      if (lensImg.getAttribute('src') !== image.src) {
+        lensImg.src = image.src;
+      }
+
+      lensImg.style.width = magnifiedW + 'px';
+      lensImg.style.height = magnifiedH + 'px';
+      lensImg.style.left = imgLeft + 'px';
+      lensImg.style.top = imgTop + 'px';
       lens.classList.add('is-active');
     }
 
@@ -480,7 +504,7 @@
       };
 
       image.src = data.src;
-      lens.style.backgroundImage = 'url("' + data.src + '")';
+      lensImg.src = data.src;
 
       prevBtn.style.display = triggers.length > 1 ? '' : 'none';
       nextBtn.style.display = triggers.length > 1 ? '' : 'none';
@@ -774,8 +798,9 @@
 
       var image = container.querySelector('.product-gallery__image');
       var lens = container.querySelector('.zoom-lens');
+      var lensImg = container.querySelector('.zoom-lens__img');
 
-      if (!image || !lens) {
+      if (!image || !lens || !lensImg) {
         return;
       }
 
@@ -795,27 +820,25 @@
           return;
         }
 
-        var clampedX = Math.min(renderBox.width, Math.max(0, imageX));
-        var clampedY = Math.min(renderBox.height, Math.max(0, imageY));
         var magnifiedW = renderBox.width * zoomRatio;
         var magnifiedH = renderBox.height * zoomRatio;
-        var bgX = -(clampedX * zoomRatio - lensRadius);
-        var bgY = -(clampedY * zoomRatio - lensRadius);
-        var maxBgX = lensRadius;
-        var minBgX = lensRadius - magnifiedW;
-        var maxBgY = lensRadius;
-        var minBgY = lensRadius - magnifiedH;
-
-        bgX = Math.min(maxBgX, Math.max(minBgX, bgX));
-        bgY = Math.min(maxBgY, Math.max(minBgY, bgY));
+        var imgLeft = lensRadius - (imageX * zoomRatio);
+        var imgTop = lensRadius - (imageY * zoomRatio);
+        var zoomSrc = getZoomImageSrc(image);
 
         lens.style.width = lensSize + 'px';
         lens.style.height = lensSize + 'px';
         lens.style.left = (event.clientX - containerRect.left - lensRadius) + 'px';
         lens.style.top = (event.clientY - containerRect.top - lensRadius) + 'px';
-        lens.style.backgroundImage = 'url("' + getZoomImageSrc(image) + '")';
-        lens.style.backgroundSize = magnifiedW + 'px ' + magnifiedH + 'px';
-        lens.style.backgroundPosition = bgX + 'px ' + bgY + 'px';
+
+        if (lensImg.getAttribute('src') !== zoomSrc) {
+          lensImg.src = zoomSrc;
+        }
+
+        lensImg.style.width = magnifiedW + 'px';
+        lensImg.style.height = magnifiedH + 'px';
+        lensImg.style.left = imgLeft + 'px';
+        lensImg.style.top = imgTop + 'px';
         lens.classList.add('is-active');
       }
 
@@ -826,8 +849,10 @@
 
       if (!image.complete) {
         image.addEventListener('load', function() {
-          lens.style.backgroundImage = 'url("' + getZoomImageSrc(image) + '")';
+          lensImg.src = getZoomImageSrc(image);
         });
+      } else {
+        lensImg.src = getZoomImageSrc(image);
       }
     }
 
@@ -953,7 +978,9 @@
                     }}
                   {%- endif -%}
                   {% if gallery_hover_zoom %}
-                    <div class="zoom-lens" aria-hidden="true"></div>
+                    <div class="zoom-lens" aria-hidden="true">
+                      <img class="zoom-lens__img" src="" alt="" draggable="false">
+                    </div>
                   </div>
                   {% endif %}
                 {% else %}
