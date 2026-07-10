@@ -1,0 +1,1007 @@
+{% comment %}
+  @param product {Object}
+    The product object
+
+  @param gallery_thumbnails {Boolean}
+    If true, show product thumbnails
+
+  @param gallery_thumbnail_slider {Boolean}
+    If true, activate thumbnail slider
+
+  @param gallery_click_to_zoom {Boolean}
+    If true, enable product lightbox
+
+  @param gallery_hover_zoom {Boolean}
+    If true, magnify product images on hover
+
+  @param gallery_arrows {Boolean}
+    If true, display slideshow arrows
+
+  @param set_product_height {Boolean}
+    If true, set product media height
+
+  @param gallery_slideshow_transition {String}
+    Slideshow transition, which is either 'slide' or 'fade'
+
+  @param gallery_slideshow_speed {Number}
+    The slideshow speed, which is a range between '0' and '6'
+
+  @param gallery_thumbnail_position {String}
+    Thumbnail position, which is either 'below main image', 'left of main image', or 'right of main image'
+
+  @param video_looping {Boolean}
+    If true, loop videos
+{% endcomment %}
+
+{% assign featured_image = product.selected_or_first_available_variant.featured_image | default: product.featured_image %}
+{% capture list %}
+  {% for image in product.images %}
+    {% comment %}Loop through images only once{% endcomment %}
+    {{ image.id }}`~`{{ image.alt }}`~`{{ image | img_url: '100x' }}`~`{{ image | img_url: '200x' }}`~`{{ image | img_url: '400x' }}`~`{{ image | img_url: '600x' }}`~`{{ image | img_url: '800x' }}`~`{{ image | img_url: '1200x' }}`~`{{ image | img_url: '2000x' }}`~`{{-image.width-}}px`~`{{-image.height-}}px{{ image | product_img_url: '5000x' }}{% if forloop.last == false %}^{% endif %}
+  {% endfor %}
+{% endcapture %}
+{% assign image_list = list | split: "^" %}
+
+{% style %}
+.shopify-model-viewer-ui model-viewer {
+  --progress-bar-height: 2px;
+  --progress-bar-color: {{ settings.regular_color }};
+}
+
+/* Desktop gallery hover lens */
+.zoom-container {
+  display: block;
+  position: relative;
+}
+.zoom-container .zoom-lens {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200px;
+  height: 200px;
+  margin: 0;
+  pointer-events: none;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  background-repeat: no-repeat;
+  background-color: rgba(255, 255, 255, 0.05);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease;
+  z-index: 5;
+}
+.zoom-container .zoom-lens.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+@media (max-width: 798px) {
+  .zoom-container .zoom-lens {
+    display: none;
+  }
+}
+
+/* Custom lightbox */
+.product-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000000;
+  display: none;
+  background: rgba(0, 0, 0, 0.95);
+  touch-action: none;
+}
+.product-lightbox.is-open {
+  display: block;
+}
+.product-lightbox__stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.product-lightbox__content {
+  position: relative;
+  max-width: 100%;
+  max-height: 100%;
+  touch-action: none;
+}
+.product-lightbox__image {
+  display: block;
+  max-width: 100vw;
+  max-height: 100vh;
+  width: auto;
+  height: auto;
+  margin: 0 auto;
+  transform-origin: center center;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-drag: none;
+  touch-action: none;
+}
+.product-lightbox__lens {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200px;
+  height: 200px;
+  pointer-events: none;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  background-repeat: no-repeat;
+  background-color: rgba(255, 255, 255, 0.05);
+  opacity: 0;
+  visibility: hidden;
+  z-index: 3;
+}
+.product-lightbox__lens.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+.product-lightbox__close,
+.product-lightbox__prev,
+.product-lightbox__next {
+  position: fixed;
+  z-index: 4;
+  border: 0;
+  background: rgba(255, 255, 255, 0.92);
+  color: #111;
+  cursor: pointer;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.product-lightbox__close {
+  top: 16px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 28px;
+}
+.product-lightbox__prev,
+.product-lightbox__next {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  font-size: 32px;
+}
+.product-lightbox__prev {
+  left: 16px;
+}
+.product-lightbox__next {
+  right: 16px;
+}
+.product-lightbox__hint,
+.product-lightbox__zoom-level {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 4;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  max-width: calc(100vw - 32px);
+  white-space: nowrap;
+}
+.product-lightbox__hint.is-visible,
+.product-lightbox__zoom-level.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+@media (max-width: 768px) {
+  .product-lightbox__lens {
+    width: 160px;
+    height: 160px;
+    border-width: 3px;
+  }
+  .product-lightbox__prev,
+  .product-lightbox__next {
+    width: 40px;
+    height: 40px;
+    font-size: 26px;
+  }
+  .product-lightbox__hint,
+  .product-lightbox__zoom-level {
+    bottom: 16px;
+    font-size: 13px;
+    white-space: normal;
+    max-width: calc(100vw - 48px);
+  }
+}
+{% endstyle %}
+
+{% if gallery_click_to_zoom %}
+<div class="product-lightbox product-lightbox--{{ product.id }}" aria-hidden="true" role="dialog" aria-modal="true">
+  <button type="button" class="product-lightbox__close" aria-label="Close">&times;</button>
+  <button type="button" class="product-lightbox__prev" aria-label="Previous image">&#8249;</button>
+  <button type="button" class="product-lightbox__next" aria-label="Next image">&#8250;</button>
+  <div class="product-lightbox__stage">
+    <div class="product-lightbox__content">
+      <img class="product-lightbox__image" src="" alt="">
+      <div class="product-lightbox__lens" aria-hidden="true"></div>
+    </div>
+  </div>
+  <div class="product-lightbox__hint"></div>
+  <div class="product-lightbox__zoom-level" aria-live="polite"></div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var lightbox = document.querySelector('.product-lightbox--{{ product.id }}');
+
+    if (!lightbox) {
+      return;
+    }
+
+    var triggers = Array.prototype.slice.call(
+      document.querySelectorAll('.product-{{ product.id }}-gallery .product-lightbox-trigger')
+    );
+
+    if (!triggers.length) {
+      return;
+    }
+
+    var stage = lightbox.querySelector('.product-lightbox__stage');
+    var content = lightbox.querySelector('.product-lightbox__content');
+    var image = lightbox.querySelector('.product-lightbox__image');
+    var lens = lightbox.querySelector('.product-lightbox__lens');
+    var hint = lightbox.querySelector('.product-lightbox__hint');
+    var zoomLevel = lightbox.querySelector('.product-lightbox__zoom-level');
+    var closeBtn = lightbox.querySelector('.product-lightbox__close');
+    var prevBtn = lightbox.querySelector('.product-lightbox__prev');
+    var nextBtn = lightbox.querySelector('.product-lightbox__next');
+
+    var isTouch = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+    var currentIndex = 0;
+    var scale = 1;
+    var translateX = 0;
+    var translateY = 0;
+    var lensSize = isTouch ? 160 : 200;
+    var lensRadius = lensSize / 2;
+    var lensRatio = isTouch ? 3 : 2.5;
+    var tapLevels = isTouch ? [1, 10, 20, 35, 50] : [1, 2, 4, 8, 10];
+    var hintTimer;
+    var moveThreshold = 6;
+
+    var touchState = {
+      mode: null,
+      startX: 0,
+      startY: 0,
+      lastX: 0,
+      lastY: 0,
+      startDistance: 0,
+      startScale: 1,
+      startTranslateX: 0,
+      startTranslateY: 0,
+      moved: false
+    };
+
+    function getTriggerData(index) {
+      var trigger = triggers[index];
+      return {
+        src: trigger.getAttribute('data-zoom-src') || trigger.getAttribute('href'),
+        alt: trigger.getAttribute('data-zoom-alt') || ''
+      };
+    }
+
+    function formatZoom(value) {
+      return (Math.round(value * 10) / 10) + '×';
+    }
+
+    function showHint(text, persistent) {
+      hint.textContent = text;
+      hint.classList.add('is-visible');
+      clearTimeout(hintTimer);
+
+      if (!persistent) {
+        hintTimer = setTimeout(function() {
+          hint.classList.remove('is-visible');
+        }, 3500);
+      }
+    }
+
+    function hideHint() {
+      clearTimeout(hintTimer);
+      hint.classList.remove('is-visible');
+    }
+
+    function updateZoomLabel() {
+      if (scale <= 1.05) {
+        zoomLevel.classList.remove('is-visible');
+        zoomLevel.textContent = '';
+        if (isTouch) {
+          showHint('Slide finger to magnify · Tap to zoom · Pinch to zoom', true);
+        }
+        return;
+      }
+
+      hideHint();
+      zoomLevel.textContent = 'Zoom: ' + formatZoom(scale);
+      zoomLevel.classList.add('is-visible');
+    }
+
+    function getRenderedImageBox(img) {
+      var rect = img.getBoundingClientRect();
+      var nw = img.naturalWidth;
+      var nh = img.naturalHeight;
+
+      if (!nw || !nh) {
+        return { offsetX: 0, offsetY: 0, width: rect.width, height: rect.height };
+      }
+
+      var imageRatio = nw / nh;
+      var boxRatio = rect.width / rect.height;
+      var renderWidth;
+      var renderHeight;
+      var offsetX = 0;
+      var offsetY = 0;
+
+      if (imageRatio > boxRatio) {
+        renderWidth = rect.width;
+        renderHeight = rect.width / imageRatio;
+        offsetY = (rect.height - renderHeight) / 2;
+      } else {
+        renderHeight = rect.height;
+        renderWidth = rect.height * imageRatio;
+        offsetX = (rect.width - renderWidth) / 2;
+      }
+
+      return { offsetX: offsetX, offsetY: offsetY, width: renderWidth, height: renderHeight };
+    }
+
+    function clampTranslate() {
+      var rect = image.getBoundingClientRect();
+      var stageRect = stage.getBoundingClientRect();
+      var maxX = Math.max(0, (rect.width - stageRect.width) / 2);
+      var maxY = Math.max(0, (rect.height - stageRect.height) / 2);
+
+      translateX = Math.min(maxX, Math.max(-maxX, translateX));
+      translateY = Math.min(maxY, Math.max(-maxY, translateY));
+    }
+
+    function applyTransform() {
+      clampTranslate();
+      image.style.transform = 'translate(' + translateX + 'px, ' + translateY + 'px) scale(' + scale + ')';
+      updateZoomLabel();
+
+      if (scale > 1.05) {
+        hideLens();
+      }
+    }
+
+    function resetTransform() {
+      scale = 1;
+      translateX = 0;
+      translateY = 0;
+      applyTransform();
+    }
+
+    function getNextTapLevel(current) {
+      for (var i = 0; i < tapLevels.length - 1; i++) {
+        if (current < tapLevels[i + 1] - 0.2) {
+          return tapLevels[i + 1];
+        }
+      }
+      return 1;
+    }
+
+    function zoomAtPoint(nextScale, clientX, clientY) {
+      if (nextScale <= 1.05) {
+        resetTransform();
+        return;
+      }
+
+      var rect = image.getBoundingClientRect();
+      var offsetX = clientX - (rect.left + rect.width / 2);
+      var offsetY = clientY - (rect.top + rect.height / 2);
+      var factor = 1 - nextScale / (scale || 1);
+
+      scale = nextScale;
+      translateX += offsetX * factor;
+      translateY += offsetY * factor;
+      applyTransform();
+    }
+
+    function updateLens(clientX, clientY) {
+      if (scale > 1.05 || !image.src) {
+        lens.classList.remove('is-active');
+        return;
+      }
+
+      var imageRect = image.getBoundingClientRect();
+      var contentRect = content.getBoundingClientRect();
+      var renderBox = getRenderedImageBox(image);
+      var pointerX = clientX - imageRect.left;
+      var pointerY = clientY - imageRect.top;
+      var imageX = pointerX - renderBox.offsetX;
+      var imageY = pointerY - renderBox.offsetY;
+
+      if (imageX < 0 || imageY < 0 || imageX > renderBox.width || imageY > renderBox.height) {
+        lens.classList.remove('is-active');
+        return;
+      }
+
+      lens.style.width = lensSize + 'px';
+      lens.style.height = lensSize + 'px';
+      lens.style.left = (clientX - contentRect.left - lensRadius) + 'px';
+      lens.style.top = (clientY - contentRect.top - lensRadius) + 'px';
+      lens.style.backgroundImage = 'url("' + image.src + '")';
+      lens.style.backgroundSize = (renderBox.width * lensRatio) + 'px ' + (renderBox.height * lensRatio) + 'px';
+      lens.style.backgroundPosition =
+        (-(imageX * lensRatio - lensRadius)) + 'px ' +
+        (-(imageY * lensRatio - lensRadius)) + 'px';
+      lens.classList.add('is-active');
+    }
+
+    function hideLens() {
+      lens.classList.remove('is-active');
+    }
+
+    function loadImage(index) {
+      currentIndex = index;
+      var data = getTriggerData(index);
+      resetTransform();
+      image.alt = data.alt;
+      hideLens();
+
+      image.onload = function() {
+        updateZoomLabel();
+      };
+
+      image.src = data.src;
+      lens.style.backgroundImage = 'url("' + data.src + '")';
+
+      prevBtn.style.display = triggers.length > 1 ? '' : 'none';
+      nextBtn.style.display = triggers.length > 1 ? '' : 'none';
+    }
+
+    function openLightbox(index) {
+      loadImage(index);
+      lightbox.classList.add('is-open');
+      lightbox.setAttribute('aria-hidden', 'false');
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+
+      if (isTouch) {
+        showHint('Slide finger to magnify · Tap to zoom · Pinch to zoom', true);
+      } else {
+        showHint('Move mouse to magnify · Click to zoom · Scroll to zoom', false);
+      }
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove('is-open');
+      lightbox.setAttribute('aria-hidden', 'true');
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      image.src = '';
+      hideLens();
+      hideHint();
+      zoomLevel.classList.remove('is-visible');
+      resetTransform();
+    }
+
+    function showPrev() {
+      var nextIndex = currentIndex - 1;
+      if (nextIndex < 0) {
+        nextIndex = triggers.length - 1;
+      }
+      loadImage(nextIndex);
+    }
+
+    function showNext() {
+      var nextIndex = currentIndex + 1;
+      if (nextIndex >= triggers.length) {
+        nextIndex = 0;
+      }
+      loadImage(nextIndex);
+    }
+
+    function getTouchDistance(touches) {
+      var dx = touches[0].clientX - touches[1].clientX;
+      var dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function onTouchStart(event) {
+      if (event.touches.length === 2) {
+        touchState.mode = 'pinch';
+        touchState.startDistance = getTouchDistance(event.touches);
+        touchState.startScale = scale;
+        touchState.startTranslateX = translateX;
+        touchState.startTranslateY = translateY;
+        touchState.moved = true;
+        hideLens();
+        event.preventDefault();
+        return;
+      }
+
+      if (event.touches.length === 1) {
+        touchState.startX = event.touches[0].clientX;
+        touchState.startY = event.touches[0].clientY;
+        touchState.lastX = translateX;
+        touchState.lastY = translateY;
+        touchState.moved = false;
+
+        if (scale > 1.05) {
+          touchState.mode = 'pan';
+        } else {
+          touchState.mode = 'lens';
+          updateLens(event.touches[0].clientX, event.touches[0].clientY);
+        }
+      }
+    }
+
+    function onTouchMove(event) {
+      if (touchState.mode === 'pinch' && event.touches.length === 2) {
+        var distance = getTouchDistance(event.touches);
+        var nextScale = touchState.startScale * (distance / touchState.startDistance);
+        var midX = (event.touches[0].clientX + event.touches[1].clientX) / 2;
+        var midY = (event.touches[0].clientY + event.touches[1].clientY) / 2;
+        var clampedScale = Math.min(50, Math.max(1, nextScale));
+
+        if (clampedScale <= 1.05) {
+          resetTransform();
+        } else {
+          var previousScale = scale;
+          scale = clampedScale;
+
+          if (previousScale <= 1.05) {
+            var rect = image.getBoundingClientRect();
+            var offsetX = midX - (rect.left + rect.width / 2);
+            var offsetY = midY - (rect.top + rect.height / 2);
+            translateX = offsetX * (1 - clampedScale);
+            translateY = offsetY * (1 - clampedScale);
+          } else {
+            var factor = 1 - clampedScale / previousScale;
+            var imageRect = image.getBoundingClientRect();
+            var pinchOffsetX = midX - (imageRect.left + imageRect.width / 2);
+            var pinchOffsetY = midY - (imageRect.top + imageRect.height / 2);
+            translateX += pinchOffsetX * factor;
+            translateY += pinchOffsetY * factor;
+          }
+
+          applyTransform();
+        }
+
+        touchState.moved = true;
+        event.preventDefault();
+        return;
+      }
+
+      if (event.touches.length !== 1) {
+        return;
+      }
+
+      var touch = event.touches[0];
+      var dx = touch.clientX - touchState.startX;
+      var dy = touch.clientY - touchState.startY;
+
+      if (Math.abs(dx) > moveThreshold || Math.abs(dy) > moveThreshold) {
+        touchState.moved = true;
+      }
+
+      if (touchState.mode === 'lens' && scale <= 1.05) {
+        updateLens(touch.clientX, touch.clientY);
+        event.preventDefault();
+        return;
+      }
+
+      if (touchState.mode === 'pan' && scale > 1.05) {
+        translateX = touchState.lastX + dx;
+        translateY = touchState.lastY + dy;
+        applyTransform();
+        event.preventDefault();
+      }
+    }
+
+    function onTouchEnd(event) {
+      if (touchState.mode === 'lens' && !touchState.moved && event.changedTouches.length) {
+        var touch = event.changedTouches[0];
+        var nextScale = getNextTapLevel(scale);
+        zoomAtPoint(nextScale, touch.clientX, touch.clientY);
+      } else if (touchState.mode === 'pan' && !touchState.moved && event.changedTouches.length) {
+        var tapTouch = event.changedTouches[0];
+        var tapScale = getNextTapLevel(scale);
+        zoomAtPoint(tapScale, tapTouch.clientX, tapTouch.clientY);
+      }
+
+      if (event.touches.length === 0) {
+        touchState.mode = null;
+        if (scale <= 1.05) {
+          hideLens();
+        }
+      }
+    }
+
+    triggers.forEach(function(trigger, index) {
+      trigger.addEventListener('click', function(event) {
+        event.preventDefault();
+        openLightbox(index);
+      });
+    });
+
+    closeBtn.addEventListener('click', closeLightbox);
+    prevBtn.addEventListener('click', showPrev);
+    nextBtn.addEventListener('click', showNext);
+
+    content.addEventListener('mousemove', function(event) {
+      if (isTouch) {
+        return;
+      }
+      updateLens(event.clientX, event.clientY);
+    });
+    content.addEventListener('mouseleave', hideLens);
+
+    content.addEventListener('click', function(event) {
+      if (isTouch) {
+        return;
+      }
+
+      var nextScale = getNextTapLevel(scale);
+      zoomAtPoint(nextScale, event.clientX, event.clientY);
+    });
+
+    content.addEventListener('wheel', function(event) {
+      if (isTouch) {
+        return;
+      }
+
+      event.preventDefault();
+      var delta = event.deltaY < 0 ? 0.35 : -0.35;
+      var nextScale = Math.min(10, Math.max(1, scale + delta));
+
+      if (nextScale <= 1.05) {
+        resetTransform();
+        return;
+      }
+
+      zoomAtPoint(nextScale, event.clientX, event.clientY);
+    }, { passive: false });
+
+    content.addEventListener('touchstart', onTouchStart, { passive: false });
+    content.addEventListener('touchmove', onTouchMove, { passive: false });
+    content.addEventListener('touchend', onTouchEnd);
+    content.addEventListener('touchcancel', onTouchEnd);
+
+    stage.addEventListener('click', function(event) {
+      if (event.target === stage) {
+        closeLightbox();
+      }
+    });
+
+    document.addEventListener('keydown', function(event) {
+      if (!lightbox.classList.contains('is-open')) {
+        return;
+      }
+
+      if (event.key === 'Escape') {
+        closeLightbox();
+      } else if (event.key === 'ArrowLeft') {
+        showPrev();
+      } else if (event.key === 'ArrowRight') {
+        showNext();
+      }
+    });
+  });
+</script>
+{% endif %}
+
+{% if gallery_hover_zoom %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+      return;
+    }
+
+    var lensSize = 200;
+    var lensRadius = lensSize / 2;
+    var zoomRatio = 2.5;
+    var gallery = document.querySelector('.product-{{ product.id }}-gallery');
+
+    if (!gallery) {
+      return;
+    }
+
+    function getRenderedImageBox(image) {
+      var rect = image.getBoundingClientRect();
+      var naturalWidth = image.naturalWidth;
+      var naturalHeight = image.naturalHeight;
+
+      if (!naturalWidth || !naturalHeight) {
+        return { offsetX: 0, offsetY: 0, width: rect.width, height: rect.height };
+      }
+
+      var imageRatio = naturalWidth / naturalHeight;
+      var boxRatio = rect.width / rect.height;
+      var renderWidth;
+      var renderHeight;
+      var offsetX = 0;
+      var offsetY = 0;
+
+      if (imageRatio > boxRatio) {
+        renderWidth = rect.width;
+        renderHeight = rect.width / imageRatio;
+        offsetY = (rect.height - renderHeight) / 2;
+      } else {
+        renderHeight = rect.height;
+        renderWidth = rect.height * imageRatio;
+        offsetX = (rect.width - renderWidth) / 2;
+      }
+
+      return { offsetX: offsetX, offsetY: offsetY, width: renderWidth, height: renderHeight };
+    }
+
+    function getZoomImageSrc(image) {
+      return image.getAttribute('data-zoom-src') || image.currentSrc || image.src;
+    }
+
+    function initHoverLens(container) {
+      if (container.getAttribute('data-hover-zoom-ready') === 'true') {
+        return;
+      }
+
+      var image = container.querySelector('.product-gallery__image');
+      var lens = container.querySelector('.zoom-lens');
+
+      if (!image || !lens) {
+        return;
+      }
+
+      container.setAttribute('data-hover-zoom-ready', 'true');
+
+      function moveLens(event) {
+        var imageRect = image.getBoundingClientRect();
+        var containerRect = container.getBoundingClientRect();
+        var renderBox = getRenderedImageBox(image);
+        var pointerX = event.clientX - imageRect.left;
+        var pointerY = event.clientY - imageRect.top;
+        var imageX = pointerX - renderBox.offsetX;
+        var imageY = pointerY - renderBox.offsetY;
+
+        if (imageX < 0 || imageY < 0 || imageX > renderBox.width || imageY > renderBox.height) {
+          lens.classList.remove('is-active');
+          return;
+        }
+
+        lens.style.width = lensSize + 'px';
+        lens.style.height = lensSize + 'px';
+        lens.style.left = (event.clientX - containerRect.left - lensRadius) + 'px';
+        lens.style.top = (event.clientY - containerRect.top - lensRadius) + 'px';
+        lens.style.backgroundImage = 'url("' + getZoomImageSrc(image) + '")';
+        lens.style.backgroundSize = (renderBox.width * zoomRatio) + 'px ' + (renderBox.height * zoomRatio) + 'px';
+        lens.style.backgroundPosition =
+          (-(imageX * zoomRatio - lensRadius)) + 'px ' +
+          (-(imageY * zoomRatio - lensRadius)) + 'px';
+        lens.classList.add('is-active');
+      }
+
+      container.addEventListener('mouseleave', function() {
+        lens.classList.remove('is-active');
+      });
+      container.addEventListener('mousemove', moveLens);
+
+      if (!image.complete) {
+        image.addEventListener('load', function() {
+          lens.style.backgroundImage = 'url("' + getZoomImageSrc(image) + '")';
+        });
+      }
+    }
+
+    gallery.querySelectorAll('.zoom-container').forEach(initHoverLens);
+  });
+</script>
+{% endif %}
+
+<div class="gallery-wrap
+            gallery-arrows--{{ gallery_arrows }}
+            {% if set_product_height != blank %}product-height-set{% endif %}
+            gallery-thumbnails--{{ gallery_thumbnail_position }}">
+  <div class="product_gallery
+              js-product-gallery product-{{ product.id }}-gallery
+              transparentBackground--{{ settings.slideshow_button_style }}
+              slideshow-transition--{{ gallery_slideshow_transition }}
+              popup-enabled--{{ gallery_click_to_zoom }}
+              show-gallery-arrows--{{ gallery_arrows }}
+              {% if product.media.size > 1 %} multi-image {% else %} single-image {% endif %}"
+              data-thumbnails-enabled="{{ gallery_thumbnails }}"
+              data-gallery-arrows-enabled="{{ gallery_arrows }}"
+              data-slideshow-speed="{{ gallery_slideshow_speed }}"
+              data-thumbnails-position="{{ gallery_thumbnail_position }}"
+              data-thumbnails-slider-enabled="{{ gallery_thumbnail_slider }}"
+              data-zoom="{{ gallery_hover_zoom }}"
+              data-video-loop="{{ video_looping }}"
+              data-product-id="{{ product.id }}"
+              data-product-lightbox="{{ gallery_click_to_zoom }}"
+              data-media-count="{{ product.media.size }}"
+              data-product-gallery>
+
+    {% for media in product.media %}
+      <div class="gallery-cell" data-product-id="{{ product.id }}" data-media-type="{% if media.alt contains 'youtube' or media.alt contains 'vimeo' %}external_video{% else %}{{ media.media_type }}{% endif %}" data-thumb="{{ image_large }}" data-title="{% if image_alt contains 'youtube' or image_alt contains 'vimeo' %}{{ product.title | escape }}{% else %}{{ image_alt | escape }}{% endif %}">
+        {% case media.media_type %}
+          {% when 'image' %}
+
+            {% capture image_id %}{{ media.id }}{% endcapture %}
+            {% capture image_alt %}{{ media.alt | escape }}{% endcapture %}
+            {% capture image_100x %}{{ media | img_url: '100x' }}{% endcapture %}
+            {% capture image_200x %}{{ media | img_url: '200x' }}{% endcapture %}
+            {% capture image_400x %}{{ media | img_url: '400x' }}{% endcapture %}
+            {% capture image_600x %}{{ media | img_url: '600x' }}{% endcapture %}
+            {% capture image_800x %}{{ media | img_url: '800x' }}{% endcapture %}
+            {% capture image_1200x %}{{ media | img_url: '1200x' }}{% endcapture %}
+            {% capture image_2000x %}{{ media | img_url: '2000x' }}{% endcapture %}
+            {% capture image_2048x %}{{ media | image_url: width: 2048 }}{% endcapture %}
+            {% capture image_zoom %}{{ media | product_img_url: 'master' }}{% endcapture %}
+
+            {% if image_alt contains 'youtube' or image_alt contains 'vimeo' %}
+
+              {% assign alt_text = image_alt | split: ' ' %}
+                {% for property in alt_text %}
+                  {% if property contains "src" %}
+                    {% assign cleanURL =  property | remove: 'src=' | remove: '&quot;' | remove: '"' %}
+                    <div class="product-gallery__video" data-youtube-video>
+                      <iframe src="{{ cleanURL }}" frameborder="0"></iframe>
+                    </div>
+                  {% endif %}
+                {% endfor %}
+
+            {% else %}
+
+              {% if gallery_click_to_zoom and product.images.size > 0 %}
+                <a href="{{ image_zoom }}"
+                   class="product-lightbox-trigger"
+                   data-zoom-src="{{ image_zoom }}"
+                   data-zoom-alt="{{ image_alt }}"
+                   tabindex="-1">
+              {% endif %}
+              <div class="image__container" style="max-width: {{ media.width }}px">
+                {% if product.images.size > 0 %}
+                  {%- liquid
+                    assign lazyload = true
+                    if forloop.first
+                      assign lazyload = false
+                    endif
+                  -%}
+                  {%- capture srcset -%}
+                    {{ media | img_url: '2000x' }} 2000w,
+                    {{ media | img_url: '1200x' }} 1200w,
+                    {{ media | img_url: '800x' }} 800w,
+                    {{ media | img_url: '600x' }} 600w,
+                    {{ media | img_url: '400x' }} 400w,
+                    {{ media | img_url: '200x' }} 200w
+                  {%- endcapture -%}
+                  {% if gallery_hover_zoom %}
+                  <div class="zoom-container">
+                  {% endif %}
+                  {%- if lazyload -%}
+                    <img loading="lazy"
+                      data-zoom-src="{{ image_zoom }}"
+                      alt="{{ image_alt }}"
+                      class="
+                        product-gallery__image
+                        lazyload
+                        {{ settings.image_loading_style }}
+                      "
+                      data-image-id="{{ product.media[forloop.index0].id }}"
+                      data-index="{{ forloop.index0 }}"
+                      data-sizes="auto"
+                      data-aspectratio="{{ media.width }}/{{ media.height }}"
+                      data-src="{{ media | img_url: '1200x' }}"
+                      data-srcset="{{ srcset }}"
+                      height="{{ media.height }}"
+                      width="{{ media.width }}"
+                      srcset="data:image/svg+xml;utf8,<svg%20xmlns='http://www.w3.org/2000/svg'%20width='{{ media.width }}'%20height='{{ media.height }}'></svg>"
+                    />
+                  {%- else -%}
+                    {{
+                      media
+                      | image_url: width: 1000
+                      | image_tag:
+                        loading: 'eager',
+                        fetchpriority: 'high',
+                        class: 'product-gallery__image',
+                        alt: image_alt,
+                        width: media.width,
+                        height: media.height,
+                        srcset: srcset,
+                        data-image-id: product.media[forloop.index0].id,
+                        data-index: forloop.index0,
+                        data-zoom-src: image_zoom
+                    }}
+                  {%- endif -%}
+                  {% if gallery_hover_zoom %}
+                    <div class="zoom-lens" aria-hidden="true"></div>
+                  </div>
+                  {% endif %}
+                {% else %}
+                  <img loading="lazy" width="{{ image.width | default: 800 }}" height="{{ image.height | default: 1200 }}" src="{{ image | img_url: '1200x' }}" alt="{{ image.alt | default: product.title | escape }}" />
+                {% endif %}
+              </div>
+              {% if gallery_click_to_zoom and product.images.size > 0 %}
+                </a>
+              {% endif %}
+            {% endif %}
+          {% when 'external_video' %}
+            <div class="product-gallery__video" data-youtube-video>
+              {{ media | external_video_tag }}
+            </div>
+          {% when 'video' %}
+            <div class="product-gallery__video" data-html5-video>
+              {{ media | video_tag: controls: true }}
+            </div>
+          {% when 'model' %}
+            <div class="product-gallery__model">
+              {{ media | model_viewer_tag: reveal: 'interaction', toggleable: true,  image_size: '800x800' }}
+
+              <button class="view-in-your-space" data-shopify-xr data-shopify-model3d-id="{% if media.media_type == 'model' %}{{ media.id }}{% else %}{{ has_model.id }}{% endif %}" data-shopify-title={{ product.title | escape }} style="display: none;">
+                <svg width="33" height="33" viewBox="0 0 33 33" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M16 9L22.0622 12.5V19.5L16 23L9.93782 19.5V12.5L16 9Z" stroke="#3A3A3A" stroke-width="1.5"/>
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M16 23V15.6024C16.6225 15.2002 16.6225 15.2002 16.6225 15.2002L22 12V19.4082L16 23Z" fill="#3A3A3A"/>
+                </svg>
+                {{ 'products.product.view_in_your_space' | t | capitalize }}
+              </button>
+            </div>
+          {% else %}
+            {{ media | media_tag }}
+        {% endcase %}
+      </div>
+    {% endfor %}
+
+  </div>
+
+  {% if gallery_thumbnails == true %}
+    {% if image_width != 'full' %}
+      <div class="
+            product_gallery_nav
+            {% unless gallery_thumbnail_slider %}
+              product_gallery_nav--slider-enabled
+            {% endunless %}
+            product-gallery__thumbnails
+            product_gallery_nav--{{ thumbnail_position }}
+            product-{{ product.id }}-gallery-nav
+          "
+        >
+      {% if product.media.size > 1 %}
+        {% for media in product.media %}
+          {% if media.media_type contains 'video' %}
+            {% assign thumbnail_badge = 'video-thumbnail' %}
+          {% elsif media.media_type contains 'model' %}
+            {% assign thumbnail_badge = '3d-thumbnail' %}
+          {% else %}
+            {% assign thumbnail_badge = '' %}
+          {% endif %}
+
+          <div tabindex="0" class="gallery-cell product-gallery__thumbnail" data-title="{{ media.alt | escape }}">
+            {%
+              render 'image-element',
+              image: media,
+              alt: media.alt,
+            %}
+            {% if thumbnail_badge == 'video-thumbnail' %}
+              <svg class="media-badge" width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M1 25H25V1H1V25Z" fill="white"/><path class="media-badge__outline" d="M0.5 25V25.5H1H25H25.5V25V1V0.5H25H1H0.5V1V25Z" stroke="black" stroke-opacity="0.05"/><path fill-rule="evenodd" clip-rule="evenodd" d="M8.19995 5.8V20.2L19.3999 12.5858L8.19995 5.8Z" fill="#3A3A3A" fill-opacity="0.6"/></svg>
+            {% elsif thumbnail_badge == '3d-thumbnail' %}
+              <svg class="media-badge" width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M1 25H25V1H1V25Z" fill="white"/><path class="media-badge__outline" d="M0.5 25V25.5H1H25H25.5V25V1V0.5H25H1H0.5V1V25Z" stroke="black" stroke-opacity="0.05"/><g opacity="0.6"><path fill-rule="evenodd" clip-rule="evenodd" d="M13 6L19.0622 9.5V16.5L13 20L6.93782 16.5V9.5L13 6Z" stroke="#3A3A3A" stroke-width="1.5"/><path fill-rule="evenodd" clip-rule="evenodd" d="M13 20V12.6024C13.6225 12.2002 13.6225 12.2002 13.6225 12.2002L19 9V16.4082L13 20Z" fill="#3A3A3A"/></g></svg>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% endif %}
+      </div>
+    {% endif %}
+  {% endif %}
+</div>
