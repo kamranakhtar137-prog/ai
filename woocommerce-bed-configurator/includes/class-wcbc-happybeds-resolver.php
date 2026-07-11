@@ -88,7 +88,8 @@ class WCBC_HappyBeds_Resolver {
 	 * @return string
 	 */
 	public static function depth_code( $depth ) {
-		return str_replace( '-inch', 'i', sanitize_title( $depth ) );
+		$depth = self::slug( $depth );
+		return str_replace( '-inch', 'i', $depth );
 	}
 
 	/**
@@ -98,7 +99,7 @@ class WCBC_HappyBeds_Resolver {
 	 * @return string
 	 */
 	public static function size_code( $size ) {
-		$size = sanitize_title( $size );
+		$size = self::slug( $size );
 		return isset( self::$size_codes[ $size ] ) ? self::$size_codes[ $size ] : '4ft6';
 	}
 
@@ -109,7 +110,7 @@ class WCBC_HappyBeds_Resolver {
 	 * @return array{fabric:string,code:string,drawer:string}
 	 */
 	public static function colour_meta( $colour ) {
-		$colour = sanitize_title( $colour );
+		$colour = self::slug( $colour );
 		if ( isset( self::$colour_meta[ $colour ] ) ) {
 			return self::$colour_meta[ $colour ];
 		}
@@ -202,18 +203,27 @@ class WCBC_HappyBeds_Resolver {
 	 * @return array<string,string>
 	 */
 	public static function build_layers( $selections, $defaults = array() ) {
-		$pick = static function ( $key ) use ( $selections, $defaults ) {
-			if ( ! empty( $selections[ $key ] ) ) {
-				return sanitize_title( $selections[ $key ] );
-			}
-			return ! empty( $defaults[ $key ] ) ? sanitize_title( $defaults[ $key ] ) : '';
-		};
+		$size       = self::pick_selection( $selections, $defaults, 'size' );
+		$colour     = self::pick_selection( $selections, $defaults, 'colour' );
+		$headboard  = self::pick_selection( $selections, $defaults, 'headboard' );
+		$base_depth = self::pick_selection( $selections, $defaults, 'base_depth' );
+		$storage    = self::pick_selection( $selections, $defaults, 'storage' );
 
-		$size       = $pick( 'size' ) ?: 'small-double';
-		$colour     = $pick( 'colour' ) ?: 'beige-velvet';
-		$headboard  = $pick( 'headboard' ) ?: 'cornell-lined';
-		$base_depth = $pick( 'base_depth' ) ?: '14-inch';
-		$storage    = $pick( 'storage' ) ?: 'no-drawers';
+		if ( ! $size ) {
+			$size = 'double';
+		}
+		if ( ! $colour ) {
+			$colour = 'beige-velvet';
+		}
+		if ( ! $headboard ) {
+			$headboard = 'cornell-lined';
+		}
+		if ( ! $base_depth ) {
+			$base_depth = '14-inch';
+		}
+		if ( ! $storage ) {
+			$storage = 'no-drawers';
+		}
 
 		$size_code  = self::size_code( $size );
 		$depth_code = self::depth_code( $base_depth );
@@ -261,6 +271,36 @@ class WCBC_HappyBeds_Resolver {
 		}
 
 		return $layers;
+	}
+
+	/**
+	 * Pick a selection value with fallback to defaults.
+	 *
+	 * @param array<string,string> $selections Selections.
+	 * @param array<string,string> $defaults Defaults.
+	 * @param string               $key Key.
+	 * @return string
+	 */
+	private static function pick_selection( $selections, $defaults, $key ) {
+		if ( ! empty( $selections[ $key ] ) ) {
+			return self::slug( $selections[ $key ] );
+		}
+		if ( ! empty( $defaults[ $key ] ) ) {
+			return self::slug( $defaults[ $key ] );
+		}
+		return '';
+	}
+
+	/**
+	 * Normalize option slug without requiring WordPress helpers.
+	 *
+	 * @param string $value Raw value.
+	 * @return string
+	 */
+	private static function slug( $value ) {
+		$value = strtolower( (string) $value );
+		$value = preg_replace( '/[^a-z0-9\-]+/', '-', $value );
+		return trim( $value, '-' );
 	}
 
 	/**

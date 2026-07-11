@@ -3,7 +3,7 @@
  * Plugin Name: WooCommerce Bed Configurator
  * Plugin URI: https://github.com/example/woocommerce-bed-configurator
  * Description: Build-your-own-bed product configurator for WooCommerce with layered preview images, accordion options, and dynamic pricing.
- * Version: 1.0.9
+ * Version: 1.0.10
  * Author: Cursor
  * Author URI: https://cursor.com
  * Text Domain: wc-bed-configurator
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'WCBC_VERSION', '1.0.9' );
+define( 'WCBC_VERSION', '1.0.10' );
 define( 'WCBC_PLUGIN_FILE', __FILE__ );
 define( 'WCBC_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WCBC_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -61,7 +61,7 @@ function wcbc_init() {
 add_action( 'plugins_loaded', 'wcbc_init', 20 );
 
 /**
- * Activation hook.
+ * Activation hook — defer demo product setup until WooCommerce is fully loaded.
  */
 function wcbc_activate() {
 	if ( ! class_exists( 'WooCommerce' ) ) {
@@ -72,13 +72,30 @@ function wcbc_activate() {
 			array( 'back_link' => true )
 		);
 	}
-	require_once WCBC_PLUGIN_DIR . 'includes/class-wcbc-config.php';
-	require_once WCBC_PLUGIN_DIR . 'includes/class-wcbc-happybeds-resolver.php';
-	require_once WCBC_PLUGIN_DIR . 'includes/class-wcbc-demo.php';
-	WCBC_Demo::create_demo_product();
+
+	update_option( 'wcbc_pending_demo_setup', '1', false );
 	flush_rewrite_rules();
 }
 register_activation_hook( __FILE__, 'wcbc_activate' );
+
+/**
+ * Create demo product after WooCommerce has booted.
+ */
+function wcbc_run_pending_setup() {
+	if ( '1' !== get_option( 'wcbc_pending_demo_setup' ) ) {
+		return;
+	}
+
+	if ( ! function_exists( 'wc_get_product_id_by_sku' ) || ! class_exists( 'WC_Product_Simple' ) ) {
+		return;
+	}
+
+	require_once WCBC_PLUGIN_DIR . 'includes/class-wcbc-demo.php';
+	WCBC_Demo::create_demo_product();
+	delete_option( 'wcbc_pending_demo_setup' );
+}
+add_action( 'woocommerce_init', 'wcbc_run_pending_setup', 5 );
+add_action( 'admin_init', 'wcbc_run_pending_setup', 20 );
 
 /**
  * Deactivation hook.

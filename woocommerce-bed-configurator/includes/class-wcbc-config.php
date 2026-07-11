@@ -46,11 +46,9 @@ class WCBC_Config {
 			'storage'    => '2-drawers',
 		);
 
-		$hb_layers = WCBC_HappyBeds_Resolver::build_layers( $selection_defaults, $selection_defaults );
-
 		return array(
 			'base_price' => 299.99,
-			'layers'     => $hb_layers,
+			'layers'     => array(),
 			'groups'     => array(
 				array(
 					'id'       => 'size',
@@ -180,7 +178,7 @@ class WCBC_Config {
 			$config = self::get_default_config();
 		}
 		$defaults = self::get_default_config();
-		$config['layers']     = ! empty( $config['layers'] ) ? $config['layers'] : $defaults['layers'];
+		$config['layers']     = WCBC_Layer_Builder::build( $config, isset( $config['defaults'] ) ? $config['defaults'] : $defaults['defaults'] );
 		$config['defaults']   = ! empty( $config['defaults'] ) ? $config['defaults'] : $defaults['defaults'];
 		$config['base_price'] = isset( $config['base_price'] ) ? (float) $config['base_price'] : $defaults['base_price'];
 		return $config;
