@@ -76,6 +76,32 @@ class WCBC_Admin {
 					<span class="description"><?php esc_html_e( 'Edit groups, options, images, and default selections. Invalid JSON is ignored on save.', 'wc-bed-configurator' ); ?></span>
 				</p>
 				<p class="form-field">
+					<strong><?php esc_html_e( 'Happy Beds real images', 'wc-bed-configurator' ); ?></strong><br />
+					<?php esc_html_e( 'Happy Beds blocks hotlinked images on localhost. Import real layer files once using the browser script in scripts/import-happybeds-to-wp.js', 'wc-bed-configurator' ); ?>
+					<br /><br />
+					<code style="display:block;padding:8px;background:#f6f7f7;">
+						wcbcWpSite = '<?php echo esc_js( home_url() ); ?>';<br />
+						wcbcImportNonce = '<?php echo esc_js( WCBC_Cache_API::import_nonce() ); ?>';
+					</code>
+					<br />
+					<?php
+					printf(
+						/* translators: %s: path to script */
+						esc_html__( 'Run those two lines on happybeds.co.uk, then paste %s in DevTools Console.', 'wc-bed-configurator' ),
+						'<code>scripts/import-happybeds-to-wp.js</code>'
+					);
+					?>
+					<br />
+					<?php
+					printf(
+						esc_html__( 'Cache status: %s', 'wc-bed-configurator' ),
+						WCBC_Layer_Serve::cache_has_files()
+							? '<span style="color:green;">' . esc_html__( 'imported', 'wc-bed-configurator' ) . '</span>'
+							: '<span style="color:#b45309;">' . esc_html__( 'not imported yet', 'wc-bed-configurator' ) . '</span>'
+					);
+					?>
+				</p>
+				<p class="form-field">
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wcbc-docs' ) ); ?>" class="button" onclick="alert('See plugin README.md for JSON schema and demo images in demo-images/ folder.');return false;">
 						<?php esc_html_e( 'View documentation', 'wc-bed-configurator' ); ?>
 					</a>

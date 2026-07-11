@@ -40,7 +40,7 @@ class WCBC_Layer_Serve {
 		);
 
 		foreach ( $iterator as $file ) {
-			if ( $file->isFile() ) {
+			if ( $file->isFile() && '.gitkeep' !== $file->getFilename() ) {
 				return true;
 			}
 		}
@@ -129,36 +129,20 @@ class WCBC_Layer_Serve {
 			}
 		}
 
-		self::send_demo_fallback( self::demo_fallback_for_path( $relative ) );
+		self::send_transparent();
 	}
 
 	/**
-	 * Guess a demo fallback file from a Happy Beds CDN path.
-	 *
-	 * @param string $relative Relative CDN path.
-	 * @return string Demo filename relative to demo-images/layers/.
+	 * Stream a 1×1 transparent PNG when no cached asset exists.
 	 */
-	private static function demo_fallback_for_path( $relative ) {
-		if ( false !== strpos( $relative, 'new_shadow/' ) ) {
-			return 'shadow-only.png';
-		}
-		if ( false !== strpos( $relative, '/legs/' ) || 0 === strpos( $relative, 'legs/' ) ) {
-			return 'legs/double.png';
-		}
-		if ( false !== strpos( $relative, 'headboards_' ) ) {
-			return 'headboard/double/cornell/beige-velvet.png';
-		}
-		if ( false !== strpos( $relative, 'drawers_' ) ) {
-			return 'transparent.png';
-		}
-		if ( false !== strpos( $relative, 'FFFFFF-0' ) ) {
-			return 'transparent.png';
-		}
-		if ( false !== strpos( $relative, 'bases/' ) ) {
-			return 'base/double/beige-velvet/14-inch-drawers.png';
+	private static function send_transparent() {
+		$demo_file = WCBC_PLUGIN_DIR . 'demo-images/layers/transparent.png';
+		if ( is_readable( $demo_file ) ) {
+			self::output_file( $demo_file );
 		}
 
-		return 'transparent.png';
+		status_header( 404 );
+		exit;
 	}
 
 	/**
@@ -262,14 +246,9 @@ function wcbc_get_image_mode() {
 		return $mode;
 	}
 
-	$host = wp_parse_url( home_url(), PHP_URL_HOST );
-	if ( in_array( $host, array( 'localhost', '127.0.0.1' ), true ) ) {
-		return 'demo';
-	}
-
 	if ( WCBC_Layer_Serve::cache_has_files() ) {
 		return 'happybeds-proxy';
 	}
 
-	return 'demo';
+	return 'happybeds-cdn';
 }

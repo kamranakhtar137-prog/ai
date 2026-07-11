@@ -45,6 +45,7 @@ class WCBC_Loader {
 		require_once WCBC_PLUGIN_DIR . 'includes/class-wcbc-cart.php';
 		require_once WCBC_PLUGIN_DIR . 'includes/class-wcbc-ajax.php';
 		require_once WCBC_PLUGIN_DIR . 'includes/class-wcbc-layer-serve.php';
+		require_once WCBC_PLUGIN_DIR . 'includes/class-wcbc-cache-api.php';
 	}
 
 	/**
@@ -56,6 +57,7 @@ class WCBC_Loader {
 		WCBC_Cart::init();
 		WCBC_Ajax::init();
 		WCBC_Layer_Serve::init();
+		WCBC_Cache_API::init();
 
 		add_action( 'wp_enqueue_scripts', array( $this, 'register_assets' ) );
 	}

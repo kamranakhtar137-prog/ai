@@ -208,7 +208,7 @@
 		if (!layers) {
 			return;
 		}
-		var demoFallback = demoLayers(state.selections);
+		var demoFallback = (wcbcData.imageMode === 'demo') ? demoLayers(state.selections) : {};
 		wcbcData.layers.forEach(function (layer) {
 			if (!layers[layer]) {
 				return;
@@ -218,13 +218,11 @@
 				return;
 			}
 			var nextSrc = layers[layer];
-			var fallbackSrc = $img.data('fallback') || demoFallback[layer] || '';
+			var fallbackSrc = $img.data('fallback') || demoFallback[layer] || (wcbcData.layerBase || '') + 'transparent.png';
 			applyLayerImage($img, nextSrc);
 			$img.off('error.wcbc').on('error.wcbc', function () {
 				if (fallbackSrc && $img.attr('src') !== fallbackSrc) {
 					applyLayerImage($img, fallbackSrc);
-				} else {
-					applyLayerImage($img, (wcbcData.layerBase || '') + 'transparent.png');
 				}
 			});
 		});

@@ -173,6 +173,8 @@ class WCBC_Frontend {
 				'imageMode'    => $image_mode,
 				'useHappyBeds' => in_array( $image_mode, array( 'happybeds-cdn', 'happybeds-proxy' ), true ),
 				'layerProxy'   => admin_url( 'admin-ajax.php?action=wcbc_layer_image&path=' ),
+				'importNonce'  => current_user_can( 'manage_woocommerce' ) ? WCBC_Cache_API::import_nonce() : '',
+				'siteUrl'      => home_url( '/' ),
 				'currency'     => get_woocommerce_currency_symbol(),
 				'i18n'      => array(
 					'optionsAvailable' => __( '%d options available', 'wc-bed-configurator' ),

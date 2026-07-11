@@ -31,10 +31,12 @@ if ( 'media' === $part ) : ?>
 				<div class="leftpart">
 					<div id="dynamic_product_images" class="dynamic_product_images wcbc-preview">
 						<?php
-						$demo_layers = WCBC_Layer_Builder::build_demo_layers( $selections, $config['defaults'] );
+						$image_mode  = function_exists( 'wcbc_get_image_mode' ) ? wcbc_get_image_mode() : 'happybeds-cdn';
+						$transparent = WCBC_PLUGIN_URL . 'demo-images/layers/transparent.png';
+						$demo_layers = ( 'demo' === $image_mode ) ? WCBC_Layer_Builder::build_demo_layers( $selections, $config['defaults'] ) : array();
 						foreach ( WCBC_Config::get_layers() as $layer ) :
 							$src      = isset( $calc['layers'][ $layer ] ) ? $calc['layers'][ $layer ] : '';
-							$fallback = isset( $demo_layers[ $layer ] ) ? $demo_layers[ $layer ] : '';
+							$fallback = isset( $demo_layers[ $layer ] ) ? $demo_layers[ $layer ] : $transparent;
 							?>
 							<img
 								loading="lazy"
