@@ -28,17 +28,52 @@ class WCBC_HappyBeds_Resolver {
 	);
 
 	/**
-	 * Colour slug → fabric folder + numeric codes used in filenames.
+	 * Colour slug → fabric folder + numeric codes used in filenames (legacy fallback).
 	 *
-	 * @var array<string,array{fabric:string,code:string,drawer:string}>
+	 * @var array<string,array{fabric:string,hb_fabric:string,code:string,drawer:string}>
 	 */
 	private static $colour_meta = array(
-		'beige-velvet'         => array( 'fabric' => 'velvet', 'code' => '30', 'drawer' => '190' ),
-		'black-velvet'         => array( 'fabric' => 'velvet', 'code' => '10', 'drawer' => '110' ),
-		'graphite-velvet'      => array( 'fabric' => 'velvet', 'code' => '20', 'drawer' => '120' ),
-		'cream-cotton'         => array( 'fabric' => 'cotton', 'code' => '40', 'drawer' => '140' ),
-		'midnight-blue-cotton' => array( 'fabric' => 'cotton', 'code' => '50', 'drawer' => '150' ),
+		'beige-velvet'         => array( 'fabric' => 'velvet', 'hb_fabric' => 'velvet', 'code' => '30', 'drawer' => '190' ),
+		'black-velvet'         => array( 'fabric' => 'velvet', 'hb_fabric' => 'velvet', 'code' => '10', 'drawer' => '110' ),
+		'graphite-velvet'      => array( 'fabric' => 'velvet', 'hb_fabric' => 'velvet', 'code' => '20', 'drawer' => '120' ),
+		'mustard-velvet'       => array( 'fabric' => 'velvet', 'hb_fabric' => 'velvet', 'code' => '36', 'drawer' => '136' ),
+		'cream-cotton'         => array( 'fabric' => 'linen', 'hb_fabric' => 'linoso', 'code' => '14', 'drawer' => '114' ),
+		'midnight-blue-cotton' => array( 'fabric' => 'linen', 'hb_fabric' => 'linoso', 'code' => '17', 'drawer' => '117' ),
 	);
+
+	/**
+	 * Happy Beds folder names per fabric for base, headboard, and drawer layers.
+	 *
+	 * @param string $hb_fabric Fabric key (velvet, linoso, cotton).
+	 * @return array{base:string,headboard:string,drawer:string}
+	 */
+	public static function fabric_paths( $hb_fabric ) {
+		$hb_fabric = self::slug( $hb_fabric );
+		$map       = array(
+			'velvet'  => array(
+				'base'      => 'velvet',
+				'headboard' => 'headboards_velvet',
+				'drawer'    => 'drawers_velvet',
+			),
+			'linoso'  => array(
+				'base'      => 'linoso',
+				'headboard' => 'headboards_linoso',
+				'drawer'    => 'drawers_linoso',
+			),
+			'linen'   => array(
+				'base'      => 'linoso',
+				'headboard' => 'headboards_linoso',
+				'drawer'    => 'drawers_linoso',
+			),
+			'cotton'  => array(
+				'base'      => 'cotton',
+				'headboard' => 'headboards_cotton',
+				'drawer'    => 'drawers_cotton',
+			),
+		);
+
+		return isset( $map[ $hb_fabric ] ) ? $map[ $hb_fabric ] : $map['velvet'];
+	}
 
 	/**
 	 * CDN URL helper.
@@ -112,16 +147,35 @@ class WCBC_HappyBeds_Resolver {
 	}
 
 	/**
-	 * Colour metadata with beige fallback.
+	 * Colour metadata with config option override, then legacy map, then beige fallback.
 	 *
-	 * @param string $colour Colour option id.
-	 * @return array{fabric:string,code:string,drawer:string}
+	 * @param string              $colour Colour option id.
+	 * @param array<string,mixed> $config Product config.
+	 * @return array{fabric:string,hb_fabric:string,code:string,drawer:string}
 	 */
-	public static function colour_meta( $colour ) {
+	public static function colour_meta( $colour, $config = array() ) {
 		$colour = self::slug( $colour );
+
+		if ( ! empty( $config['groups'] ) && class_exists( 'WCBC_Colour_Registry' ) ) {
+			foreach ( $config['groups'] as $group ) {
+				if ( 'colour' !== $group['id'] || empty( $group['options'] ) ) {
+					continue;
+				}
+				foreach ( $group['options'] as $option ) {
+					if ( $option['id'] === $colour ) {
+						$meta = WCBC_Colour_Registry::meta_from_option( $option );
+						if ( $meta ) {
+							return $meta;
+						}
+					}
+				}
+			}
+		}
+
 		if ( isset( self::$colour_meta[ $colour ] ) ) {
 			return self::$colour_meta[ $colour ];
 		}
+
 		return self::$colour_meta['beige-velvet'];
 	}
 
@@ -223,7 +277,7 @@ class WCBC_HappyBeds_Resolver {
 			return $empty;
 		}
 
-		$folder     = 'velvet' === $fabric ? 'drawers_velvet' : 'drawers_cotton';
+		$folder     = self::fabric_paths( $fabric )['drawer'];
 		$suffix     = $depth_code . $colour_code;
 		$drawer_ref = self::drawer_ref_for_size( $size_code, $drawer_code );
 
@@ -267,9 +321,10 @@ class WCBC_HappyBeds_Resolver {
 	 * @param array<string,string> $selections Selections.
 	 * @param array<string,string> $defaults Defaults.
 	 * @param string               $mode Image mode.
+	 * @param array<string,mixed>  $config Product config for colour meta.
 	 * @return array<string,string>
 	 */
-	public static function build_layers( $selections, $defaults = array(), $mode = 'happybeds-cdn' ) {
+	public static function build_layers( $selections, $defaults = array(), $mode = 'happybeds-cdn', $config = array() ) {
 		$size       = self::pick_selection( $selections, $defaults, 'size' );
 		$colour     = self::pick_selection( $selections, $defaults, 'colour' );
 		$headboard  = self::pick_selection( $selections, $defaults, 'headboard' );
@@ -294,9 +349,10 @@ class WCBC_HappyBeds_Resolver {
 
 		$size_code  = self::size_code( $size );
 		$depth_code = self::depth_code( $base_depth );
-		$meta       = self::colour_meta( $colour );
+		$meta       = self::colour_meta( $colour, $config );
 		$hb_style   = self::headboard_style( $headboard );
 		$dc_suffix  = $depth_code . $meta['code'];
+		$paths      = self::fabric_paths( $meta['hb_fabric'] );
 
 		$layers = array(
 			'shadow'       => self::cdn_url( 'new_shadow/shadow_wrk_' . $size_code . '.jpg', $mode ),
@@ -305,7 +361,7 @@ class WCBC_HappyBeds_Resolver {
 			'base'         => self::cdn_url(
 				sprintf(
 					'bases/%s/bedbase_%s_%s_%s.png',
-					$meta['fabric'],
+					$paths['base'],
 					$size_code,
 					$depth_code,
 					$meta['code']
@@ -319,11 +375,10 @@ class WCBC_HappyBeds_Resolver {
 		);
 
 		if ( $hb_style ) {
-			$hb_folder = 'velvet' === $meta['fabric'] ? 'headboards_velvet' : 'headboards_cotton';
 			$layers['headboard'] = self::cdn_url(
 				sprintf(
 					'%s/%s_%s_%s.png',
-					$hb_folder,
+					$paths['headboard'],
 					$hb_style,
 					$size_code,
 					$dc_suffix
@@ -332,7 +387,7 @@ class WCBC_HappyBeds_Resolver {
 			);
 		}
 
-		$storage_paths = self::storage_layers( $storage, $size_code, $depth_code, $meta['code'], $meta['drawer'], $meta['fabric'] );
+		$storage_paths = self::storage_layers( $storage, $size_code, $depth_code, $meta['code'], $meta['drawer'], $meta['hb_fabric'] );
 		foreach ( $storage_paths as $layer => $relative ) {
 			if ( $relative ) {
 				$layers[ $layer ] = self::cdn_url( $relative, $mode );
@@ -377,12 +432,23 @@ class WCBC_HappyBeds_Resolver {
 	 *
 	 * @return array<string,mixed>
 	 */
-	public static function js_config() {
+	public static function js_config( $config = array() ) {
+		$colour_meta = class_exists( 'WCBC_Colour_Registry' ) ? WCBC_Colour_Registry::meta_map_from_config( $config ) : array();
+		if ( empty( $colour_meta ) ) {
+			$colour_meta = self::$colour_meta;
+		}
+
 		return array(
-			'cdn'         => self::CDN,
-			'sizeCodes'   => self::$size_codes,
-			'colourMeta'  => self::$colour_meta,
-			'headboards'  => array(
+			'cdn'          => self::CDN,
+			'sizeCodes'    => self::$size_codes,
+			'colourMeta'   => $colour_meta,
+			'fabricPaths'  => array(
+				'velvet' => self::fabric_paths( 'velvet' ),
+				'linoso' => self::fabric_paths( 'linoso' ),
+				'linen'  => self::fabric_paths( 'linen' ),
+				'cotton' => self::fabric_paths( 'cotton' ),
+			),
+			'headboards'   => array(
 				'cornell-plain'    => 'cornell_plain',
 				'cornell-lined'    => 'cornell_lined',
 				'cornell-buttoned' => 'cornell_buttoned',

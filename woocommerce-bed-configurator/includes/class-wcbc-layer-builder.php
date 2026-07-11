@@ -237,7 +237,7 @@ class WCBC_Layer_Builder {
 			$layers = self::build_from_product_media( $config );
 		} elseif ( 'happybeds' === $source ) {
 			$mode   = WCBC_Layer_Serve::cache_has_files() ? 'happybeds-proxy' : 'happybeds-cdn';
-			$layers = WCBC_HappyBeds_Resolver::build_layers( $selections, $defaults, $mode );
+			$layers = WCBC_HappyBeds_Resolver::build_layers( $selections, $defaults, $mode, $config );
 		} else {
 			$mode = function_exists( 'wcbc_get_image_mode' ) ? wcbc_get_image_mode() : 'demo';
 
@@ -245,9 +245,9 @@ class WCBC_Layer_Builder {
 				$layers = self::build_demo_layers( $selections, $defaults );
 			} elseif ( self::has_happybeds_manifest() ) {
 				$imported = self::build_from_manifest( $config, $selections );
-				$layers   = $imported ? $imported : WCBC_HappyBeds_Resolver::build_layers( $selections, $defaults, $mode );
+				$layers   = $imported ? $imported : WCBC_HappyBeds_Resolver::build_layers( $selections, $defaults, $mode, $config );
 			} else {
-				$layers = WCBC_HappyBeds_Resolver::build_layers( $selections, $defaults, $mode );
+				$layers = WCBC_HappyBeds_Resolver::build_layers( $selections, $defaults, $mode, $config );
 			}
 
 			if ( 'hybrid' === $source ) {
@@ -314,6 +314,8 @@ class WCBC_Layer_Builder {
 
 		$defaults = isset( $config['defaults'] ) ? $config['defaults'] : array();
 
+		$valid_layers = array_flip( WCBC_Config::get_layers() );
+
 		foreach ( $config['groups'] as $group ) {
 			$gid    = $group['id'];
 			$sel_id = self::pick( $selections, $defaults, $gid );
@@ -328,7 +330,7 @@ class WCBC_Layer_Builder {
 				continue;
 			}
 			foreach ( $option['layers'] as $layer_key => $url ) {
-				if ( ! isset( $layers[ $layer_key ] ) || ! $url ) {
+				if ( ! isset( $valid_layers[ $layer_key ] ) || ! $url ) {
 					continue;
 				}
 				$layers[ $layer_key ] = esc_url_raw( $url );

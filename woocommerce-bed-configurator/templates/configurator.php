@@ -147,11 +147,17 @@ if ( 'options' === $part ) : ?>
 								</div>
 								</button>
 							</dt>
-							<dd data-tabid="<?php echo esc_attr( $gid ); ?>" class="wcbc-accordian-body <?php echo $is_open ? 'isopen' : ''; ?>" <?php echo $is_open ? '' : 'style="display:none"'; ?>>
+							<dd data-tabid="<?php echo esc_attr( $gid ); ?>" data-filter-type="<?php echo esc_attr( ! empty( $group['filter_type'] ) ? $group['filter_type'] : '' ); ?>" class="wcbc-accordian-body <?php echo $is_open ? 'isopen' : ''; ?>" <?php echo $is_open ? '' : 'style="display:none"'; ?>>
 								<div class="input-box">
 									<?php if ( ! empty( $group['filter_type'] ) && ! empty( $group['filters'] ) ) : ?>
-										<h2><?php echo esc_html__( 'Choose Shape', 'wc-bed-configurator' ); ?></h2>
-										<div class="button-group filters-button-group wcbc-headboard-filters">
+										<?php
+										$filter_heading = 'fabric' === $group['filter_type']
+											? __( 'Choose Fabric', 'wc-bed-configurator' )
+											: __( 'Choose Shape', 'wc-bed-configurator' );
+										$default_filter = $group['filters'][0]['filter'];
+										?>
+										<h2><?php echo esc_html( $filter_heading ); ?></h2>
+										<div class="button-group filters-button-group wcbc-option-filters">
 											<?php foreach ( $group['filters'] as $fi => $filter ) : ?>
 												<button type="button" class="button wcbc-filter-btn <?php echo 0 === $fi ? 'is-checked' : ''; ?>" data-filter="<?php echo esc_attr( $filter['filter'] ); ?>">
 													<?php echo esc_html( $filter['label'] ); ?>
@@ -161,14 +167,23 @@ if ( 'options' === $part ) : ?>
 										<h2 class="wcbc-style-heading"><?php echo esc_html__( 'Choose Style', 'wc-bed-configurator' ); ?></h2>
 									<?php endif; ?>
 
-									<ul class="options-list wcbc-options-grid <?php echo ! empty( $group['filter_type'] ) ? 'wcbc-headboard-grid grid grid-cols-3' : ''; ?>">
+									<ul class="options-list wcbc-options-grid <?php echo ! empty( $group['filter_type'] ) ? 'wcbc-filterable-grid grid grid-cols-3' : ''; ?>">
 										<?php foreach ( $group['options'] as $option ) : ?>
 											<?php
 											$shape   = ! empty( $option['layers']['shape'] ) ? $option['layers']['shape'] : '';
+											$fabric  = ! empty( $option['layers']['fabric'] ) ? $option['layers']['fabric'] : '';
 											$checked = $option['id'] === $selected;
-											$hidden  = ! empty( $group['filter_type'] ) && $shape && 'cornell' !== $shape && ! $checked;
+											$hidden  = false;
+											if ( ! empty( $group['filter_type'] ) && ! $checked ) {
+												if ( 'shape' === $group['filter_type'] && $shape && $default_filter !== $shape ) {
+													$hidden = true;
+												}
+												if ( 'fabric' === $group['filter_type'] && $fabric && $default_filter !== $fabric ) {
+													$hidden = true;
+												}
+											}
 											?>
-											<li id="<?php echo esc_attr( $option['id'] ); ?>" class="wcbc-option <?php echo $shape ? 'wcbc-shape-' . esc_attr( $shape ) : ''; ?> <?php echo $hidden ? 'wcbc-filter-hidden' : ''; ?>" data-shape="<?php echo esc_attr( $shape ); ?>">
+											<li id="<?php echo esc_attr( $option['id'] ); ?>" class="wcbc-option <?php echo $shape ? 'wcbc-shape-' . esc_attr( $shape ) : ''; ?> <?php echo $fabric ? 'wcbc-fabric-' . esc_attr( $fabric ) : ''; ?> <?php echo $hidden ? 'wcbc-filter-hidden' : ''; ?>" data-shape="<?php echo esc_attr( $shape ); ?>" data-fabric="<?php echo esc_attr( $fabric ); ?>">
 												<input style="display:none;" type="radio" class="wcbc-radio product-custom-option" name="wcbc_ui_<?php echo esc_attr( $gid ); ?>" id="wcbc_<?php echo esc_attr( $gid . '_' . $option['id'] ); ?>" value="<?php echo esc_attr( $option['id'] ); ?>" data-group="<?php echo esc_attr( $gid ); ?>" data-price="<?php echo esc_attr( $option['price'] ); ?>" <?php checked( $checked ); ?> />
 												<label for="wcbc_<?php echo esc_attr( $gid . '_' . $option['id'] ); ?>" class="<?php echo $checked ? 'is-checked' : ''; ?>">
 													<div class="swatchContainer">

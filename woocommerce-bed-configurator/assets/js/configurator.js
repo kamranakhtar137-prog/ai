@@ -73,6 +73,15 @@
 		return cdn + relative;
 	}
 
+	function fabricPaths(hbFabric) {
+		var map = hb.fabricPaths || {};
+		return map[hbFabric] || map.velvet || {
+			base: 'velvet',
+			headboard: 'headboards_velvet',
+			drawer: 'drawers_velvet',
+		};
+	}
+
 	function happyBedsLayers(selections, mode) {
 		mode = mode || wcbcData.imageMode || 'happybeds-cdn';
 		var hb = wcbcData.happyBeds || {};
@@ -91,18 +100,19 @@
 
 		var sizeCode = sizeCodes[size] || '4ft6';
 		var depthCode = baseDepth.replace('-inch', 'i');
-		var meta = colourMeta[colour] || colourMeta['beige-velvet'] || { fabric: 'velvet', code: '30', drawer: '190' };
+		var meta = colourMeta[colour] || colourMeta['beige-velvet'] || { fabric: 'velvet', hb_fabric: 'velvet', code: '30', drawer: '190' };
 		var hbStyle = headboardMap[headboard];
 		var suffix = depthCode + meta.code;
-		var drawerFolder = meta.fabric === 'velvet' ? 'drawers_velvet' : 'drawers_cotton';
-		var hbFolder = meta.fabric === 'velvet' ? 'headboards_velvet' : 'headboards_cotton';
+		var paths = fabricPaths(meta.hb_fabric || meta.fabric);
+		var drawerFolder = paths.drawer;
+		var hbFolder = paths.headboard;
 		var drawerRef = drawerRefForSize(sizeCode, meta.drawer);
 
 		var layers = {
 			shadow: happyBedsUrl(cdn, 'new_shadow/shadow_wrk_' + sizeCode + '.jpg', mode),
 			legs: happyBedsUrl(cdn, 'legs/bedding_legs_' + sizeCode + '.png', mode),
 			storage_back: transparent,
-			base: happyBedsUrl(cdn, 'bases/' + meta.fabric + '/bedbase_' + sizeCode + '_' + depthCode + '_' + meta.code + '.png', mode),
+			base: happyBedsUrl(cdn, 'bases/' + paths.base + '/bedbase_' + sizeCode + '_' + depthCode + '_' + meta.code + '.png', mode),
 			headboard: transparent,
 			storage_1: transparent,
 			storage_2: transparent,
@@ -135,6 +145,12 @@
 	function applyOptionLayerOverrides(layers, selections) {
 		var config = wcbcData.config || {};
 		var defaults = config.defaults || {};
+		var validLayers = {};
+		if (wcbcData.layers) {
+			wcbcData.layers.forEach(function (layer) {
+				validLayers[layer] = true;
+			});
+		}
 		if (!config.groups) {
 			return layers;
 		}
@@ -148,7 +164,7 @@
 					return;
 				}
 				Object.keys(opt.layers).forEach(function (layerKey) {
-					if (opt.layers[layerKey] && layers[layerKey] !== undefined) {
+					if (validLayers[layerKey] && opt.layers[layerKey] && layers[layerKey] !== undefined) {
 						layers[layerKey] = opt.layers[layerKey];
 					}
 				});
@@ -344,20 +360,21 @@
 		});
 	}
 
-	function bindHeadboardFilters() {
+	function bindOptionFilters() {
 		$(document).on('click', '.wcbc-filter-btn', function (e) {
 			e.preventDefault();
 			e.stopPropagation();
 			var filter = $(this).data('filter');
 			var $section = $(this).closest('dd');
+			var filterType = $section.data('filter-type') || 'shape';
 
 			$section.find('.wcbc-filter-btn').removeClass('is-checked');
 			$(this).addClass('is-checked');
 
-			$section.find('.wcbc-headboard-grid li').each(function () {
-				var shape = $(this).data('shape') || '';
+			$section.find('.wcbc-filterable-grid li').each(function () {
+				var matchKey = filterType === 'fabric' ? ($(this).data('fabric') || '') : ($(this).data('shape') || '');
 				var isSelected = $(this).find('input.wcbc-radio').is(':checked');
-				$(this).toggleClass('wcbc-filter-hidden', shape !== filter && !isSelected);
+				$(this).toggleClass('wcbc-filter-hidden', matchKey !== filter && !isSelected);
 			});
 		});
 	}
@@ -428,7 +445,7 @@
 	$(function () {
 		initSelections();
 		bindOptions();
-		bindHeadboardFilters();
+		bindOptionFilters();
 		bindDrawerToggle();
 		relocateAddToCart();
 	});

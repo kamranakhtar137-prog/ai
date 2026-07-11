@@ -211,22 +211,26 @@ class WCBC_Cache_API {
 	 * @return string
 	 */
 	public static function import_all_script() {
-		return self::wrap_import_script( 'scripts/import-all-happybeds-to-wp.js' );
+		$colours = class_exists( 'WCBC_Colour_Registry' ) ? WCBC_Colour_Registry::colour_slugs() : array();
+		return self::wrap_import_script( 'scripts/import-all-happybeds-to-wp.js', $colours );
 	}
 
 	/**
 	 * Embed site config into a script file body.
 	 *
-	 * @param string $relative Relative path under plugin scripts/.
+	 * @param string       $relative Relative path under plugin scripts/.
+	 * @param string[]|null $colours Optional colour slugs for full import.
 	 * @return string
 	 */
-	private static function wrap_import_script( $relative ) {
-		$config = wp_json_encode(
-			array(
-				'site'  => untrailingslashit( home_url() ),
-				'token' => self::import_token(),
-			)
+	private static function wrap_import_script( $relative, $colours = null ) {
+		$payload = array(
+			'site'  => untrailingslashit( home_url() ),
+			'token' => self::import_token(),
 		);
+		if ( is_array( $colours ) && ! empty( $colours ) ) {
+			$payload['colours'] = array_values( $colours );
+		}
+		$config = wp_json_encode( $payload );
 
 		$script_path = WCBC_PLUGIN_DIR . $relative;
 		$body        = is_readable( $script_path ) ? (string) file_get_contents( $script_path ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents

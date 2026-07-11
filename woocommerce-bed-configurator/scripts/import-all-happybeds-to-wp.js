@@ -25,7 +25,13 @@
 	};
 
 	var SIZES = Object.keys(SIZE_MAP);
-	var COLOURS = ['beige-velvet', 'black-velvet', 'graphite-velvet', 'cream-cotton', 'midnight-blue-cotton'];
+	var COLOURS = config.colours || [
+		'light-silver-velvet', 'asphalt-velvet', 'graphite-velvet', 'black-velvet', 'blue-marine-velvet',
+		'emerald-velvet', 'duck-egg-blue-velvet', 'pink-velvet', 'beige-velvet', 'mustard-velvet',
+		'black-linen', 'charcoal-linen', 'chocolate-linen', 'cream-linen', 'duck-egg-blue-linen',
+		'lime-linen', 'midnight-blue-linen', 'orchid-linen', 'plum-linen', 'red-linen',
+		'slate-grey-linen', 'white-linen', 'silver-grey-linen',
+	];
 	var HEADBOARDS = ['cornell-plain', 'cornell-lined', 'cornell-buttoned', 'dudley-plain', 'victor-plain', 'no-headboard'];
 	var DEPTHS = ['6-inch', '10-inch', '14-inch'];
 	var STORAGE = ['no-drawers', 'ottoman', '2-drawers', '4-drawers', 'end-drawer'];

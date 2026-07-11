@@ -148,34 +148,7 @@ class WCBC_Config {
 						self::opt( 'super-king', 'Super Kingsize', '6ft', 100, $base . 'swatches/size/super-king.png', array( 'size' => '6ft' ) ),
 					),
 				),
-				array(
-					'id'       => 'colour',
-					'label'    => 'Colour',
-					'icon'     => 'colour',
-					'required' => true,
-					'options'  => array(
-						self::opt( 'beige-velvet', 'Beige', 'Velvet', 0, $base . 'swatches/colour/beige-velvet.png', array(
-							'base'      => $base . 'layers/base-beige.png',
-							'headboard' => $base . 'layers/headboard-cornell.png',
-						) ),
-						self::opt( 'black-velvet', 'Black', 'Velvet', 15, $base . 'swatches/colour/black-velvet.png', array(
-							'base'      => $base . 'layers/base-black.png',
-							'headboard' => $base . 'layers/base-black.png',
-						) ),
-						self::opt( 'graphite-velvet', 'Graphite', 'Velvet', 10, $base . 'swatches/colour/graphite-velvet.png', array(
-							'base'      => $base . 'layers/base-black.png',
-							'headboard' => $base . 'layers/base-black.png',
-						) ),
-						self::opt( 'cream-cotton', 'Cream', 'Cotton', 0, $base . 'swatches/colour/cream-cotton.png', array(
-							'base'      => $base . 'layers/base-beige.png',
-							'headboard' => $base . 'layers/headboard-cornell.png',
-						) ),
-						self::opt( 'midnight-blue-cotton', 'Midnight Blue', 'Cotton', 12, $base . 'swatches/colour/midnight-blue-cotton.png', array(
-							'base'      => $base . 'layers/base-black.png',
-							'headboard' => $base . 'layers/base-black.png',
-						) ),
-					),
-				),
+				WCBC_Colour_Registry::colour_group(),
 				array(
 					'id'          => 'headboard',
 					'label'       => 'Headboard',
@@ -261,6 +234,7 @@ class WCBC_Config {
 		if ( ! is_array( $config ) || empty( $config['groups'] ) ) {
 			$config = self::get_default_config();
 		}
+		$config = self::merge_colour_group( $config );
 		$defaults = self::get_default_config();
 		$config['product_id']   = (int) $product_id;
 		$config['layer_media']  = self::get_layer_media( $product_id );
@@ -268,6 +242,40 @@ class WCBC_Config {
 		$config['layers']       = WCBC_Layer_Builder::build( $config, isset( $config['defaults'] ) ? $config['defaults'] : $defaults['defaults'] );
 		$config['defaults']     = ! empty( $config['defaults'] ) ? $config['defaults'] : $defaults['defaults'];
 		$config['base_price']   = isset( $config['base_price'] ) ? (float) $config['base_price'] : $defaults['base_price'];
+		return $config;
+	}
+
+	/**
+	 * Always use the plugin colour registry (10 Velvet + 13 Linen).
+	 *
+	 * @param array<string,mixed> $config Config.
+	 * @return array<string,mixed>
+	 */
+	private static function merge_colour_group( $config ) {
+		if ( ! class_exists( 'WCBC_Colour_Registry' ) ) {
+			return $config;
+		}
+
+		$colour_group = WCBC_Colour_Registry::colour_group();
+		$merged       = false;
+
+		if ( ! empty( $config['groups'] ) ) {
+			foreach ( $config['groups'] as $index => $group ) {
+				if ( 'colour' === $group['id'] ) {
+					$config['groups'][ $index ] = $colour_group;
+					$merged                     = true;
+					break;
+				}
+			}
+		}
+
+		if ( ! $merged ) {
+			if ( empty( $config['groups'] ) ) {
+				$config['groups'] = array();
+			}
+			array_splice( $config['groups'], 1, 0, array( $colour_group ) );
+		}
+
 		return $config;
 	}
 
