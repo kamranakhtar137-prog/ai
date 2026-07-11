@@ -15,6 +15,7 @@ class WCBC_Cache_API {
 	 * Init hooks.
 	 */
 	public static function init() {
+		add_action( 'init', array( __CLASS__, 'ensure_import_token' ), 5 );
 		add_action( 'rest_api_init', array( __CLASS__, 'register_routes' ) );
 		add_action( 'init', array( __CLASS__, 'handle_preflight' ) );
 		add_filter( 'rest_pre_serve_request', array( __CLASS__, 'add_cors_headers' ), 10, 4 );
@@ -62,7 +63,7 @@ class WCBC_Cache_API {
 	private static function send_cors_headers() {
 		header( 'Access-Control-Allow-Origin: *' );
 		header( 'Access-Control-Allow-Methods: GET, POST, OPTIONS' );
-		header( 'Access-Control-Allow-Headers: Content-Type, X-WCBC-Import-Nonce' );
+		header( 'Access-Control-Allow-Headers: Content-Type, X-WCBC-Import-Token, X-WCBC-Import-Nonce' );
 	}
 
 	/**
@@ -102,7 +103,10 @@ class WCBC_Cache_API {
 	}
 
 	/**
-	 * Allow admins or same-site requests with import nonce.
+	 * Allow admins or cross-origin browser import with site token.
+	 *
+	 * WordPress nonces are tied to the logged-in user and fail from happybeds.co.uk,
+	 * so external imports must use the persistent site token instead.
 	 *
 	 * @param WP_REST_Request $request Request.
 	 * @return bool
@@ -112,8 +116,8 @@ class WCBC_Cache_API {
 			return true;
 		}
 
-		$nonce = $request->get_header( 'x-wcbc-import-nonce' );
-		if ( $nonce && wp_verify_nonce( $nonce, 'wcbc_import_layers' ) ) {
+		$token = $request->get_header( 'x-wcbc-import-token' );
+		if ( $token && hash_equals( self::import_token(), (string) $token ) ) {
 			return true;
 		}
 
@@ -177,16 +181,24 @@ class WCBC_Cache_API {
 	}
 
 	/**
-	 * Create a short-lived nonce for browser import scripts.
+	 * Persistent site token for cross-origin Happy Beds import.
 	 *
+	 * @param bool $regenerate Whether to force a new token.
 	 * @return string
 	 */
-	public static function import_nonce() {
-		return wp_create_nonce( 'wcbc_import_layers' );
+	public static function import_token( $regenerate = false ) {
+		$token = get_option( 'wcbc_import_token', '' );
+
+		if ( $regenerate || ! is_string( $token ) || '' === $token ) {
+			$token = wp_generate_password( 32, false, false );
+			update_option( 'wcbc_import_token', $token, false );
+		}
+
+		return $token;
 	}
 
 	/**
-	 * Build a ready-to-paste import script with site URL and nonce embedded.
+	 * Build a ready-to-paste import script with site URL and token embedded.
 	 *
 	 * @return string
 	 */
@@ -194,7 +206,7 @@ class WCBC_Cache_API {
 		$config = wp_json_encode(
 			array(
 				'site'  => untrailingslashit( home_url() ),
-				'nonce' => self::import_nonce(),
+				'token' => self::import_token(),
 			)
 		);
 

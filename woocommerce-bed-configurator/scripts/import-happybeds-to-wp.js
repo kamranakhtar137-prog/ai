@@ -9,11 +9,10 @@
 
 	var config = window.wcbcImportConfig || {};
 	var WP_SITE = config.site || window.wcbcWpSite || '';
-	var NONCE = config.nonce || window.wcbcImportNonce || '';
+	var TOKEN = config.token || window.wcbcImportToken || '';
 
-	if (!WP_SITE) {
-		console.error('Missing site URL. Copy the FULL script from WordPress admin (Bed Configurator tab), not just this file.');
-		console.error('Or run: wcbcWpSite = "https://your-site.com"; wcbcImportNonce = "your-nonce"; then run the script again.');
+	if (!WP_SITE || !TOKEN) {
+		console.error('Missing site URL or import token. Copy the FULL script from WordPress admin (Bed Configurator tab).');
 		return;
 	}
 
@@ -68,7 +67,7 @@
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
-				'X-WCBC-Import-Nonce': NONCE,
+				'X-WCBC-Import-Token': TOKEN,
 			},
 			body: JSON.stringify({ path: path, data: dataUrl }),
 		}).then(function (r) {
