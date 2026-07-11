@@ -2,6 +2,26 @@
 
 A custom WooCommerce plugin that adds a **Build Your Own Bed** product configurator similar to [Happy Beds](https://www.happybeds.co.uk/build-your-own-bed). It includes layered live preview images, accordion option groups, headboard shape filters, drawer open/close toggle, dynamic pricing, and cart/order meta.
 
+## Core preview layers (variation-driven)
+
+Each layer is **one** `<img>` in the preview, but the `src` changes with customer selections — same as [Happy Beds](https://www.happybeds.co.uk/build-your-own-bed):
+
+| Layer | DOM id | Varies with |
+|-------|--------|-------------|
+| Bed Legs | `#dynamic_legs` | Size |
+| Bed Headboard | `#dynamic_headboard` | Headboard style × size × base depth × colour |
+| Bed Storage Back | `#dynamic_storage_back` | Storage × size × base depth × colour |
+| Bed Base | `#dynamic_base` | Size × base depth × colour |
+
+**Primary variation options:** Size, Colour, Base Depth (plus Headboard style and Storage for full preview).
+
+### Import images (Happy Beds CDN)
+
+1. Edit product → **Bed Configurator** tab.
+2. **Core import** — all 4 layers for every size × colour × base depth (~3–5 min). Recommended first step.
+3. **Full import** — all headboard styles and storage options (~10–20 min).
+4. Paste script on [happybeds.co.uk/build-your-own-bed](https://www.happybeds.co.uk/build-your-own-bed) → Console → Enter.
+
 ## Features
 
 - Accordion option groups: **Size**, **Colour**, **Headboard**, **Base Depth**, **Storage**

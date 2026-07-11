@@ -115,6 +115,24 @@ class WCBC_Config {
 	}
 
 	/**
+	 * Primary preview layers (Happy Beds alt labels).
+	 *
+	 * @return string[]
+	 */
+	public static function core_preview_layers() {
+		return array( 'legs', 'headboard', 'storage_back', 'base' );
+	}
+
+	/**
+	 * Option groups that drive core layer image variations.
+	 *
+	 * @return string[]
+	 */
+	public static function core_variation_groups() {
+		return array( 'size', 'colour', 'base_depth' );
+	}
+
+	/**
 	 * Layers whose image file changes with customer selections (not one fixed upload).
 	 *
 	 * @return string[]

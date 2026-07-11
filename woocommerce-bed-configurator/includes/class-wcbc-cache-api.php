@@ -220,6 +220,20 @@ class WCBC_Cache_API {
 	}
 
 	/**
+	 * Core import: legs, headboard, storage back, base for all size × colour × base depth.
+	 *
+	 * @return string
+	 */
+	public static function import_core_script() {
+		$config = WCBC_Config::get_default_config();
+		$extra  = array(
+			'colours'   => class_exists( 'WCBC_Colour_Registry' ) ? WCBC_Colour_Registry::colour_slugs() : array(),
+			'happyBeds' => WCBC_HappyBeds_Resolver::js_config( $config ),
+		);
+		return self::wrap_import_script( 'scripts/import-core-layers-to-wp.js', $extra );
+	}
+
+	/**
 	 * Embed site config into a script file body.
 	 *
 	 * @param string              $relative Relative path under plugin scripts/.

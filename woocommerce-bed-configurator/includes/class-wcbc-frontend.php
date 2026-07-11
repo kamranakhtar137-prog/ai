@@ -176,6 +176,8 @@ class WCBC_Frontend {
 				'layerMedia'   => $layer_media,
 				'variationDrivenLayers' => WCBC_Config::variation_driven_layers(),
 				'staticOverrideLayers'  => WCBC_Config::static_override_layers(),
+				'corePreviewLayers'     => WCBC_Config::core_preview_layers(),
+				'coreVariationGroups'   => WCBC_Config::core_variation_groups(),
 				'useHappyBeds' => in_array( $image_mode, array( 'happybeds-cdn', 'happybeds-proxy' ), true ),
 				'layerProxy'   => admin_url( 'admin-ajax.php?action=wcbc_layer_image&path=' ),
 				'importToken'  => current_user_can( 'manage_woocommerce' ) ? WCBC_Cache_API::import_token() : '',

@@ -67,6 +67,7 @@ class WCBC_Admin {
 		$json    = wp_json_encode( $config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
 		$import_script     = WCBC_Cache_API::import_script();
 		$import_all_script = WCBC_Cache_API::import_all_script();
+		$import_core_script = WCBC_Cache_API::import_core_script();
 		$layer_media       = WCBC_Config::get_layer_media( $post->ID );
 		$image_source      = WCBC_Config::get_image_source( $post->ID );
 		$layer_labels      = WCBC_Config::get_layer_labels();
@@ -203,7 +204,12 @@ class WCBC_Admin {
 				</p>
 				<p class="form-field">
 					<strong><?php esc_html_e( 'Happy Beds images — dynamic variations', 'wc-bed-configurator' ); ?></strong><br />
-					<?php esc_html_e( 'The configurator already changes image URLs when you pick size, colour, headboard, depth, or storage. Each variation needs its image file saved on your server.', 'wc-bed-configurator' ); ?>
+					<?php esc_html_e( 'Core preview layers (one slot each, many image files per slot):', 'wc-bed-configurator' ); ?>
+					<strong><?php esc_html_e( 'Bed Legs', 'wc-bed-configurator' ); ?></strong>,
+					<strong><?php esc_html_e( 'Bed Headboard', 'wc-bed-configurator' ); ?></strong>,
+					<strong><?php esc_html_e( 'Bed Storage Back', 'wc-bed-configurator' ); ?></strong>,
+					<strong><?php esc_html_e( 'Bed Base', 'wc-bed-configurator' ); ?></strong>.
+					<?php esc_html_e( 'Image file changes when customer picks size, colour, or base depth.', 'wc-bed-configurator' ); ?>
 					<br /><br />
 					<strong><?php esc_html_e( 'Quick import (25 files)', 'wc-bed-configurator' ); ?></strong> —
 					<?php esc_html_e( 'Beige velvet, Cornell lined, 14 inch, 2 drawers only. Good for testing one look per size.', 'wc-bed-configurator' ); ?>
@@ -211,11 +217,17 @@ class WCBC_Admin {
 					<textarea id="wcbc_import_script" readonly rows="8" style="width:100%;font-family:monospace;font-size:11px;"><?php echo esc_textarea( $import_script ); ?></textarea>
 					<button type="button" class="button" id="wcbc-copy-import-script"><?php esc_html_e( 'Copy quick import', 'wc-bed-configurator' ); ?></button>
 					<br /><br />
-					<strong style="color:#b45309;"><?php esc_html_e( 'Full import (recommended)', 'wc-bed-configurator' ); ?></strong> —
-					<?php esc_html_e( 'All colours, headboards, depths & storage options. Builds CDN paths directly (no Happy Beds API). Takes ~10–20 min on happybeds.co.uk Console.', 'wc-bed-configurator' ); ?>
+					<strong style="color:#047857;"><?php esc_html_e( 'Core import (recommended first)', 'wc-bed-configurator' ); ?></strong> —
+					<?php esc_html_e( 'All 4 core layers for every size × colour × base depth (Cornell lined, 2 drawers). ~3–5 min.', 'wc-bed-configurator' ); ?>
+					<br />
+					<textarea id="wcbc_import_core_script" readonly rows="8" style="width:100%;font-family:monospace;font-size:11px;"><?php echo esc_textarea( $import_core_script ); ?></textarea>
+					<button type="button" class="button button-primary" id="wcbc-copy-import-core-script"><?php esc_html_e( 'Copy core import (4 layers)', 'wc-bed-configurator' ); ?></button>
+					<br /><br />
+					<strong style="color:#b45309;"><?php esc_html_e( 'Full import', 'wc-bed-configurator' ); ?></strong> —
+					<?php esc_html_e( 'All colours, headboards, depths & storage options. Takes ~10–20 min on happybeds.co.uk Console.', 'wc-bed-configurator' ); ?>
 					<br />
 					<textarea id="wcbc_import_all_script" readonly rows="8" style="width:100%;font-family:monospace;font-size:11px;"><?php echo esc_textarea( $import_all_script ); ?></textarea>
-					<button type="button" class="button button-primary" id="wcbc-copy-import-all-script"><?php esc_html_e( 'Copy full import (all variations)', 'wc-bed-configurator' ); ?></button>
+					<button type="button" class="button" id="wcbc-copy-import-all-script"><?php esc_html_e( 'Copy full import (all variations)', 'wc-bed-configurator' ); ?></button>
 					<br /><br />
 					<?php esc_html_e( 'Paste on https://www.happybeds.co.uk/build-your-own-bed → DevTools Console → Enter.', 'wc-bed-configurator' ); ?>
 					<br />
@@ -246,6 +258,9 @@ class WCBC_Admin {
 			});
 			document.getElementById('wcbc-copy-import-script')?.addEventListener('click', function(){
 				copyTextarea('wcbc_import_script', 'Quick import copied. Paste on happybeds.co.uk Console.');
+			});
+			document.getElementById('wcbc-copy-import-core-script')?.addEventListener('click', function(){
+				copyTextarea('wcbc_import_core_script', 'Core import copied. Paste on happybeds.co.uk Console.');
 			});
 			document.getElementById('wcbc-copy-import-all-script')?.addEventListener('click', function(){
 				copyTextarea('wcbc_import_all_script', 'Full import copied. Paste on happybeds.co.uk Console. Wait for FULL import complete.');
