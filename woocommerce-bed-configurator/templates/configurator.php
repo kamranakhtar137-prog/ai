@@ -204,7 +204,7 @@ if ( 'options' === $part ) : ?>
 													<h2><?php echo esc_html( ucfirst( $fabric ) ); ?></h2>
 												</li>
 											<?php endif; ?>
-											<li id="<?php echo esc_attr( $option['id'] ); ?>" class="wcbc-option <?php echo $shape ? 'wcbc-shape-' . esc_attr( $shape ) : ''; ?> <?php echo $fabric ? 'wcbc-fabric-' . esc_attr( $fabric ) . ' color_way' : ''; ?> <?php echo $hidden ? 'wcbc-filter-hidden' : ''; ?>" data-shape="<?php echo esc_attr( $shape ); ?>" data-fabric="<?php echo esc_attr( $fabric ); ?>">
+											<li id="<?php echo esc_attr( $option['id'] ); ?>" class="wcbc-option <?php echo $shape ? 'wcbc-shape-' . esc_attr( $shape ) : ''; ?> <?php echo $fabric ? 'wcbc-fabric-' . esc_attr( $fabric ) . ' color_way' : ''; ?> <?php echo $hidden ? 'wcbc-filter-hidden' : ''; ?> <?php echo $checked ? 'is-selected' : ''; ?>" data-shape="<?php echo esc_attr( $shape ); ?>" data-fabric="<?php echo esc_attr( $fabric ); ?>">
 												<input style="display:none;" type="radio" class="wcbc-radio product-custom-option" name="wcbc_ui_<?php echo esc_attr( $gid ); ?>" id="wcbc_<?php echo esc_attr( $gid . '_' . $option['id'] ); ?>" value="<?php echo esc_attr( $option['id'] ); ?>" data-group="<?php echo esc_attr( $gid ); ?>" data-price="<?php echo esc_attr( $option['price'] ); ?>" <?php checked( $checked ); ?> />
 												<label for="wcbc_<?php echo esc_attr( $gid . '_' . $option['id'] ); ?>" class="wcbc-option-label <?php echo $checked ? 'is-checked' : ''; ?>">
 													<div class="swatchContainer">

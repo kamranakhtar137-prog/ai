@@ -352,11 +352,18 @@
 	}
 
 	function syncGroupSelectionUI(groupId, optionId) {
-		$('input.wcbc-radio[data-group="' + groupId + '"]').each(function () {
+		var $section = $('.wcbc-accordian-body[data-tabid="' + groupId + '"]');
+		var $radios = $section.length
+			? $section.find('input.wcbc-radio[data-group="' + groupId + '"]')
+			: $('input.wcbc-radio[data-group="' + groupId + '"]');
+
+		$radios.each(function () {
 			var $input = $(this);
 			var isMatch = $input.val() === optionId;
+			var $option = $input.closest('li.wcbc-option');
 			$input.prop('checked', isMatch);
-			$input.closest('li.wcbc-option').find('label.wcbc-option-label').toggleClass('is-checked', isMatch);
+			$option.toggleClass('is-selected', isMatch);
+			$option.find('label').first().toggleClass('is-checked', isMatch);
 		});
 	}
 
@@ -491,11 +498,27 @@
 	}
 
 	function bindOptions() {
-		$(document).on('change', 'input.wcbc-radio', function () {
+		var $root = $('#product-options-wrapper, .wcbc-accordian').first();
+
+		$root.on('change', 'input.wcbc-radio', function () {
 			if (!$(this).is(':checked')) {
 				return;
 			}
 			onSelectionChange($(this).data('group'), $(this).val());
+		});
+
+		$root.on('click', 'li.wcbc-option', function (e) {
+			if ($(e.target).closest('input.wcbc-radio').length) {
+				return;
+			}
+			var $radio = $(this).find('input.wcbc-radio').first();
+			if (!$radio.length) {
+				return;
+			}
+			if ($radio.is(':checked')) {
+				return;
+			}
+			$radio.prop('checked', true).trigger('change');
 		});
 	}
 

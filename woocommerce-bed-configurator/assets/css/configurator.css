@@ -287,15 +287,15 @@
 	visibility: hidden !important;
 }
 
-/* Layer stacking order (bottom → top) */
+/* Layer stacking order (bottom → top) — matches Happy Beds */
 .dynamic_shadow { z-index: 1 !important; }
-.dynamic_legs { z-index: 5 !important; }
+.dynamic_legs { z-index: 2 !important; }
 .dynamic_storage_back { z-index: 3 !important; }
-.dynamic_base { z-index: 4 !important; }
-.dynamic_headboard { z-index: 6 !important; }
-.dynamic_storage_1 { z-index: 7 !important; }
-.dynamic_storage_2 { z-index: 8 !important; }
-.dynamic_storage_3 { z-index: 9 !important; }
+.dynamic_headboard { z-index: 4 !important; }
+.dynamic_base { z-index: 5 !important; }
+.dynamic_storage_2 { z-index: 6 !important; }
+.dynamic_storage_3 { z-index: 7 !important; }
+.dynamic_storage_1 { z-index: 8 !important; }
 
 .wcbc-preview.wcbc-drawers-open .dynamic_storage_1,
 .wcbc-preview.wcbc-drawers-open .dynamic_storage_2,
@@ -313,6 +313,9 @@
 	font-weight: 700;
 	width: 100%;
 }
+
+#draw_toggler,
+.wcbc-draw-toggler {
 	margin-top: 1rem;
 	padding: 0 0.5rem;
 	display: flex;
@@ -590,7 +593,8 @@ button.wcbc-accordian-head:focus-visible {
 	display: none !important;
 }
 
-.options-list label.wcbc-option-label {
+.options-list label.wcbc-option-label,
+.wcbc-accordian .wcbc-option > label {
 	display: block;
 	overflow: hidden;
 	width: 100%;
@@ -603,11 +607,14 @@ button.wcbc-accordian-head:focus-visible {
 	box-sizing: border-box;
 }
 
-.options-list label.wcbc-option-label:hover {
+.options-list label.wcbc-option-label:hover,
+.wcbc-accordian .wcbc-option > label:hover {
 	border-color: #d0d0d8;
 }
 
-.options-list label.wcbc-option-label.is-checked {
+.wcbc-accordian .wcbc-option.is-selected > label,
+.options-list label.wcbc-option-label.is-checked,
+.wcbc-accordian .wcbc-option > label.is-checked {
 	border: 2px solid #2b2e52 !important;
 	box-shadow: 0 0 0 1px #2b2e52;
 }
