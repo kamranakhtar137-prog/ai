@@ -30,14 +30,20 @@ if ( 'media' === $part ) : ?>
 			<div class="byobed-in">
 				<div class="leftpart">
 					<div id="dynamic_product_images" class="dynamic_product_images wcbc-preview">
-						<?php foreach ( WCBC_Config::get_layers() as $layer ) : ?>
-							<?php $src = isset( $calc['layers'][ $layer ] ) ? $calc['layers'][ $layer ] : ''; ?>
+						<?php
+						$demo_layers = WCBC_Layer_Builder::build_demo_layers( $selections, $config['defaults'] );
+						foreach ( WCBC_Config::get_layers() as $layer ) :
+							$src      = isset( $calc['layers'][ $layer ] ) ? $calc['layers'][ $layer ] : '';
+							$fallback = isset( $demo_layers[ $layer ] ) ? $demo_layers[ $layer ] : '';
+							?>
 							<img
 								loading="lazy"
 								class="dynamic_image_items dynamic_<?php echo esc_attr( $layer ); ?> wcbc-layer"
 								id="dynamic_<?php echo esc_attr( $layer ); ?>"
 								data-layer="<?php echo esc_attr( $layer ); ?>"
-								alt="<?php echo esc_attr( $layer ); ?>"
+								data-fallback="<?php echo esc_url( $fallback ); ?>"
+								alt=""
+								referrerpolicy="no-referrer"
 								src="<?php echo esc_url( $src ); ?>"
 							/>
 						<?php endforeach; ?>

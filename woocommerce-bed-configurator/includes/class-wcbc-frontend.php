@@ -154,6 +154,8 @@ class WCBC_Frontend {
 	 * @param array<string,mixed> $config Config.
 	 */
 	private static function enqueue_assets( $product_id, $config ) {
+		$image_mode = wcbc_get_image_mode();
+
 		wp_enqueue_style( 'wcbc-configurator' );
 		wp_enqueue_script( 'wcbc-accordion' );
 		wp_enqueue_script( 'wcbc-configurator' );
@@ -161,15 +163,17 @@ class WCBC_Frontend {
 			'wcbc-configurator',
 			'wcbcData',
 			array(
-				'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
-				'nonce'     => wp_create_nonce( 'wcbc_configurator' ),
-				'productId' => $product_id,
-				'config'    => $config,
-				'layers'    => WCBC_Config::get_layers(),
-				'layerBase' => WCBC_PLUGIN_URL . 'demo-images/layers/',
-				'happyBeds' => WCBC_HappyBeds_Resolver::js_config(),
-				'useHappyBeds' => true,
-				'currency'  => get_woocommerce_currency_symbol(),
+				'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
+				'nonce'        => wp_create_nonce( 'wcbc_configurator' ),
+				'productId'    => $product_id,
+				'config'       => $config,
+				'layers'       => WCBC_Config::get_layers(),
+				'layerBase'    => WCBC_PLUGIN_URL . 'demo-images/layers/',
+				'happyBeds'    => WCBC_HappyBeds_Resolver::js_config(),
+				'imageMode'    => $image_mode,
+				'useHappyBeds' => in_array( $image_mode, array( 'happybeds-cdn', 'happybeds-proxy' ), true ),
+				'layerProxy'   => admin_url( 'admin-ajax.php?action=wcbc_layer_image&path=' ),
+				'currency'     => get_woocommerce_currency_symbol(),
 				'i18n'      => array(
 					'optionsAvailable' => __( '%d options available', 'wc-bed-configurator' ),
 					'now'              => __( 'Now', 'wc-bed-configurator' ),

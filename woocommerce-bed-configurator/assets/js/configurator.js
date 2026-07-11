@@ -65,7 +65,16 @@
 		return folder + '/reference_drawer_normal_front_' + drawerRef + '_' + sizeCode + '_drawer_normal_front_' + suffix + '.png';
 	}
 
-	function happyBedsLayers(selections) {
+	function happyBedsUrl(cdn, relative, mode) {
+		relative = relative.replace(/^\//, '');
+		if (mode === 'happybeds-proxy' && wcbcData.layerProxy) {
+			return wcbcData.layerProxy + encodeURIComponent(relative);
+		}
+		return cdn + relative;
+	}
+
+	function happyBedsLayers(selections, mode) {
+		mode = mode || wcbcData.imageMode || 'happybeds-cdn';
 		var hb = wcbcData.happyBeds || {};
 		var cdn = hb.cdn || 'https://www.happybeds.co.uk/media/new_configurator/';
 		var defaults = wcbcData.config.defaults || {};
@@ -78,7 +87,7 @@
 		var sizeCodes = hb.sizeCodes || {};
 		var colourMeta = hb.colourMeta || {};
 		var headboardMap = hb.headboards || {};
-		var transparent = cdn + (hb.transparent || 'FFFFFF-0.png');
+		var transparent = happyBedsUrl(cdn, hb.transparent || 'FFFFFF-0.png', mode);
 
 		var sizeCode = sizeCodes[size] || '4ft6';
 		var depthCode = baseDepth.replace('-inch', 'i');
@@ -90,10 +99,10 @@
 		var drawerRef = drawerRefForSize(sizeCode, meta.drawer);
 
 		var layers = {
-			shadow: cdn + 'new_shadow/shadow_wrk_' + sizeCode + '.jpg',
-			legs: cdn + 'legs/bedding_legs_' + sizeCode + '.png',
+			shadow: happyBedsUrl(cdn, 'new_shadow/shadow_wrk_' + sizeCode + '.jpg', mode),
+			legs: happyBedsUrl(cdn, 'legs/bedding_legs_' + sizeCode + '.png', mode),
 			storage_back: transparent,
-			base: cdn + 'bases/' + meta.fabric + '/bedbase_' + sizeCode + '_' + depthCode + '_' + meta.code + '.png',
+			base: happyBedsUrl(cdn, 'bases/' + meta.fabric + '/bedbase_' + sizeCode + '_' + depthCode + '_' + meta.code + '.png', mode),
 			headboard: transparent,
 			storage_1: transparent,
 			storage_2: transparent,
@@ -101,22 +110,22 @@
 		};
 
 		if (hbStyle) {
-			layers.headboard = cdn + hbFolder + '/' + hbStyle + '_' + sizeCode + '_' + suffix + '.png';
+			layers.headboard = happyBedsUrl(cdn, hbFolder + '/' + hbStyle + '_' + sizeCode + '_' + suffix + '.png', mode);
 		}
 
 		if (storage === '2-drawers' || storage === 'end-drawer') {
-			layers.storage_2 = cdn + drawerBackPath(drawerFolder, sizeCode, drawerRef, suffix);
-			layers.storage_3 = cdn + drawerFrontPath(drawerFolder, sizeCode, drawerRef, suffix);
+			layers.storage_2 = happyBedsUrl(cdn, drawerBackPath(drawerFolder, sizeCode, drawerRef, suffix), mode);
+			layers.storage_3 = happyBedsUrl(cdn, drawerFrontPath(drawerFolder, sizeCode, drawerRef, suffix), mode);
 		} else if (storage === '4-drawers') {
 			var ref = drawerRef === null ? sizeCode : drawerRef;
-			layers.storage_2 = cdn + drawerBackPath(drawerFolder, sizeCode, drawerRef, suffix);
-			layers.storage_1 = cdn + drawerFrontPath(drawerFolder, sizeCode, drawerRef, suffix);
+			layers.storage_2 = happyBedsUrl(cdn, drawerBackPath(drawerFolder, sizeCode, drawerRef, suffix), mode);
+			layers.storage_1 = happyBedsUrl(cdn, drawerFrontPath(drawerFolder, sizeCode, drawerRef, suffix), mode);
 			if (drawerRef === null) {
-				layers.storage_2 = cdn + drawerFolder + '/reference_drawer_jumbo_front_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png';
-				layers.storage_3 = cdn + drawerFolder + '/reference_drawer_jumbo_back_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png';
+				layers.storage_2 = happyBedsUrl(cdn, drawerFolder + '/reference_drawer_jumbo_front_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png', mode);
+				layers.storage_3 = happyBedsUrl(cdn, drawerFolder + '/reference_drawer_jumbo_back_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png', mode);
 			} else {
-				layers.storage_2 = cdn + drawerFolder + '/reference_drawer_jumbo_front_' + ref + '_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png';
-				layers.storage_3 = cdn + drawerFolder + '/reference_drawer_jumbo_back_' + ref + '_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png';
+				layers.storage_2 = happyBedsUrl(cdn, drawerFolder + '/reference_drawer_jumbo_front_' + ref + '_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png', mode);
+				layers.storage_3 = happyBedsUrl(cdn, drawerFolder + '/reference_drawer_jumbo_back_' + ref + '_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png', mode);
 			}
 		}
 
@@ -124,10 +133,14 @@
 	}
 
 	function buildLayers(selections) {
-		if (wcbcData.useHappyBeds && wcbcData.happyBeds) {
-			return happyBedsLayers(selections);
+		var mode = wcbcData.imageMode || (wcbcData.useHappyBeds ? 'happybeds-cdn' : 'demo');
+		if (mode === 'demo') {
+			return demoLayers(selections);
 		}
+		return happyBedsLayers(selections, mode);
+	}
 
+	function demoLayers(selections) {
 		var base = wcbcData.layerBase || '';
 		var size = pick(selections, 'size') || 'small-double';
 		var colour = pick(selections, 'colour') || 'beige-velvet';
@@ -180,10 +193,22 @@
 		});
 	}
 
+	function applyLayerImage($img, nextSrc) {
+		var isTransparent = isTransparentUrl(nextSrc);
+		if ($img.attr('src') !== nextSrc) {
+			$img.attr('src', nextSrc);
+		}
+		$img.css({
+			opacity: isTransparent ? 0 : 1,
+			visibility: isTransparent ? 'hidden' : 'visible',
+		});
+	}
+
 	function updateLayers(layers) {
 		if (!layers) {
 			return;
 		}
+		var demoFallback = demoLayers(state.selections);
 		wcbcData.layers.forEach(function (layer) {
 			if (!layers[layer]) {
 				return;
@@ -193,13 +218,14 @@
 				return;
 			}
 			var nextSrc = layers[layer];
-			var isTransparent = isTransparentUrl(nextSrc);
-			if ($img.attr('src') !== nextSrc) {
-				$img.attr('src', nextSrc);
-			}
-			$img.css({
-				opacity: isTransparent ? 0 : 1,
-				visibility: isTransparent ? 'hidden' : 'visible',
+			var fallbackSrc = $img.data('fallback') || demoFallback[layer] || '';
+			applyLayerImage($img, nextSrc);
+			$img.off('error.wcbc').on('error.wcbc', function () {
+				if (fallbackSrc && $img.attr('src') !== fallbackSrc) {
+					applyLayerImage($img, fallbackSrc);
+				} else {
+					applyLayerImage($img, (wcbcData.layerBase || '') + 'transparent.png');
+				}
 			});
 		});
 	}

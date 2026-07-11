@@ -274,7 +274,11 @@
 	float: none !important;
 }
 
-/* Hide empty / transparent layers so they don't ghost-overlap */
+/* Hide broken image icon text and alt ghosting */
+.wcbc-preview img {
+	color: transparent !important;
+	font-size: 0 !important;
+}
 .wcbc-layer[src*="transparent.png"],
 .wcbc-layer[src*="FFFFFF-0"],
 .dynamic_image_items[src*="transparent.png"],

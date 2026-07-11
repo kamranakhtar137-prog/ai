@@ -177,6 +177,51 @@ class WCBC_Layer_Builder {
 	}
 
 	/**
+	 * Build demo layer URLs bundled with the plugin.
+	 *
+	 * @param array<string,string> $selections Selections.
+	 * @param array<string,string> $defaults Defaults.
+	 * @return array<string,string>
+	 */
+	public static function build_demo_layers( $selections, $defaults = array() ) {
+		$base     = self::layer_base();
+		$size     = self::pick( $selections, $defaults, 'size' );
+		$colour   = self::pick( $selections, $defaults, 'colour' );
+		$headboard = self::pick( $selections, $defaults, 'headboard' );
+		$depth    = self::pick( $selections, $defaults, 'base_depth' );
+		$storage  = self::pick( $selections, $defaults, 'storage' );
+		$shape    = self::headboard_shape( $headboard );
+		$suffix   = self::has_drawers( $storage ) ? '-drawers' : '';
+
+		if ( ! $size ) {
+			$size = 'double';
+		}
+		if ( ! $colour ) {
+			$colour = 'beige-velvet';
+		}
+		if ( ! $depth ) {
+			$depth = '14-inch';
+		}
+
+		$layers = array(
+			'shadow'       => $base . 'shadow-only.png',
+			'legs'         => $base . 'legs/' . $size . '.png',
+			'storage_back' => $base . 'transparent.png',
+			'base'         => $base . 'base/' . $size . '/' . $colour . '/' . $depth . $suffix . '.png',
+			'headboard'    => $base . 'transparent.png',
+			'storage_1'    => $base . 'transparent.png',
+			'storage_2'    => $base . 'transparent.png',
+			'storage_3'    => $base . 'transparent.png',
+		);
+
+		if ( 'none' !== $shape ) {
+			$layers['headboard'] = $base . 'headboard/' . $size . '/' . $shape . '/' . $colour . '.png';
+		}
+
+		return $layers;
+	}
+
+	/**
 	 * Build all preview layer URLs.
 	 *
 	 * @param array<string,mixed>  $config Product config.
@@ -185,6 +230,11 @@ class WCBC_Layer_Builder {
 	 */
 	public static function build( $config, $selections ) {
 		$defaults = isset( $config['defaults'] ) ? $config['defaults'] : array();
+		$mode     = function_exists( 'wcbc_get_image_mode' ) ? wcbc_get_image_mode() : 'demo';
+
+		if ( 'demo' === $mode ) {
+			return self::build_demo_layers( $selections, $defaults );
+		}
 
 		if ( self::has_happybeds_manifest() ) {
 			$imported = self::build_from_manifest( $config, $selections );
@@ -193,7 +243,6 @@ class WCBC_Layer_Builder {
 			}
 		}
 
-		// Live Happy Beds CDN layers (same URLs as happybeds.co.uk build-your-own-bed).
-		return WCBC_HappyBeds_Resolver::build_layers( $selections, $defaults );
+		return WCBC_HappyBeds_Resolver::build_layers( $selections, $defaults, $mode );
 	}
 }

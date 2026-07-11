@@ -44,19 +44,27 @@ class WCBC_HappyBeds_Resolver {
 	 * CDN URL helper.
 	 *
 	 * @param string $relative Relative path under new_configurator.
+	 * @param string $mode Image mode.
 	 * @return string
 	 */
-	public static function cdn_url( $relative ) {
-		return self::CDN . ltrim( $relative, '/' );
+	public static function cdn_url( $relative, $mode = 'happybeds-cdn' ) {
+		$relative = ltrim( (string) $relative, '/' );
+
+		if ( 'happybeds-proxy' === $mode && class_exists( 'WCBC_Layer_Serve' ) ) {
+			return WCBC_Layer_Serve::proxy_url( $relative );
+		}
+
+		return self::CDN . $relative;
 	}
 
 	/**
 	 * Transparent placeholder used by Happy Beds.
 	 *
+	 * @param string $mode Image mode.
 	 * @return string
 	 */
-	public static function transparent_url() {
-		return self::cdn_url( 'FFFFFF-0.png' );
+	public static function transparent_url( $mode = 'happybeds-cdn' ) {
+		return self::cdn_url( 'FFFFFF-0.png', $mode );
 	}
 
 	/**
@@ -258,9 +266,10 @@ class WCBC_HappyBeds_Resolver {
 	 *
 	 * @param array<string,string> $selections Selections.
 	 * @param array<string,string> $defaults Defaults.
+	 * @param string               $mode Image mode.
 	 * @return array<string,string>
 	 */
-	public static function build_layers( $selections, $defaults = array() ) {
+	public static function build_layers( $selections, $defaults = array(), $mode = 'happybeds-cdn' ) {
 		$size       = self::pick_selection( $selections, $defaults, 'size' );
 		$colour     = self::pick_selection( $selections, $defaults, 'colour' );
 		$headboard  = self::pick_selection( $selections, $defaults, 'headboard' );
@@ -290,9 +299,9 @@ class WCBC_HappyBeds_Resolver {
 		$dc_suffix  = $depth_code . $meta['code'];
 
 		$layers = array(
-			'shadow'       => self::cdn_url( 'new_shadow/shadow_wrk_' . $size_code . '.jpg' ),
-			'legs'         => self::cdn_url( 'legs/bedding_legs_' . $size_code . '.png' ),
-			'storage_back' => self::transparent_url(),
+			'shadow'       => self::cdn_url( 'new_shadow/shadow_wrk_' . $size_code . '.jpg', $mode ),
+			'legs'         => self::cdn_url( 'legs/bedding_legs_' . $size_code . '.png', $mode ),
+			'storage_back' => self::transparent_url( $mode ),
 			'base'         => self::cdn_url(
 				sprintf(
 					'bases/%s/bedbase_%s_%s_%s.png',
@@ -300,12 +309,13 @@ class WCBC_HappyBeds_Resolver {
 					$size_code,
 					$depth_code,
 					$meta['code']
-				)
+				),
+				$mode
 			),
-			'headboard'    => self::transparent_url(),
-			'storage_1'    => self::transparent_url(),
-			'storage_2'    => self::transparent_url(),
-			'storage_3'    => self::transparent_url(),
+			'headboard'    => self::transparent_url( $mode ),
+			'storage_1'    => self::transparent_url( $mode ),
+			'storage_2'    => self::transparent_url( $mode ),
+			'storage_3'    => self::transparent_url( $mode ),
 		);
 
 		if ( $hb_style ) {
@@ -317,14 +327,15 @@ class WCBC_HappyBeds_Resolver {
 					$hb_style,
 					$size_code,
 					$dc_suffix
-				)
+				),
+				$mode
 			);
 		}
 
 		$storage_paths = self::storage_layers( $storage, $size_code, $depth_code, $meta['code'], $meta['drawer'], $meta['fabric'] );
 		foreach ( $storage_paths as $layer => $relative ) {
 			if ( $relative ) {
-				$layers[ $layer ] = self::cdn_url( $relative );
+				$layers[ $layer ] = self::cdn_url( $relative, $mode );
 			}
 		}
 
