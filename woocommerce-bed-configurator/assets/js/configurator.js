@@ -125,6 +125,7 @@
 	}
 
 	function fabricPaths(hbFabric) {
+		var hb = wcbcData.happyBeds || {};
 		var map = hb.fabricPaths || {};
 		return map[hbFabric] || map.velvet || {
 			base: 'velvet',
