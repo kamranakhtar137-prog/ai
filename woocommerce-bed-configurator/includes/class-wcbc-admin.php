@@ -197,7 +197,7 @@ class WCBC_Admin {
 					<button type="button" class="button" id="wcbc-copy-import-script"><?php esc_html_e( 'Copy quick import', 'wc-bed-configurator' ); ?></button>
 					<br /><br />
 					<strong style="color:#b45309;"><?php esc_html_e( 'Full import (recommended)', 'wc-bed-configurator' ); ?></strong> —
-					<?php esc_html_e( 'All colours, headboards, depths & storage options. Required for images to update when customers change variations. Takes ~15–30 min on happybeds.co.uk Console.', 'wc-bed-configurator' ); ?>
+					<?php esc_html_e( 'All colours, headboards, depths & storage options. Builds CDN paths directly (no Happy Beds API). Takes ~10–20 min on happybeds.co.uk Console.', 'wc-bed-configurator' ); ?>
 					<br />
 					<textarea id="wcbc_import_all_script" readonly rows="8" style="width:100%;font-family:monospace;font-size:11px;"><?php echo esc_textarea( $import_all_script ); ?></textarea>
 					<button type="button" class="button button-primary" id="wcbc-copy-import-all-script"><?php esc_html_e( 'Copy full import (all variations)', 'wc-bed-configurator' ); ?></button>

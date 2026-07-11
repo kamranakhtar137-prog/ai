@@ -211,25 +211,29 @@ class WCBC_Cache_API {
 	 * @return string
 	 */
 	public static function import_all_script() {
-		$colours = class_exists( 'WCBC_Colour_Registry' ) ? WCBC_Colour_Registry::colour_slugs() : array();
-		return self::wrap_import_script( 'scripts/import-all-happybeds-to-wp.js', $colours );
+		$config = WCBC_Config::get_default_config();
+		$extra  = array(
+			'colours'   => class_exists( 'WCBC_Colour_Registry' ) ? WCBC_Colour_Registry::colour_slugs() : array(),
+			'happyBeds' => WCBC_HappyBeds_Resolver::js_config( $config ),
+		);
+		return self::wrap_import_script( 'scripts/import-all-happybeds-to-wp.js', $extra );
 	}
 
 	/**
 	 * Embed site config into a script file body.
 	 *
-	 * @param string       $relative Relative path under plugin scripts/.
-	 * @param string[]|null $colours Optional colour slugs for full import.
+	 * @param string              $relative Relative path under plugin scripts/.
+	 * @param array<string,mixed> $extra    Extra keys merged into wcbcImportConfig.
 	 * @return string
 	 */
-	private static function wrap_import_script( $relative, $colours = null ) {
-		$payload = array(
-			'site'  => untrailingslashit( home_url() ),
-			'token' => self::import_token(),
+	private static function wrap_import_script( $relative, $extra = array() ) {
+		$payload = array_merge(
+			array(
+				'site'  => untrailingslashit( home_url() ),
+				'token' => self::import_token(),
+			),
+			is_array( $extra ) ? $extra : array()
 		);
-		if ( is_array( $colours ) && ! empty( $colours ) ) {
-			$payload['colours'] = array_values( $colours );
-		}
 		$config = wp_json_encode( $payload );
 
 		$script_path = WCBC_PLUGIN_DIR . $relative;

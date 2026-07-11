@@ -1,5 +1,5 @@
 /**
- * FULL import — all size/colour/headboard/depth/storage variations.
+ * FULL import — builds CDN paths locally (no Happy Beds API) then uploads to WordPress.
  * Run on https://www.happybeds.co.uk/build-your-own-bed
  * Copy from WordPress admin → Bed Configurator → "Full import script"
  */
@@ -9,104 +9,139 @@
 	var config = window.wcbcImportConfig || {};
 	var WP_SITE = config.site || '';
 	var TOKEN = config.token || '';
+	var hb = config.happyBeds || {};
 
 	if (!WP_SITE || !TOKEN) {
 		console.error('Copy the FULL script from WordPress admin (Bed Configurator tab).');
 		return;
 	}
 
-	var SIZE_MAP = {
-		'small-single': 'small-single-2ft-6',
-		single: 'single-3ft',
-		'small-double': 'small-double-4ft',
-		double: 'double-4ft-6',
-		king: 'king-5ft',
-		'super-king': 'superking-6ft',
-	};
-
-	var SIZES = Object.keys(SIZE_MAP);
-	var COLOURS = config.colours || [
-		'light-silver-velvet', 'asphalt-velvet', 'graphite-velvet', 'black-velvet', 'blue-marine-velvet',
-		'emerald-velvet', 'duck-egg-blue-velvet', 'pink-velvet', 'beige-velvet', 'mustard-velvet',
-		'black-linen', 'charcoal-linen', 'chocolate-linen', 'cream-linen', 'duck-egg-blue-linen',
-		'lime-linen', 'midnight-blue-linen', 'orchid-linen', 'plum-linen', 'red-linen',
-		'slate-grey-linen', 'white-linen', 'silver-grey-linen',
-	];
+	var SIZES = ['small-single', 'single', 'small-double', 'double', 'king', 'super-king'];
+	var COLOURS = config.colours || Object.keys(hb.colourMeta || {});
 	var HEADBOARDS = ['cornell-plain', 'cornell-lined', 'cornell-buttoned', 'dudley-plain', 'victor-plain', 'no-headboard'];
 	var DEPTHS = ['6-inch', '10-inch', '14-inch'];
 	var STORAGE = ['no-drawers', 'ottoman', '2-drawers', '4-drawers', 'end-drawer'];
 
-	function styleFromHeadboard(headboard) {
-		if (headboard.indexOf('cornell') === 0) return 'CORNELL';
-		if (headboard.indexOf('dudley') === 0) return 'DUDLEY';
-		if (headboard.indexOf('victor') === 0) return 'VICTOR';
-		return 'NOHEADBOARD';
+	var sizeCodes = hb.sizeCodes || {
+		'small-single': '3ft',
+		single: '3ft',
+		'small-double': '4ft6',
+		double: '4ft6',
+		king: '5ft',
+		'super-king': '6ft',
+	};
+	var colourMeta = hb.colourMeta || {};
+	var headboardMap = hb.headboards || {};
+	var fabricPathMap = hb.fabricPaths || {};
+
+	function fabricPaths(hbFabric) {
+		return fabricPathMap[hbFabric] || fabricPathMap.velvet || {
+			base: 'velvet',
+			headboard: 'headboards_velvet',
+			drawer: 'drawers_velvet',
+		};
 	}
 
-	function resolvePaths(obj, params) {
-		var baseImage = obj.base_image;
-		var legsImage = obj.legs_image;
-		var shadowImage = obj.shadow_image;
-		var headboardImage = obj.headboard_image;
-		var storage1 = obj.storage1;
-		var storage2 = obj.storage2;
-		var storage3 = obj.storage3;
-		var urlStorage = params.storage;
-		var urlSize = params.size;
-		var drawState = params.ds;
+	function drawerRefForSize(sizeCode, drawerCode) {
+		if (sizeCode === '3ft') return null;
+		if (sizeCode === '5ft' || sizeCode === '6ft') return '200';
+		return drawerCode;
+	}
 
-		if (urlStorage === 'ottoman' && drawState === 0) {
-			baseImage = baseImage
-				.replace('linoso', 'linoso/ottoman_open')
-				.replace('suede', 'suede/ottoman_open')
-				.replace('velvet', 'velvet/ottoman_open');
+	function drawerBackPath(folder, sizeCode, drawerRef, suffix) {
+		if (drawerRef === null) {
+			return folder + '/reference_drawer_normal_back_' + sizeCode + '_drawer_normal_front_' + suffix + '.png';
+		}
+		return folder + '/reference_drawer_normal_back_' + drawerRef + '_' + sizeCode + '_drawer_normal_front_' + suffix + '.png';
+	}
+
+	function drawerFrontPath(folder, sizeCode, drawerRef, suffix) {
+		if (drawerRef === null) {
+			return folder + '/reference_drawer_normal_front_' + sizeCode + '_drawer_normal_front_' + suffix + '.png';
+		}
+		return folder + '/reference_drawer_normal_front_' + drawerRef + '_' + sizeCode + '_drawer_normal_front_' + suffix + '.png';
+	}
+
+	function addPath(set, rel) {
+		if (!rel || rel.indexOf('FFFFFF-0') !== -1) return;
+		set[rel.replace(/^\//, '')] = true;
+	}
+
+	function buildRelativePaths(selections) {
+		var paths = [];
+		var size = selections.size;
+		var colour = selections.colour;
+		var headboard = selections.headboard;
+		var baseDepth = selections.base_depth;
+		var storage = selections.storage;
+
+		var sizeCode = sizeCodes[size] || '4ft6';
+		var depthCode = baseDepth.replace('-inch', 'i');
+		var meta = colourMeta[colour] || colourMeta['beige-velvet'] || { hb_fabric: 'velvet', code: '30', drawer: '190' };
+		var hbStyle = headboardMap[headboard];
+		var suffix = depthCode + meta.code;
+		var pathsFabric = fabricPaths(meta.hb_fabric || meta.fabric);
+		var drawerFolder = pathsFabric.drawer;
+		var hbFolder = pathsFabric.headboard;
+		var drawerRef = drawerRefForSize(sizeCode, meta.drawer);
+
+		paths.push('new_shadow/shadow_wrk_' + sizeCode + '.jpg');
+		paths.push('legs/bedding_legs_' + sizeCode + '.png');
+		paths.push('bases/' + pathsFabric.base + '/bedbase_' + sizeCode + '_' + depthCode + '_' + meta.code + '.png');
+
+		if (storage === 'ottoman') {
+			paths.push('bases/' + pathsFabric.base + '/ottoman_open/bedbase_' + sizeCode + '_' + depthCode + '_' + meta.code + '.png');
+			if (sizeCode === '4ft6') paths.push('legs/hb_legs_4ft6_ottoman.png');
+			if (sizeCode === '5ft') paths.push('legs/hb_legs_5ft_ottoman.png');
+			if (sizeCode === '6ft') paths.push('legs/hb_legs_6ft_ottoman.png');
 		}
 
-		if (urlStorage === 'ottoman') {
-			if (urlSize === 'double-4ft-6' || urlSize === "double-4ft-6''") {
-				legsImage = 'hb_legs_4ft6_ottoman.png';
-			} else if (urlSize === 'king-5ft' || urlSize === 'king-size-5ft') {
-				legsImage = 'hb_legs_5ft_ottoman.png';
-			} else if (urlSize === 'superking-6ft' || urlSize === 'super-kingsize-6ft') {
-				legsImage = 'hb_legs_6ft_ottoman.png';
+		if (hbStyle) {
+			paths.push(hbFolder + '/' + hbStyle + '_' + sizeCode + '_' + suffix + '.png');
+		}
+
+		if (storage === '2-drawers' || storage === 'end-drawer') {
+			paths.push(drawerBackPath(drawerFolder, sizeCode, drawerRef, suffix));
+			paths.push(drawerFrontPath(drawerFolder, sizeCode, drawerRef, suffix));
+		} else if (storage === '4-drawers') {
+			var ref = drawerRef === null ? sizeCode : drawerRef;
+			paths.push(drawerBackPath(drawerFolder, sizeCode, drawerRef, suffix));
+			paths.push(drawerFrontPath(drawerFolder, sizeCode, drawerRef, suffix));
+			if (drawerRef === null) {
+				paths.push(drawerFolder + '/reference_drawer_jumbo_front_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png');
+				paths.push(drawerFolder + '/reference_drawer_jumbo_back_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png');
+			} else {
+				paths.push(drawerFolder + '/reference_drawer_jumbo_front_' + ref + '_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png');
+				paths.push(drawerFolder + '/reference_drawer_jumbo_back_' + ref + '_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png');
 			}
 		}
 
-		var layers = {
-			shadow: 'new_shadow/' + shadowImage,
-			legs: 'legs/' + legsImage,
-			storage_back: 'FFFFFF-0.png',
-			base: 'bases/' + baseImage + '.png',
-			headboard: headboardImage ? headboardImage + '.png' : 'FFFFFF-0.png',
-			storage_1: storage1 || 'FFFFFF-0.png',
-			storage_2: storage2 || 'FFFFFF-0.png',
-			storage_3: storage3 || 'FFFFFF-0.png',
-		};
-
-		if (storage3 && (urlStorage === '4-drawers' || urlStorage === '2-drawers')) {
-			layers.storage_back = storage3.replace('4ft6', '4ft').replace('_front_', '_front_left_');
-		}
-
-		if (layers.headboard === 'no_headboard.png' || params.headboard === 'no-headboard') {
-			layers.headboard = 'FFFFFF-0.png';
-		}
-
-		return layers;
+		return paths;
 	}
 
-	function fetchLayers(apiParams) {
-		var q = new URLSearchParams(apiParams);
-		return fetch('/ev_bespokebeds/bespoke/image?' + q.toString(), {
-			credentials: 'same-origin',
-			headers: { Accept: 'application/json' },
-		})
-			.then(function (r) { return r.json(); })
-			.then(function (data) {
-				if (!data || data.status === 'ERROR' || !data.image_result) {
-					throw new Error('API error');
-				}
-				return JSON.parse(data.image_result);
+	function collectUniquePaths() {
+		var unique = {};
+		SIZES.forEach(function (size) {
+			COLOURS.forEach(function (colour) {
+				HEADBOARDS.forEach(function (headboard) {
+					DEPTHS.forEach(function (depth) {
+						STORAGE.forEach(function (storage) {
+							buildRelativePaths({
+								size: size,
+								colour: colour,
+								headboard: headboard,
+								base_depth: depth,
+								storage: storage,
+							}).forEach(function (rel) {
+								addPath(unique, rel);
+							});
+						});
+					});
+				});
 			});
+		});
+		addPath(unique, 'FFFFFF-0.png');
+		return Object.keys(unique);
 	}
 
 	function sleep(ms) {
@@ -133,115 +168,55 @@
 		}).then(function (r) { return r.json(); });
 	}
 
-	function buildQueue() {
-		var list = [];
-		SIZES.forEach(function (size) {
-			COLOURS.forEach(function (colour) {
-				HEADBOARDS.forEach(function (headboard) {
-					DEPTHS.forEach(function (depth) {
-						STORAGE.forEach(function (storage) {
-							list.push({ size: size, colour: colour, headboard: headboard, depth: depth, storage: storage, ds: 1 });
-							if (storage === 'ottoman') {
-								list.push({ size: size, colour: colour, headboard: headboard, depth: depth, storage: storage, ds: 0 });
-							}
-						});
-					});
-				});
-			});
-		});
-		return list;
-	}
+	var fileList = collectUniquePaths();
+	var ok = 0;
+	var fail = 0;
+	var skip = 0;
+	var i = 0;
 
-	var uniqueFiles = {};
-	var queue = buildQueue();
-	var total = queue.length;
-	var index = 0;
+	console.log('Full import: downloading', fileList.length, 'unique CDN images (no API calls)…');
+	console.log('Upload target:', WP_SITE);
 
-	console.log('Step 1/2: Fetching', total, 'combinations from Happy Beds API…');
-
-	function fetchNext() {
-		if (index >= queue.length) {
-			return uploadAll();
+	function downloadNext() {
+		if (i >= fileList.length) {
+			console.log('FULL import complete. OK:', ok, 'Skipped (404):', skip, 'Failed:', fail);
+			console.log('Reload your product page — colour/size/headboard variations should now update.');
+			return Promise.resolve();
 		}
 
-		var local = queue[index++];
-		var apiSize = SIZE_MAP[local.size];
-		var apiParams = {
-			size: apiSize,
-			style: styleFromHeadboard(local.headboard),
-			colour: local.colour,
-			base: local.depth,
-			headboard: local.headboard,
-			storage: local.storage,
-			ds: String(local.ds),
-			is_divan: '1',
-		};
-
-		return fetchLayers(apiParams)
-			.then(function (obj) {
-				var layers = resolvePaths(obj, {
-					size: apiSize,
-					storage: local.storage,
-					headboard: local.headboard,
-					ds: local.ds,
+		var path = fileList[i++];
+		return fetch('/media/new_configurator/' + path, { credentials: 'same-origin' })
+			.then(function (r) {
+				if (r.status === 404) {
+					skip++;
+					return null;
+				}
+				if (!r.ok) throw new Error('HTTP ' + r.status);
+				return r.blob();
+			})
+			.then(function (blob) {
+				if (!blob) return null;
+				return blobToBase64(blob).then(function (dataUrl) {
+					return upload(path, dataUrl);
 				});
-				Object.keys(layers).forEach(function (layer) {
-					var rel = layers[layer];
-					if (rel && rel.indexOf('FFFFFF-0') === -1) {
-						uniqueFiles[rel] = true;
-					}
-				});
-				if (index % 50 === 0 || index === total) {
-					console.log('API progress:', index, '/', total, '— unique files:', Object.keys(uniqueFiles).length);
+			})
+			.then(function (res) {
+				if (res === null) return;
+				if (res && res.ok) {
+					ok++;
+					if (ok % 25 === 0) console.log('Uploaded', ok, '/', fileList.length);
+				} else {
+					fail++;
+					console.warn('Upload failed', path, res);
 				}
 			})
-			.catch(function () { /* skip failed combo */ })
-			.then(function () { return sleep(100); })
-			.then(fetchNext);
+			.catch(function (err) {
+				fail++;
+				console.warn('Failed', path, err.message);
+			})
+			.then(function () { return sleep(60); })
+			.then(downloadNext);
 	}
 
-	function uploadAll() {
-		var fileList = Object.keys(uniqueFiles);
-		var ok = 0;
-		var fail = 0;
-		var i = 0;
-
-		console.log('Step 2/2: Uploading', fileList.length, 'unique images to', WP_SITE);
-
-		function uploadNext() {
-			if (i >= fileList.length) {
-				console.log('FULL import complete. OK:', ok, 'Failed:', fail);
-				console.log('Reload your product page — all colour/size/headboard variations should now update.');
-				return Promise.resolve();
-			}
-
-			var path = fileList[i++];
-			return fetch('/media/new_configurator/' + path, { credentials: 'same-origin' })
-				.then(function (r) {
-					if (!r.ok) throw new Error('HTTP ' + r.status);
-					return r.blob();
-				})
-				.then(blobToBase64)
-				.then(function (dataUrl) { return upload(path, dataUrl); })
-				.then(function (res) {
-					if (res && res.ok) {
-						ok++;
-						if (ok % 25 === 0) console.log('Uploaded', ok, '/', fileList.length);
-					} else {
-						fail++;
-						console.warn('Upload failed', path, res);
-					}
-				})
-				.catch(function (err) {
-					fail++;
-					console.warn('Failed', path, err.message);
-				})
-				.then(function () { return sleep(80); })
-				.then(uploadNext);
-		}
-
-		return uploadNext();
-	}
-
-	return fetchNext();
+	return downloadNext();
 })();
