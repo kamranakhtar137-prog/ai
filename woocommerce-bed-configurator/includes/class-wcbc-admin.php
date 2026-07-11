@@ -181,7 +181,6 @@ class WCBC_Admin {
 						</table>
 					<?php endforeach; ?>
 				</div>
-				<?php
 				<p class="form-field">
 					<label for="wcbc_config_json"><?php esc_html_e( 'Configurator JSON (advanced)', 'wc-bed-configurator' ); ?></label>
 					<textarea id="wcbc_config_json" name="wcbc_config_json" rows="18" style="width:100%;font-family:monospace;"><?php echo esc_textarea( $json ); ?></textarea>
