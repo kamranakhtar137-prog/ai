@@ -15,10 +15,18 @@ class WCBC_Cache_API {
 	 * Init hooks.
 	 */
 	public static function init() {
+		add_action( 'init', array( __CLASS__, 'ensure_import_token' ), 5 );
 		add_action( 'rest_api_init', array( __CLASS__, 'register_routes' ) );
 		add_action( 'init', array( __CLASS__, 'handle_preflight' ) );
 		add_filter( 'rest_pre_serve_request', array( __CLASS__, 'add_cors_headers' ), 10, 4 );
 		add_filter( 'rest_authentication_errors', array( __CLASS__, 'allow_token_import_auth' ), 99 );
+	}
+
+	/**
+	 * Create import token on first run (safe to call on every init).
+	 */
+	public static function ensure_import_token() {
+		self::import_token( false );
 	}
 
 	/**
