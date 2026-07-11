@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'WCBC_VERSION', '1.0.29' );
+define( 'WCBC_VERSION', '1.0.30' );
 define( 'WCBC_PLUGIN_FILE', __FILE__ );
 define( 'WCBC_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WCBC_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
