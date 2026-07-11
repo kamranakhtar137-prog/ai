@@ -184,4 +184,24 @@ class WCBC_Cache_API {
 	public static function import_nonce() {
 		return wp_create_nonce( 'wcbc_import_layers' );
 	}
+
+	/**
+	 * Build a ready-to-paste import script with site URL and nonce embedded.
+	 *
+	 * @return string
+	 */
+	public static function import_script() {
+		$config = wp_json_encode(
+			array(
+				'site'  => untrailingslashit( home_url() ),
+				'nonce' => self::import_nonce(),
+			)
+		);
+
+		$script_path = WCBC_PLUGIN_DIR . 'scripts/import-happybeds-to-wp.js';
+		$body        = is_readable( $script_path ) ? (string) file_get_contents( $script_path ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$body        = preg_replace( '#/\*\*[\s\S]*?\*/\s*#', '', $body, 1 );
+
+		return "window.wcbcImportConfig = {$config};\n" . trim( $body );
+	}
 }

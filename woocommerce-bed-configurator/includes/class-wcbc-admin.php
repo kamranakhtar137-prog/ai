@@ -44,6 +44,7 @@ class WCBC_Admin {
 		$enabled = get_post_meta( $post->ID, WCBC_Config::ENABLED_KEY, true ) === 'yes';
 		$config  = WCBC_Config::get_product_config( $post->ID );
 		$json    = wp_json_encode( $config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+		$import_script = WCBC_Cache_API::import_script();
 		?>
 		<div id="wcbc_product_data" class="panel woocommerce_options_panel hidden">
 			<div class="options_group">
@@ -77,21 +78,12 @@ class WCBC_Admin {
 				</p>
 				<p class="form-field">
 					<strong><?php esc_html_e( 'Happy Beds real images', 'wc-bed-configurator' ); ?></strong><br />
-					<?php esc_html_e( 'Happy Beds blocks hotlinked images on localhost. Import real layer files once using the browser script in scripts/import-happybeds-to-wp.js', 'wc-bed-configurator' ); ?>
+					<?php esc_html_e( 'Copy the script below, open happybeds.co.uk/build-your-own-bed, paste in DevTools Console, press Enter. Wait for "Import complete".', 'wc-bed-configurator' ); ?>
 					<br /><br />
-					<code style="display:block;padding:8px;background:#f6f7f7;">
-						wcbcWpSite = '<?php echo esc_js( home_url() ); ?>';<br />
-						wcbcImportNonce = '<?php echo esc_js( WCBC_Cache_API::import_nonce() ); ?>';
-					</code>
+					<textarea id="wcbc_import_script" readonly rows="12" style="width:100%;font-family:monospace;font-size:11px;"><?php echo esc_textarea( $import_script ); ?></textarea>
 					<br />
-					<?php
-					printf(
-						/* translators: %s: path to script */
-						esc_html__( 'Run those two lines on happybeds.co.uk, then paste %s in DevTools Console.', 'wc-bed-configurator' ),
-						'<code>scripts/import-happybeds-to-wp.js</code>'
-					);
-					?>
-					<br />
+					<button type="button" class="button" id="wcbc-copy-import-script"><?php esc_html_e( 'Copy import script', 'wc-bed-configurator' ); ?></button>
+					<br /><br />
 					<?php
 					printf(
 						esc_html__( 'Cache status: %s', 'wc-bed-configurator' ),
@@ -115,6 +107,20 @@ class WCBC_Admin {
 			document.getElementById('wcbc-reset-defaults')?.addEventListener('click', function(){
 				if (confirm('Reset configurator JSON to plugin demo defaults?')) {
 					document.getElementById('wcbc_config_json').value = JSON.stringify(defaults, null, 2);
+				}
+			});
+			document.getElementById('wcbc-copy-import-script')?.addEventListener('click', function(){
+				var ta = document.getElementById('wcbc_import_script');
+				if (!ta) return;
+				ta.select();
+				ta.setSelectionRange(0, 99999);
+				if (navigator.clipboard && navigator.clipboard.writeText) {
+					navigator.clipboard.writeText(ta.value).then(function(){
+						alert('Import script copied. Paste it on happybeds.co.uk Console.');
+					});
+				} else {
+					document.execCommand('copy');
+					alert('Import script copied. Paste it on happybeds.co.uk Console.');
 				}
 			});
 		})();

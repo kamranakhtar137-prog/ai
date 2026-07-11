@@ -1,26 +1,19 @@
 /**
  * Import real Happy Beds layer images into your WordPress plugin cache.
  *
- * STEP 1 — On your WordPress site (logged in as admin), open any page and run:
- *   wcbcWpSite = 'http://localhost/slick';
- *   wcbcImportNonce = 'PASTE_NONCE_FROM_WP_ADMIN';
- *
- *   Get nonce: WooCommerce → Bed Configurator (or add this to product page source:
- *   view page source and search for wcbcImportNonce in localized script — added in v1.0.13)
- *
- * STEP 2 — Open https://www.happybeds.co.uk/build-your-own-bed in another tab
- * STEP 3 — Paste this entire file into DevTools Console and press Enter
- *
- * Images are fetched same-origin from Happy Beds, then POSTed to your WordPress cache.
+ * Run on https://www.happybeds.co.uk/build-your-own-bed
+ * Copy the full script from WooCommerce product → Bed Configurator tab (one block).
  */
 (function importHappyBedsToWordPress() {
 	'use strict';
 
-	var WP_SITE = window.wcbcWpSite || '';
-	var NONCE = window.wcbcImportNonce || '';
+	var config = window.wcbcImportConfig || {};
+	var WP_SITE = config.site || window.wcbcWpSite || '';
+	var NONCE = config.nonce || window.wcbcImportNonce || '';
 
 	if (!WP_SITE) {
-		console.error('Set wcbcWpSite first, e.g. wcbcWpSite = "http://localhost/slick";');
+		console.error('Missing site URL. Copy the FULL script from WordPress admin (Bed Configurator tab), not just this file.');
+		console.error('Or run: wcbcWpSite = "https://your-site.com"; wcbcImportNonce = "your-nonce"; then run the script again.');
 		return;
 	}
 
