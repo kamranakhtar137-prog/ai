@@ -3,7 +3,7 @@
  * Plugin Name: WooCommerce Bed Configurator
  * Plugin URI: https://github.com/example/woocommerce-bed-configurator
  * Description: Build-your-own-bed product configurator for WooCommerce with layered preview images, accordion options, and dynamic pricing.
- * Version: 1.0.8
+ * Version: 1.0.9
  * Author: Cursor
  * Author URI: https://cursor.com
  * Text Domain: wc-bed-configurator
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'WCBC_VERSION', '1.0.8' );
+define( 'WCBC_VERSION', '1.0.9' );
 define( 'WCBC_PLUGIN_FILE', __FILE__ );
 define( 'WCBC_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WCBC_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -72,6 +72,8 @@ function wcbc_activate() {
 			array( 'back_link' => true )
 		);
 	}
+	require_once WCBC_PLUGIN_DIR . 'includes/class-wcbc-config.php';
+	require_once WCBC_PLUGIN_DIR . 'includes/class-wcbc-happybeds-resolver.php';
 	require_once WCBC_PLUGIN_DIR . 'includes/class-wcbc-demo.php';
 	WCBC_Demo::create_demo_product();
 	flush_rewrite_rules();

@@ -38,8 +38,15 @@ class WCBC_Config {
 	public static function get_default_config() {
 		$base = WCBC_PLUGIN_URL . 'demo-images/';
 
-		$defaults = self::get_default_config();
-		$hb_layers = WCBC_HappyBeds_Resolver::build_layers( $defaults['defaults'], $defaults['defaults'] );
+		$selection_defaults = array(
+			'size'       => 'double',
+			'colour'     => 'beige-velvet',
+			'headboard'  => 'cornell-lined',
+			'base_depth' => '14-inch',
+			'storage'    => '2-drawers',
+		);
+
+		$hb_layers = WCBC_HappyBeds_Resolver::build_layers( $selection_defaults, $selection_defaults );
 
 		return array(
 			'base_price' => 299.99,
@@ -133,13 +140,7 @@ class WCBC_Config {
 					),
 				),
 			),
-			'defaults'   => array(
-				'size'       => 'double',
-				'colour'     => 'beige-velvet',
-				'headboard'  => 'cornell-lined',
-				'base_depth' => '14-inch',
-				'storage'    => '2-drawers',
-			),
+			'defaults'   => $selection_defaults,
 		);
 	}
 
