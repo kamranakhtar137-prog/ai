@@ -571,12 +571,14 @@ button.wcbc-accordian-head:focus-visible {
 	width: 100%;
 }
 
-.options-list > li {
+.options-list > li,
+.options-list > li.wcbc-option {
 	box-sizing: border-box;
 	flex: 0 0 33.333%;
 	max-width: 33.333%;
 	padding: 8px;
 	text-align: center;
+	position: relative;
 }
 
 .wcbc-headboard-grid.options-list > li {
@@ -588,7 +590,7 @@ button.wcbc-accordian-head:focus-visible {
 	display: none !important;
 }
 
-.options-list label {
+.options-list label.wcbc-option-label {
 	display: block;
 	overflow: hidden;
 	width: 100%;
@@ -601,13 +603,21 @@ button.wcbc-accordian-head:focus-visible {
 	box-sizing: border-box;
 }
 
-.options-list label:hover {
+.options-list label.wcbc-option-label:hover {
 	border-color: #d0d0d8;
 }
 
-.options-list label.is-checked,
-.options-list input:checked + label {
-	border: 2px solid #2b2e52;
+.options-list label.wcbc-option-label.is-checked {
+	border: 2px solid #2b2e52 !important;
+	box-shadow: 0 0 0 1px #2b2e52;
+}
+
+.wcbc-option input.wcbc-radio {
+	position: absolute;
+	opacity: 0;
+	width: 1px;
+	height: 1px;
+	pointer-events: none;
 }
 
 .colourspan,

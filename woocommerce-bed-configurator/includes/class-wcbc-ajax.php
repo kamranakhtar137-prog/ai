@@ -46,6 +46,7 @@ class WCBC_Ajax {
 				'price_html'  => wc_price( $calc['price'] ),
 				'layers'      => $calc['layers'],
 				'labels'      => $calc['labels'],
+				'selections'  => isset( $calc['selections'] ) ? $calc['selections'] : array(),
 				'formatted'   => number_format( $calc['price'], 2, '.', '' ),
 			)
 		);

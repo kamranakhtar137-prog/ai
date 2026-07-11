@@ -339,11 +339,32 @@
 		return layers;
 	}
 
+	function resolveDefaultSelection(group) {
+		var defaults = wcbcData.config.defaults || {};
+		var selected = defaults[group.id] || '';
+		if (!group.options || !group.options.length) {
+			return selected;
+		}
+		var found = group.options.some(function (opt) {
+			return opt.id === selected;
+		});
+		return found ? selected : group.options[0].id;
+	}
+
+	function syncGroupSelectionUI(groupId, optionId) {
+		$('input.wcbc-radio[data-group="' + groupId + '"]').each(function () {
+			var $input = $(this);
+			var isMatch = $input.val() === optionId;
+			$input.prop('checked', isMatch);
+			$input.closest('li.wcbc-option').find('label.wcbc-option-label').toggleClass('is-checked', isMatch);
+		});
+	}
+
 	function initSelections() {
 		wcbcData.config.groups.forEach(function (group) {
-			var def = wcbcData.config.defaults[group.id] || '';
-			var $checked = $('input.wcbc-radio[data-group="' + group.id + '"]:checked');
-			state.selections[group.id] = $checked.length ? $checked.val() : def;
+			var selected = resolveDefaultSelection(group);
+			state.selections[group.id] = selected;
+			syncGroupSelectionUI(group.id, selected);
 		});
 		syncHiddenFields();
 		refreshPreview();
@@ -445,12 +466,7 @@
 	function onSelectionChange(groupId, optionId) {
 		state.selections[groupId] = optionId;
 		syncHiddenFields();
-
-		$('input.wcbc-radio[data-group="' + groupId + '"]').each(function () {
-			var isMatch = $(this).val() === optionId;
-			$(this).prop('checked', isMatch);
-			$(this).closest('li').find('label').toggleClass('is-checked', isMatch);
-		});
+		syncGroupSelectionUI(groupId, optionId);
 
 		// Update bed preview immediately from local layer map.
 		refreshPreview();
@@ -463,21 +479,23 @@
 			if (response.data.layers) {
 				updateLayers(response.data.layers);
 			}
+			if (response.data.selections) {
+				Object.keys(response.data.selections).forEach(function (groupId) {
+					state.selections[groupId] = response.data.selections[groupId];
+					syncGroupSelectionUI(groupId, response.data.selections[groupId]);
+				});
+				syncHiddenFields();
+			}
 			updateLabels(response.data.labels);
 		});
 	}
 
 	function bindOptions() {
 		$(document).on('change', 'input.wcbc-radio', function () {
-			onSelectionChange($(this).data('group'), $(this).val());
-		});
-
-		$(document).on('click', '.wcbc-option label', function (e) {
-			e.preventDefault();
-			var $radio = $(this).closest('li').find('input.wcbc-radio');
-			if ($radio.length) {
-				$radio.prop('checked', true).trigger('change');
+			if (!$(this).is(':checked')) {
+				return;
 			}
+			onSelectionChange($(this).data('group'), $(this).val());
 		});
 	}
 

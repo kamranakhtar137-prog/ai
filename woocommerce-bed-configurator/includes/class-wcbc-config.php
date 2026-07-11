@@ -274,13 +274,79 @@ class WCBC_Config {
 		$config = self::merge_colour_group( $config );
 		$config = self::sanitize_option_layers( $config );
 		$defaults = self::get_default_config();
+		$config['defaults']     = self::normalize_defaults( $config );
 		$config['product_id']   = (int) $product_id;
 		$config['layer_media']  = self::get_layer_media( $product_id );
 		$config['image_source'] = self::get_image_source( $product_id );
-		$config['layers']       = WCBC_Layer_Builder::build( $config, isset( $config['defaults'] ) ? $config['defaults'] : $defaults['defaults'] );
-		$config['defaults']     = ! empty( $config['defaults'] ) ? $config['defaults'] : $defaults['defaults'];
+		$config['layers']       = WCBC_Layer_Builder::build( $config, $config['defaults'] );
 		$config['base_price']   = isset( $config['base_price'] ) ? (float) $config['base_price'] : $defaults['base_price'];
 		return $config;
+	}
+
+	/**
+	 * Ensure each group default matches a real option id (single selection).
+	 *
+	 * @param array<string,mixed> $config Config.
+	 * @return array<string,string>
+	 */
+	public static function normalize_defaults( $config ) {
+		$plugin_defaults = self::get_default_config();
+		$out             = ! empty( $config['defaults'] ) && is_array( $config['defaults'] )
+			? $config['defaults']
+			: $plugin_defaults['defaults'];
+
+		if ( empty( $config['groups'] ) ) {
+			return $out;
+		}
+
+		foreach ( $config['groups'] as $group ) {
+			if ( empty( $group['id'] ) || empty( $group['options'] ) ) {
+				continue;
+			}
+
+			$gid        = $group['id'];
+			$valid_ids  = array();
+			foreach ( $group['options'] as $option ) {
+				if ( ! empty( $option['id'] ) ) {
+					$valid_ids[] = sanitize_title( $option['id'] );
+				}
+			}
+
+			if ( empty( $valid_ids ) ) {
+				continue;
+			}
+
+			$current = isset( $out[ $gid ] ) ? sanitize_title( $out[ $gid ] ) : '';
+			if ( ! in_array( $current, $valid_ids, true ) ) {
+				$out[ $gid ] = $valid_ids[0];
+			} else {
+				$out[ $gid ] = $current;
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Resolve the selected option id for a group.
+	 *
+	 * @param array<string,mixed> $group Option group.
+	 * @param string              $selected Requested selection.
+	 * @return string
+	 */
+	public static function resolve_group_selection( $group, $selected ) {
+		if ( empty( $group['options'] ) ) {
+			return sanitize_title( $selected );
+		}
+
+		$selected = sanitize_title( $selected );
+		foreach ( $group['options'] as $option ) {
+			if ( ! empty( $option['id'] ) && sanitize_title( $option['id'] ) === $selected ) {
+				return sanitize_title( $option['id'] );
+			}
+		}
+
+		return sanitize_title( $group['options'][0]['id'] );
 	}
 
 	/**
@@ -396,6 +462,7 @@ class WCBC_Config {
 		foreach ( $config['groups'] as $group ) {
 			$gid    = $group['id'];
 			$sel_id = isset( $selections[ $gid ] ) ? $selections[ $gid ] : ( isset( $config['defaults'][ $gid ] ) ? $config['defaults'][ $gid ] : '' );
+			$sel_id = self::resolve_group_selection( $group, $sel_id );
 			$option = self::find_option( $config, $gid, $sel_id );
 			if ( ! $option ) {
 				continue;
@@ -404,12 +471,21 @@ class WCBC_Config {
 			$labels[ $gid ] = trim( $option['label'] . ( $option['sublabel'] ? ' ' . $option['sublabel'] : '' ) );
 		}
 
-		$layers = WCBC_Layer_Builder::build( $config, $selections );
+		$normalized = array();
+		foreach ( $config['groups'] as $group ) {
+			$gid = $group['id'];
+			$normalized[ $gid ] = isset( $selections[ $gid ] )
+				? self::resolve_group_selection( $group, $selections[ $gid ] )
+				: ( isset( $config['defaults'][ $gid ] ) ? $config['defaults'][ $gid ] : '' );
+		}
+
+		$layers = WCBC_Layer_Builder::build( $config, $normalized );
 
 		return array(
-			'price'  => max( 0, $price ),
-			'layers' => $layers,
-			'labels' => $labels,
+			'price'       => max( 0, $price ),
+			'layers'      => $layers,
+			'labels'      => $labels,
+			'selections'  => $normalized,
 		);
 	}
 }

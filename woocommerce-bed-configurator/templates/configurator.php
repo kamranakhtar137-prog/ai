@@ -113,7 +113,7 @@ if ( 'options' === $part ) : ?>
 							<?php
 							$gid       = $group['id'];
 							$is_open   = ( 2 === $index );
-							$selected  = isset( $selections[ $gid ] ) ? $selections[ $gid ] : '';
+							$selected  = WCBC_Config::resolve_group_selection( $group, isset( $selections[ $gid ] ) ? $selections[ $gid ] : '' );
 							$sel_label = '';
 							foreach ( $group['options'] as $opt ) {
 								if ( $opt['id'] === $selected ) {
@@ -187,7 +187,7 @@ if ( 'options' === $part ) : ?>
 										foreach ( $group['options'] as $option ) :
 											$shape   = ! empty( $option['layers']['shape'] ) ? $option['layers']['shape'] : '';
 											$fabric  = ! empty( $option['layers']['fabric'] ) ? $option['layers']['fabric'] : '';
-											$checked = $option['id'] === $selected;
+											$checked = ( sanitize_title( $option['id'] ) === $selected );
 											$hidden  = false;
 											if ( ! $is_fabric_sections && ! empty( $group['filter_type'] ) && ! $checked ) {
 												if ( 'shape' === $group['filter_type'] && $shape && $default_filter !== $shape ) {
@@ -206,7 +206,7 @@ if ( 'options' === $part ) : ?>
 											<?php endif; ?>
 											<li id="<?php echo esc_attr( $option['id'] ); ?>" class="wcbc-option <?php echo $shape ? 'wcbc-shape-' . esc_attr( $shape ) : ''; ?> <?php echo $fabric ? 'wcbc-fabric-' . esc_attr( $fabric ) . ' color_way' : ''; ?> <?php echo $hidden ? 'wcbc-filter-hidden' : ''; ?>" data-shape="<?php echo esc_attr( $shape ); ?>" data-fabric="<?php echo esc_attr( $fabric ); ?>">
 												<input style="display:none;" type="radio" class="wcbc-radio product-custom-option" name="wcbc_ui_<?php echo esc_attr( $gid ); ?>" id="wcbc_<?php echo esc_attr( $gid . '_' . $option['id'] ); ?>" value="<?php echo esc_attr( $option['id'] ); ?>" data-group="<?php echo esc_attr( $gid ); ?>" data-price="<?php echo esc_attr( $option['price'] ); ?>" <?php checked( $checked ); ?> />
-												<label for="wcbc_<?php echo esc_attr( $gid . '_' . $option['id'] ); ?>" class="<?php echo $checked ? 'is-checked' : ''; ?>">
+												<label for="wcbc_<?php echo esc_attr( $gid . '_' . $option['id'] ); ?>" class="wcbc-option-label <?php echo $checked ? 'is-checked' : ''; ?>">
 													<div class="swatchContainer">
 														<div class="swatch45 product-option divswatch">
 															<?php if ( ! empty( $option['image'] ) ) : ?>
