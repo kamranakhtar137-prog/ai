@@ -197,11 +197,30 @@ class WCBC_Cache_API {
 	}
 
 	/**
-	 * Build a ready-to-paste import script with site URL and token embedded.
+	 * Build a ready-to-paste QUICK import script (25 images, default combo per size).
 	 *
 	 * @return string
 	 */
 	public static function import_script() {
+		return self::wrap_import_script( 'scripts/import-happybeds-to-wp.js' );
+	}
+
+	/**
+	 * Build a ready-to-paste FULL import script (all variations for dynamic preview).
+	 *
+	 * @return string
+	 */
+	public static function import_all_script() {
+		return self::wrap_import_script( 'scripts/import-all-happybeds-to-wp.js' );
+	}
+
+	/**
+	 * Embed site config into a script file body.
+	 *
+	 * @param string $relative Relative path under plugin scripts/.
+	 * @return string
+	 */
+	private static function wrap_import_script( $relative ) {
 		$config = wp_json_encode(
 			array(
 				'site'  => untrailingslashit( home_url() ),
@@ -209,7 +228,7 @@ class WCBC_Cache_API {
 			)
 		);
 
-		$script_path = WCBC_PLUGIN_DIR . 'scripts/import-happybeds-to-wp.js';
+		$script_path = WCBC_PLUGIN_DIR . $relative;
 		$body        = is_readable( $script_path ) ? (string) file_get_contents( $script_path ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		$body        = preg_replace( '#/\*\*[\s\S]*?\*/\s*#', '', $body, 1 );
 

@@ -44,7 +44,8 @@ class WCBC_Admin {
 		$enabled = get_post_meta( $post->ID, WCBC_Config::ENABLED_KEY, true ) === 'yes';
 		$config  = WCBC_Config::get_product_config( $post->ID );
 		$json    = wp_json_encode( $config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
-		$import_script = WCBC_Cache_API::import_script();
+		$import_script     = WCBC_Cache_API::import_script();
+		$import_all_script = WCBC_Cache_API::import_all_script();
 		?>
 		<div id="wcbc_product_data" class="panel woocommerce_options_panel hidden">
 			<div class="options_group">
