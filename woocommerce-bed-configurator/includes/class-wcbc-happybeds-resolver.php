@@ -19,9 +19,9 @@ class WCBC_HappyBeds_Resolver {
 	 * @var array<string,string>
 	 */
 	private static $size_codes = array(
-		'small-single' => '2ft6',
+		'small-single' => '3ft',
 		'single'       => '3ft',
-		'small-double' => '4ft',
+		'small-double' => '4ft6',
 		'double'       => '4ft6',
 		'king'         => '5ft',
 		'super-king'   => '6ft',
@@ -118,13 +118,88 @@ class WCBC_HappyBeds_Resolver {
 	}
 
 	/**
+	 * Drawer reference token in filename — varies by rendered size code.
+	 *
+	 * @param string $size_code Render size code (3ft, 4ft6, 5ft, 6ft).
+	 * @param string $drawer_code Colour drawer code (e.g. 190 for beige on 4ft6).
+	 * @return string|null Null when the size omits the drawer reference segment.
+	 */
+	private static function drawer_ref_for_size( $size_code, $drawer_code ) {
+		if ( '3ft' === $size_code ) {
+			return null;
+		}
+		if ( in_array( $size_code, array( '5ft', '6ft' ), true ) ) {
+			return '200';
+		}
+		return $drawer_code;
+	}
+
+	/**
+	 * Build drawer back image relative path.
+	 *
+	 * @param string      $folder Drawer folder.
+	 * @param string      $size_code Size code.
+	 * @param string|null $drawer_ref Drawer reference or null for 3ft.
+	 * @param string      $suffix Depth + colour suffix.
+	 * @return string
+	 */
+	private static function drawer_back_path( $folder, $size_code, $drawer_ref, $suffix ) {
+		if ( null === $drawer_ref ) {
+			return sprintf(
+				'%s/reference_drawer_normal_back_%s_drawer_normal_front_%s.png',
+				$folder,
+				$size_code,
+				$suffix
+			);
+		}
+
+		return sprintf(
+			'%s/reference_drawer_normal_back_%s_%s_drawer_normal_front_%s.png',
+			$folder,
+			$drawer_ref,
+			$size_code,
+			$suffix
+		);
+	}
+
+	/**
+	 * Build drawer front image relative path.
+	 *
+	 * @param string      $folder Drawer folder.
+	 * @param string      $size_code Size code.
+	 * @param string|null $drawer_ref Drawer reference or null for 3ft.
+	 * @param string      $suffix Depth + colour suffix.
+	 * @return string
+	 */
+	private static function drawer_front_path( $folder, $size_code, $drawer_ref, $suffix ) {
+		if ( null === $drawer_ref ) {
+			return sprintf(
+				'%s/reference_drawer_normal_front_%s_drawer_normal_front_%s.png',
+				$folder,
+				$size_code,
+				$suffix
+			);
+		}
+
+		return sprintf(
+			'%s/reference_drawer_normal_front_%s_%s_drawer_normal_front_%s.png',
+			$folder,
+			$drawer_ref,
+			$size_code,
+			$suffix
+		);
+	}
+
+	/**
 	 * Build drawer layer relative paths for storage option.
+	 *
+	 * Happy Beds DOM maps back drawer → #dynamic_storage_2, front → #dynamic_storage_3.
 	 *
 	 * @param string $storage Storage option id.
 	 * @param string $size_code Size code.
 	 * @param string $depth_code Depth code.
 	 * @param string $colour_code Colour numeric code.
-	 * @param string $drawer_code Drawer reference code.
+	 * @param string $drawer_code Drawer reference for 4ft6 sizes.
 	 * @param string $fabric Fabric folder key.
 	 * @return array{storage_1:?string,storage_2:?string,storage_3:?string,storage_back:?string}
 	 */
@@ -140,56 +215,39 @@ class WCBC_HappyBeds_Resolver {
 			return $empty;
 		}
 
-		$folder = 'velvet' === $fabric ? 'drawers_velvet' : 'drawers_cotton';
-		$suffix = $depth_code . $colour_code;
+		$folder     = 'velvet' === $fabric ? 'drawers_velvet' : 'drawers_cotton';
+		$suffix     = $depth_code . $colour_code;
+		$drawer_ref = self::drawer_ref_for_size( $size_code, $drawer_code );
 
 		if ( '2-drawers' === $storage || 'end-drawer' === $storage ) {
-			$empty['storage_back'] = sprintf(
-				'%s/reference_drawer_normal_back_%s_%s_drawer_normal_front_%s.png',
-				$folder,
-				$drawer_code,
-				$size_code,
-				$suffix
-			);
-			$empty['storage_2']    = sprintf(
-				'%s/reference_drawer_normal_front_%s_%s_drawer_normal_front_%s.png',
-				$folder,
-				$drawer_code,
-				$size_code,
-				$suffix
-			);
+			$empty['storage_2'] = self::drawer_back_path( $folder, $size_code, $drawer_ref, $suffix );
+			$empty['storage_3'] = self::drawer_front_path( $folder, $size_code, $drawer_ref, $suffix );
 			return $empty;
 		}
 
 		if ( '4-drawers' === $storage ) {
-			$empty['storage_back'] = sprintf(
-				'%s/reference_drawer_normal_back_%s_%s_drawer_normal_front_%s.png',
-				$folder,
-				$drawer_code,
-				$size_code,
-				$suffix
-			);
-			$empty['storage_1'] = sprintf(
-				'%s/reference_drawer_normal_front_%s_%s_drawer_normal_front_%s.png',
-				$folder,
-				$drawer_code,
-				$size_code,
-				$suffix
-			);
-			$empty['storage_2'] = sprintf(
-				'%s/reference_drawer_jumbo_front_%s_%s_drawer_jumbo_front_%s.png',
-				$folder,
-				$drawer_code,
-				$size_code,
-				$suffix
-			);
-			$empty['storage_3'] = sprintf(
-				'%s/reference_drawer_jumbo_back_%s_%s_drawer_jumbo_front_%s.png',
-				$folder,
-				$drawer_code,
-				$size_code,
-				$suffix
-			);
+			$ref = null !== $drawer_ref ? $drawer_ref : $size_code;
+			$empty['storage_2'] = self::drawer_back_path( $folder, $size_code, $drawer_ref, $suffix );
+			$empty['storage_1'] = self::drawer_front_path( $folder, $size_code, $drawer_ref, $suffix );
+			if ( null === $drawer_ref ) {
+				$empty['storage_3'] = sprintf( '%s/reference_drawer_jumbo_back_%s_drawer_jumbo_front_%s.png', $folder, $size_code, $suffix );
+				$empty['storage_2'] = sprintf( '%s/reference_drawer_jumbo_front_%s_drawer_jumbo_front_%s.png', $folder, $size_code, $suffix );
+			} else {
+				$empty['storage_3'] = sprintf(
+					'%s/reference_drawer_jumbo_back_%s_%s_drawer_jumbo_front_%s.png',
+					$folder,
+					$ref,
+					$size_code,
+					$suffix
+				);
+				$empty['storage_2'] = sprintf(
+					'%s/reference_drawer_jumbo_front_%s_%s_drawer_jumbo_front_%s.png',
+					$folder,
+					$ref,
+					$size_code,
+					$suffix
+				);
+			}
 		}
 
 		return $empty;
