@@ -27,7 +27,8 @@ class WCBC_Config {
 	 * @return string[]
 	 */
 	public static function get_layers() {
-		return array( 'shadow', 'legs', 'storage_back', 'base', 'headboard', 'storage_1', 'storage_2', 'storage_3' );
+		// Match Happy Beds DOM stacking order.
+		return array( 'shadow', 'legs', 'headboard', 'storage_back', 'base', 'storage_2', 'storage_3', 'storage_1' );
 	}
 
 	/**
