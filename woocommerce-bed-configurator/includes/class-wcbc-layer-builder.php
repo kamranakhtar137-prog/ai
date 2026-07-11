@@ -173,6 +173,7 @@ class WCBC_Layer_Builder {
 	 * @return bool
 	 */
 	private static function has_drawers( $storage_id ) {
+		$storage_id = class_exists( 'WCBC_HappyBeds_Resolver' ) ? WCBC_HappyBeds_Resolver::normalize_storage( $storage_id ) : $storage_id;
 		return in_array( $storage_id, array( '2-drawers', '4-drawers', 'end-drawer' ), true );
 	}
 
@@ -331,6 +332,9 @@ class WCBC_Layer_Builder {
 			}
 			foreach ( $option['layers'] as $layer_key => $url ) {
 				if ( ! isset( $valid_layers[ $layer_key ] ) || ! $url ) {
+					continue;
+				}
+				if ( is_string( $url ) && false !== strpos( $url, 'demo-images/layers' ) ) {
 					continue;
 				}
 				$layers[ $layer_key ] = esc_url_raw( $url );

@@ -136,6 +136,24 @@ class WCBC_HappyBeds_Resolver {
 	}
 
 	/**
+	 * Map plugin storage slug to Happy Beds drawer layer logic.
+	 *
+	 * @param string $storage Storage option id.
+	 * @return string
+	 */
+	public static function normalize_storage( $storage ) {
+		$storage = self::slug( $storage );
+		$map     = array(
+			'2-drawers-same-side'          => '2-drawers',
+			'2-drawers-with-end-drawer'    => '2-drawers',
+			'2-drawers-with-2-mini-drawers' => '2-drawers',
+			'end-drawer-with-2-mini-drawers' => 'end-drawer',
+		);
+
+		return isset( $map[ $storage ] ) ? $map[ $storage ] : $storage;
+	}
+
+	/**
 	 * Size slug → Happy Beds size code.
 	 *
 	 * @param string $size Size option id.
@@ -155,6 +173,9 @@ class WCBC_HappyBeds_Resolver {
 	 */
 	public static function colour_meta( $colour, $config = array() ) {
 		$colour = self::slug( $colour );
+		if ( class_exists( 'WCBC_Colour_Registry' ) ) {
+			$colour = WCBC_Colour_Registry::resolve_slug( $colour );
+		}
 
 		if ( ! empty( $config['groups'] ) && class_exists( 'WCBC_Colour_Registry' ) ) {
 			foreach ( $config['groups'] as $group ) {
@@ -346,6 +367,8 @@ class WCBC_HappyBeds_Resolver {
 		if ( ! $storage ) {
 			$storage = 'no-drawers';
 		}
+
+		$storage = self::normalize_storage( $storage );
 
 		$size_code  = self::size_code( $size );
 		$depth_code = self::depth_code( $base_depth );

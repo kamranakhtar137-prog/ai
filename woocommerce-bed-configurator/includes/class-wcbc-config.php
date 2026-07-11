@@ -123,11 +123,11 @@ class WCBC_Config {
 		$base = WCBC_PLUGIN_URL . 'demo-images/';
 
 		$selection_defaults = array(
-			'size'       => 'double',
+			'size'       => 'small-single',
 			'colour'     => 'beige-velvet',
 			'headboard'  => 'cornell-lined',
 			'base_depth' => '14-inch',
-			'storage'    => '2-drawers',
+			'storage'    => '2-drawers-same-side',
 		);
 
 		return array(
@@ -162,12 +162,12 @@ class WCBC_Config {
 						array( 'id' => 'none', 'label' => 'No Headboard', 'filter' => 'none' ),
 					),
 					'options'     => array(
-						self::opt( 'cornell-plain', 'Cornell Plain', '', 0, $base . 'swatches/headboard/cornell-plain.png', array( 'headboard' => $base . 'layers/headboard-cornell.png', 'shape' => 'cornell' ) ),
-						self::opt( 'cornell-lined', 'Cornell Lined', '', 25, $base . 'swatches/headboard/cornell-lined.png', array( 'headboard' => $base . 'layers/headboard-cornell.png', 'shape' => 'cornell' ) ),
-						self::opt( 'cornell-buttoned', 'Cornell Buttoned', '', 35, $base . 'swatches/headboard/cornell-buttoned.png', array( 'headboard' => $base . 'layers/headboard-cornell.png', 'shape' => 'cornell' ) ),
-						self::opt( 'dudley-plain', 'Dudley Plain', '', 20, $base . 'swatches/headboard/dudley-plain.png', array( 'headboard' => $base . 'layers/headboard-cornell.png', 'shape' => 'dudley' ) ),
-						self::opt( 'victor-plain', 'Victor Plain', '', 30, $base . 'swatches/headboard/victor-plain.png', array( 'headboard' => $base . 'layers/headboard-cornell.png', 'shape' => 'victor' ) ),
-						self::opt( 'no-headboard', 'No Headboard', '', -50, $base . 'swatches/headboard/no-headboard.png', array( 'headboard' => $base . 'layers/headboard-none.png', 'shape' => 'none' ) ),
+						self::opt( 'cornell-plain', 'Cornell Plain', '', 0, $base . 'swatches/headboard/cornell-plain.png', array( 'shape' => 'cornell' ) ),
+						self::opt( 'cornell-lined', 'Cornell Lined', '', 25, $base . 'swatches/headboard/cornell-lined.png', array( 'shape' => 'cornell' ) ),
+						self::opt( 'cornell-buttoned', 'Cornell Buttoned', '', 35, $base . 'swatches/headboard/cornell-buttoned.png', array( 'shape' => 'cornell' ) ),
+						self::opt( 'dudley-plain', 'Dudley Plain', '', 20, $base . 'swatches/headboard/dudley-plain.png', array( 'shape' => 'dudley' ) ),
+						self::opt( 'victor-plain', 'Victor Plain', '', 30, $base . 'swatches/headboard/victor-plain.png', array( 'shape' => 'victor' ) ),
+						self::opt( 'no-headboard', 'No Headboard', '', -50, $base . 'swatches/headboard/no-headboard.png', array( 'shape' => 'none' ) ),
 					),
 				),
 				array(
@@ -187,11 +187,12 @@ class WCBC_Config {
 					'icon'     => 'storage',
 					'required' => true,
 					'options'  => array(
-						self::opt( 'no-drawers', 'No Drawers', '', 0, $base . 'swatches/storage/no-drawers.png', array( 'base' => $base . 'layers/base-beige.png' ) ),
-						self::opt( 'ottoman', 'Ottoman', '', 80, $base . 'swatches/storage/ottoman.png', array( 'base' => $base . 'layers/base-beige.png' ) ),
-						self::opt( '2-drawers', '2 Drawers', '', 50, $base . 'swatches/storage/2-drawers.png', array( 'base' => $base . 'layers/base-beige-2drawers.png' ) ),
-						self::opt( '4-drawers', '4 Drawers', '', 90, $base . 'swatches/storage/4-drawers.png', array( 'base' => $base . 'layers/base-beige-2drawers.png' ) ),
-						self::opt( 'end-drawer', 'End Drawer', '', 40, $base . 'swatches/storage/end-drawer.png', array( 'base' => $base . 'layers/base-beige-2drawers.png' ) ),
+						self::opt( 'ottoman', 'Ottoman', '', 80, $base . 'swatches/storage/ottoman.png' ),
+						self::opt( 'no-drawers', 'No Drawers', '', 0, $base . 'swatches/storage/no-drawers.png' ),
+						self::opt( 'end-drawer', 'End Drawer', '', 40, $base . 'swatches/storage/end-drawer.png' ),
+						self::opt( '2-drawers', '2 Drawers', '', 50, $base . 'swatches/storage/2-drawers.png' ),
+						self::opt( '2-drawers-same-side', '2 Drawers Same Side', '', 50, $base . 'swatches/storage/2-drawers.png' ),
+						self::opt( '4-drawers', '4 Drawers', '', 90, $base . 'swatches/storage/4-drawers.png' ),
 					),
 				),
 			),
@@ -235,6 +236,7 @@ class WCBC_Config {
 			$config = self::get_default_config();
 		}
 		$config = self::merge_colour_group( $config );
+		$config = self::sanitize_option_layers( $config );
 		$defaults = self::get_default_config();
 		$config['product_id']   = (int) $product_id;
 		$config['layer_media']  = self::get_layer_media( $product_id );
@@ -242,6 +244,49 @@ class WCBC_Config {
 		$config['layers']       = WCBC_Layer_Builder::build( $config, isset( $config['defaults'] ) ? $config['defaults'] : $defaults['defaults'] );
 		$config['defaults']     = ! empty( $config['defaults'] ) ? $config['defaults'] : $defaults['defaults'];
 		$config['base_price']   = isset( $config['base_price'] ) ? (float) $config['base_price'] : $defaults['base_price'];
+		return $config;
+	}
+
+	/**
+	 * Strip static demo layer URLs from options so Happy Beds paths stay dynamic.
+	 *
+	 * @param array<string,mixed> $config Config.
+	 * @return array<string,mixed>
+	 */
+	private static function sanitize_option_layers( $config ) {
+		if ( empty( $config['groups'] ) ) {
+			return $config;
+		}
+
+		$meta_keys   = array( 'shape', 'fabric', 'hb_fabric', 'hb_code', 'hb_drawer', 'size' );
+		$layer_keys  = array_flip( self::get_layers() );
+		$clean_groups = array( 'colour', 'headboard', 'storage', 'size', 'base_depth' );
+
+		foreach ( $config['groups'] as $gi => $group ) {
+			if ( empty( $group['options'] ) || ! in_array( $group['id'], $clean_groups, true ) ) {
+				continue;
+			}
+			foreach ( $group['options'] as $oi => $option ) {
+				if ( empty( $option['layers'] ) || ! is_array( $option['layers'] ) ) {
+					continue;
+				}
+				$clean = array();
+				foreach ( $option['layers'] as $key => $value ) {
+					if ( in_array( $key, $meta_keys, true ) ) {
+						$clean[ $key ] = $value;
+						continue;
+					}
+					if ( isset( $layer_keys[ $key ] ) && is_string( $value ) && false !== strpos( $value, 'demo-images/layers' ) ) {
+						continue;
+					}
+					if ( isset( $layer_keys[ $key ] ) ) {
+						$clean[ $key ] = $value;
+					}
+				}
+				$config['groups'][ $gi ]['options'][ $oi ]['layers'] = $clean;
+			}
+		}
+
 		return $config;
 	}
 

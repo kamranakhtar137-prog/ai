@@ -303,7 +303,16 @@
 	opacity: 1;
 }
 
-.wcbc-draw-toggler {
+.wcbc-colour-grid li.color_way {
+	width: 20%;
+}
+
+.wcbc-fabric-heading h2 {
+	margin: 0.625rem 0.625rem 0;
+	font-size: 1rem;
+	font-weight: 700;
+	width: 100%;
+}
 	margin-top: 1rem;
 	padding: 0 0.5rem;
 	display: flex;

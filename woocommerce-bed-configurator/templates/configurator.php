@@ -16,6 +16,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $part  = isset( $part ) ? $part : 'full';
+$layer_alts = array(
+	'shadow'       => '',
+	'legs'         => __( 'Bed Legs', 'wc-bed-configurator' ),
+	'headboard'    => __( 'Bed Headboard', 'wc-bed-configurator' ),
+	'storage_back' => __( 'Bed Storage Back', 'wc-bed-configurator' ),
+	'base'         => __( 'Bed Base', 'wc-bed-configurator' ),
+	'storage_1'    => __( 'Bed Storage 3', 'wc-bed-configurator' ),
+	'storage_2'    => __( 'Bed Storage 1', 'wc-bed-configurator' ),
+	'storage_3'    => __( 'Bed Storage 2', 'wc-bed-configurator' ),
+);
 $icons = array(
 	'size'      => $plugin_url . 'assets/icons/size.svg',
 	'colour'    => $plugin_url . 'assets/icons/colour.svg',
@@ -37,14 +47,15 @@ if ( 'media' === $part ) : ?>
 						foreach ( WCBC_Config::get_layers() as $layer ) :
 							$src      = isset( $calc['layers'][ $layer ] ) ? $calc['layers'][ $layer ] : '';
 							$fallback = isset( $demo_layers[ $layer ] ) ? $demo_layers[ $layer ] : $transparent;
+							$alt      = isset( $layer_alts[ $layer ] ) ? $layer_alts[ $layer ] : '';
 							?>
 							<img
 								loading="lazy"
-								class="dynamic_image_items dynamic_<?php echo esc_attr( $layer ); ?> wcbc-layer"
+								class="lazyload dynamic_image_items dynamic_<?php echo esc_attr( $layer ); ?> wcbc-layer"
 								id="dynamic_<?php echo esc_attr( $layer ); ?>"
 								data-layer="<?php echo esc_attr( $layer ); ?>"
 								data-fallback="<?php echo esc_url( $fallback ); ?>"
-								alt=""
+								alt="<?php echo esc_attr( $alt ); ?>"
 								referrerpolicy="no-referrer"
 								src="<?php echo esc_url( $src ); ?>"
 							/>
@@ -149,12 +160,15 @@ if ( 'options' === $part ) : ?>
 							</dt>
 							<dd data-tabid="<?php echo esc_attr( $gid ); ?>" data-filter-type="<?php echo esc_attr( ! empty( $group['filter_type'] ) ? $group['filter_type'] : '' ); ?>" class="wcbc-accordian-body <?php echo $is_open ? 'isopen' : ''; ?>" <?php echo $is_open ? '' : 'style="display:none"'; ?>>
 								<div class="input-box">
-									<?php if ( ! empty( $group['filter_type'] ) && ! empty( $group['filters'] ) ) : ?>
+									<?php
+									$is_fabric_sections = ( 'fabric' === ( $group['filter_type'] ?? '' ) && 'sections' === ( $group['display_mode'] ?? '' ) );
+									$default_filter     = ! empty( $group['filters'][0]['filter'] ) ? $group['filters'][0]['filter'] : '';
+									?>
+									<?php if ( ! empty( $group['filter_type'] ) && ! empty( $group['filters'] ) && ! $is_fabric_sections ) : ?>
 										<?php
 										$filter_heading = 'fabric' === $group['filter_type']
 											? __( 'Choose Fabric', 'wc-bed-configurator' )
 											: __( 'Choose Shape', 'wc-bed-configurator' );
-										$default_filter = $group['filters'][0]['filter'];
 										?>
 										<h2><?php echo esc_html( $filter_heading ); ?></h2>
 										<div class="button-group filters-button-group wcbc-option-filters">
@@ -167,14 +181,15 @@ if ( 'options' === $part ) : ?>
 										<h2 class="wcbc-style-heading"><?php echo esc_html__( 'Choose Style', 'wc-bed-configurator' ); ?></h2>
 									<?php endif; ?>
 
-									<ul class="options-list wcbc-options-grid <?php echo ! empty( $group['filter_type'] ) ? 'wcbc-filterable-grid grid grid-cols-3' : ''; ?>">
-										<?php foreach ( $group['options'] as $option ) : ?>
-											<?php
+									<ul class="options-list wcbc-options-grid <?php echo ! empty( $group['filter_type'] ) && ! $is_fabric_sections ? 'wcbc-filterable-grid grid grid-cols-3' : ''; ?> <?php echo $is_fabric_sections ? 'wcbc-colour-grid' : ''; ?>">
+										<?php
+										$last_fabric = '';
+										foreach ( $group['options'] as $option ) :
 											$shape   = ! empty( $option['layers']['shape'] ) ? $option['layers']['shape'] : '';
 											$fabric  = ! empty( $option['layers']['fabric'] ) ? $option['layers']['fabric'] : '';
 											$checked = $option['id'] === $selected;
 											$hidden  = false;
-											if ( ! empty( $group['filter_type'] ) && ! $checked ) {
+											if ( ! $is_fabric_sections && ! empty( $group['filter_type'] ) && ! $checked ) {
 												if ( 'shape' === $group['filter_type'] && $shape && $default_filter !== $shape ) {
 													$hidden = true;
 												}
@@ -182,8 +197,14 @@ if ( 'options' === $part ) : ?>
 													$hidden = true;
 												}
 											}
-											?>
-											<li id="<?php echo esc_attr( $option['id'] ); ?>" class="wcbc-option <?php echo $shape ? 'wcbc-shape-' . esc_attr( $shape ) : ''; ?> <?php echo $fabric ? 'wcbc-fabric-' . esc_attr( $fabric ) : ''; ?> <?php echo $hidden ? 'wcbc-filter-hidden' : ''; ?>" data-shape="<?php echo esc_attr( $shape ); ?>" data-fabric="<?php echo esc_attr( $fabric ); ?>">
+											if ( $is_fabric_sections && $fabric && $fabric !== $last_fabric ) :
+												$last_fabric = $fabric;
+												?>
+												<li class="wcbc-fabric-heading" style="width:100%;list-style:none;">
+													<h2><?php echo esc_html( ucfirst( $fabric ) ); ?></h2>
+												</li>
+											<?php endif; ?>
+											<li id="<?php echo esc_attr( $option['id'] ); ?>" class="wcbc-option <?php echo $shape ? 'wcbc-shape-' . esc_attr( $shape ) : ''; ?> <?php echo $fabric ? 'wcbc-fabric-' . esc_attr( $fabric ) . ' color_way' : ''; ?> <?php echo $hidden ? 'wcbc-filter-hidden' : ''; ?>" data-shape="<?php echo esc_attr( $shape ); ?>" data-fabric="<?php echo esc_attr( $fabric ); ?>">
 												<input style="display:none;" type="radio" class="wcbc-radio product-custom-option" name="wcbc_ui_<?php echo esc_attr( $gid ); ?>" id="wcbc_<?php echo esc_attr( $gid . '_' . $option['id'] ); ?>" value="<?php echo esc_attr( $option['id'] ); ?>" data-group="<?php echo esc_attr( $gid ); ?>" data-price="<?php echo esc_attr( $option['price'] ); ?>" <?php checked( $checked ); ?> />
 												<label for="wcbc_<?php echo esc_attr( $gid . '_' . $option['id'] ); ?>" class="<?php echo $checked ? 'is-checked' : ''; ?>">
 													<div class="swatchContainer">

@@ -243,6 +243,25 @@ class WCBC_Frontend {
 			);
 		}
 		echo '<input type="hidden" name="wcbc_configured" value="1" />';
+		$layer_fields = array(
+			'shadow'       => 'bs_shadow',
+			'legs'         => 'bs_legs',
+			'headboard'    => 'bs_headboard',
+			'storage_back' => 'bs_storage_back',
+			'base'         => 'bs_base',
+			'storage_1'    => 'bs_storage_1',
+			'storage_2'    => 'bs_storage_2',
+			'storage_3'    => 'bs_storage_3',
+		);
+		$calc = WCBC_Config::calculate( $config, $config['defaults'] );
+		foreach ( $layer_fields as $layer => $field_id ) {
+			$val = isset( $calc['layers'][ $layer ] ) ? $calc['layers'][ $layer ] : '';
+			printf(
+				'<input type="hidden" name="%1$s" id="%1$s" value="%2$s" />',
+				esc_attr( $field_id ),
+				esc_url( $val )
+			);
+		}
 		echo '</div>';
 	}
 }

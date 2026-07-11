@@ -20,7 +20,7 @@
 	var COLOURS = config.colours || Object.keys(hb.colourMeta || {});
 	var HEADBOARDS = ['cornell-plain', 'cornell-lined', 'cornell-buttoned', 'dudley-plain', 'victor-plain', 'no-headboard'];
 	var DEPTHS = ['6-inch', '10-inch', '14-inch'];
-	var STORAGE = ['no-drawers', 'ottoman', '2-drawers', '4-drawers', 'end-drawer'];
+	var STORAGE = ['no-drawers', 'ottoman', '2-drawers', '2-drawers-same-side', '4-drawers', 'end-drawer'];
 
 	var sizeCodes = hb.sizeCodes || {
 		'small-single': '3ft',
@@ -67,13 +67,23 @@
 		set[rel.replace(/^\//, '')] = true;
 	}
 
+	function normalizeStorage(storage) {
+		var map = {
+			'2-drawers-same-side': '2-drawers',
+			'2-drawers-with-end-drawer': '2-drawers',
+			'2-drawers-with-2-mini-drawers': '2-drawers',
+			'end-drawer-with-2-mini-drawers': 'end-drawer',
+		};
+		return map[storage] || storage;
+	}
+
 	function buildRelativePaths(selections) {
 		var paths = [];
 		var size = selections.size;
 		var colour = selections.colour;
 		var headboard = selections.headboard;
 		var baseDepth = selections.base_depth;
-		var storage = selections.storage;
+		var storage = normalizeStorage(selections.storage);
 
 		var sizeCode = sizeCodes[size] || '4ft6';
 		var depthCode = baseDepth.replace('-inch', 'i');

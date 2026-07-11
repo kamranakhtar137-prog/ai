@@ -34,7 +34,41 @@
 	}
 
 	function hasDrawers(storageId) {
+		storageId = normalizeStorage(storageId);
 		return storageId === '2-drawers' || storageId === '4-drawers' || storageId === 'end-drawer';
+	}
+
+	function normalizeStorage(storage) {
+		var map = {
+			'2-drawers-same-side': '2-drawers',
+			'2-drawers-with-end-drawer': '2-drawers',
+			'2-drawers-with-2-mini-drawers': '2-drawers',
+			'end-drawer-with-2-mini-drawers': 'end-drawer',
+		};
+		return map[storage] || storage;
+	}
+
+	function resolveColourSlug(colour) {
+		var aliases = {
+			'black-linen': 'black-cotton',
+			'charcoal-linen': 'charcoal-cotton',
+			'chocolate-linen': 'chocolate-cotton',
+			'cream-linen': 'cream-cotton',
+			'duck-egg-blue-linen': 'duck-egg-blue-cotton',
+			'lime-linen': 'lime-cotton',
+			'midnight-blue-linen': 'midnight-blue-cotton',
+			'orchid-linen': 'orchid-cotton',
+			'plum-linen': 'plum-cotton',
+			'red-linen': 'red-cotton',
+			'slate-grey-linen': 'slate-grey-cotton',
+			'white-linen': 'white-cotton',
+			'silver-grey-linen': 'silver-grey-cotton',
+		};
+		return aliases[colour] || colour;
+	}
+
+	function isDemoLayerUrl(url) {
+		return /demo-images\/layers/i.test(url || '');
 	}
 
 	function isTransparentUrl(src) {
@@ -88,10 +122,10 @@
 		var cdn = hb.cdn || 'https://www.happybeds.co.uk/media/new_configurator/';
 		var defaults = wcbcData.config.defaults || {};
 		var size = pick(selections, 'size') || defaults.size || 'double';
-		var colour = pick(selections, 'colour') || defaults.colour || 'beige-velvet';
+		var colour = resolveColourSlug(pick(selections, 'colour') || defaults.colour || 'beige-velvet');
 		var headboard = pick(selections, 'headboard') || defaults.headboard || 'cornell-lined';
 		var baseDepth = pick(selections, 'base_depth') || defaults.base_depth || '14-inch';
-		var storage = pick(selections, 'storage') || defaults.storage || 'no-drawers';
+		var storage = normalizeStorage(pick(selections, 'storage') || defaults.storage || 'no-drawers');
 
 		var sizeCodes = hb.sizeCodes || {};
 		var colourMeta = hb.colourMeta || {};
@@ -164,9 +198,13 @@
 					return;
 				}
 				Object.keys(opt.layers).forEach(function (layerKey) {
-					if (validLayers[layerKey] && opt.layers[layerKey] && layers[layerKey] !== undefined) {
-						layers[layerKey] = opt.layers[layerKey];
+					if (!validLayers[layerKey] || !opt.layers[layerKey] || layers[layerKey] === undefined) {
+						return;
 					}
+					if (wcbcData.useHappyBeds && isDemoLayerUrl(opt.layers[layerKey])) {
+						return;
+					}
+					layers[layerKey] = opt.layers[layerKey];
 				});
 			});
 		});
@@ -220,7 +258,7 @@
 		var colour = pick(selections, 'colour') || 'beige-velvet';
 		var headboard = pick(selections, 'headboard');
 		var baseDepth = pick(selections, 'base_depth') || '14-inch';
-		var storage = pick(selections, 'storage') || 'no-drawers';
+		var storage = normalizeStorage(pick(selections, 'storage') || 'no-drawers');
 		var shape = headboardShape(headboard);
 		var drawerSuffix = hasDrawers(storage) ? '-drawers' : '';
 
@@ -278,6 +316,28 @@
 		});
 	}
 
+	function syncLayerHiddenFields(layers) {
+		if (!layers) {
+			return;
+		}
+		var map = {
+			shadow: 'bs_shadow',
+			legs: 'bs_legs',
+			headboard: 'bs_headboard',
+			storage_back: 'bs_storage_back',
+			base: 'bs_base',
+			storage_1: 'bs_storage_1',
+			storage_2: 'bs_storage_2',
+			storage_3: 'bs_storage_3',
+		};
+		Object.keys(map).forEach(function (layer) {
+			var $field = $('#' + map[layer]);
+			if ($field.length) {
+				$field.val(layers[layer] || '');
+			}
+		});
+	}
+
 	function updateLayers(layers) {
 		if (!layers) {
 			return;
@@ -300,6 +360,7 @@
 				}
 			});
 		});
+		syncLayerHiddenFields(layers);
 	}
 
 	function updatePrices(priceHtml) {
