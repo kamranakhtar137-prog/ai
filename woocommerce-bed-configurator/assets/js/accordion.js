@@ -71,6 +71,9 @@
 	}
 
 	function onClick(event) {
+		if (event.target.closest && event.target.closest('.wcbc-option, .wcbc-filter-btn, .wcbc-option-filters')) {
+			return;
+		}
 		var head = closestAccordionHead(event.target);
 		if (!head) {
 			return;

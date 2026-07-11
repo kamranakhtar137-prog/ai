@@ -497,28 +497,46 @@
 		});
 	}
 
+	function selectOptionRadio(radio) {
+		var $radio = $(radio);
+		if (!$radio.length) {
+			return;
+		}
+		var groupId = $radio.attr('data-group') || $radio.data('group');
+		var optionId = $radio.val();
+		if (!groupId || !optionId) {
+			return;
+		}
+		onSelectionChange(groupId, optionId);
+	}
+
+	window.wcbcSelectOption = selectOptionRadio;
+
 	function bindOptions() {
-		var $root = $('#product-options-wrapper, .wcbc-accordian').first();
+		// Capture phase — runs before theme/accordion handlers that may block bubbling.
+		document.addEventListener(
+			'click',
+			function (e) {
+				var option = e.target.closest('.wcbc-option');
+				if (!option || !option.closest('.wcbc-accordian')) {
+					return;
+				}
+				var radio = option.querySelector('input.wcbc-radio');
+				if (!radio) {
+					return;
+				}
+				e.preventDefault();
+				e.stopPropagation();
+				radio.checked = true;
+				selectOptionRadio(radio);
+			},
+			true
+		);
 
-		$root.on('change', 'input.wcbc-radio', function () {
-			if (!$(this).is(':checked')) {
-				return;
+		$(document).on('change', '.wcbc-accordian input.wcbc-radio', function () {
+			if (this.checked) {
+				selectOptionRadio(this);
 			}
-			onSelectionChange($(this).data('group'), $(this).val());
-		});
-
-		$root.on('click', 'li.wcbc-option', function (e) {
-			if ($(e.target).closest('input.wcbc-radio').length) {
-				return;
-			}
-			var $radio = $(this).find('input.wcbc-radio').first();
-			if (!$radio.length) {
-				return;
-			}
-			if ($radio.is(':checked')) {
-				return;
-			}
-			$radio.prop('checked', true).trigger('change');
 		});
 	}
 

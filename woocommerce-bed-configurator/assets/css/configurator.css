@@ -612,19 +612,28 @@ button.wcbc-accordian-head:focus-visible {
 	border-color: #d0d0d8;
 }
 
+.wcbc-accordian li.wcbc-option.is-selected > label,
 .wcbc-accordian .wcbc-option.is-selected > label,
 .options-list label.wcbc-option-label.is-checked,
 .wcbc-accordian .wcbc-option > label.is-checked {
-	border: 2px solid #2b2e52 !important;
-	box-shadow: 0 0 0 1px #2b2e52;
+	border: 3px solid #2b2e52 !important;
+	box-shadow: 0 0 0 1px #2b2e52 !important;
+	background: #f8f9ff !important;
 }
 
-.wcbc-option input.wcbc-radio {
-	position: absolute;
-	opacity: 0;
-	width: 1px;
-	height: 1px;
-	pointer-events: none;
+.wcbc-option input.wcbc-radio,
+.wcbc-option input.wcbc-radio-input {
+	position: absolute !important;
+	width: 1px !important;
+	height: 1px !important;
+	padding: 0 !important;
+	margin: -1px !important;
+	overflow: hidden !important;
+	clip: rect(0, 0, 0, 0) !important;
+	white-space: nowrap !important;
+	border: 0 !important;
+	opacity: 0 !important;
+	pointer-events: none !important;
 }
 
 .colourspan,
