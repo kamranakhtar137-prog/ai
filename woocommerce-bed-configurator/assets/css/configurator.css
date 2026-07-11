@@ -276,7 +276,9 @@
 
 /* Hide empty / transparent layers so they don't ghost-overlap */
 .wcbc-layer[src*="transparent.png"],
-.dynamic_image_items[src*="transparent.png"] {
+.wcbc-layer[src*="FFFFFF-0"],
+.dynamic_image_items[src*="transparent.png"],
+.dynamic_image_items[src*="FFFFFF-0"] {
 	opacity: 0 !important;
 	visibility: hidden !important;
 }

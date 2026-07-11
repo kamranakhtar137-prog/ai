@@ -38,18 +38,12 @@ class WCBC_Config {
 	public static function get_default_config() {
 		$base = WCBC_PLUGIN_URL . 'demo-images/';
 
+		$defaults = self::get_default_config();
+		$hb_layers = WCBC_HappyBeds_Resolver::build_layers( $defaults['defaults'], $defaults['defaults'] );
+
 		return array(
 			'base_price' => 299.99,
-			'layers'     => array(
-				'shadow'       => $base . 'layers/shadow-only.png',
-				'legs'         => $base . 'layers/legs/small-double.png',
-				'storage_back' => $base . 'layers/transparent.png',
-				'base'         => $base . 'layers/base-beige.png',
-				'headboard'    => $base . 'layers/headboard-cornell.png',
-				'storage_1'    => $base . 'layers/transparent.png',
-				'storage_2'    => $base . 'layers/transparent.png',
-				'storage_3'    => $base . 'layers/transparent.png',
-			),
+			'layers'     => $hb_layers,
 			'groups'     => array(
 				array(
 					'id'       => 'size',
@@ -140,11 +134,11 @@ class WCBC_Config {
 				),
 			),
 			'defaults'   => array(
-				'size'       => 'small-double',
+				'size'       => 'double',
 				'colour'     => 'beige-velvet',
-				'headboard'  => 'cornell-plain',
+				'headboard'  => 'cornell-lined',
 				'base_depth' => '14-inch',
-				'storage'    => 'no-drawers',
+				'storage'    => '2-drawers',
 			),
 		);
 	}

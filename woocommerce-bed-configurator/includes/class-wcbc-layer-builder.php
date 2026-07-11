@@ -184,6 +184,8 @@ class WCBC_Layer_Builder {
 	 * @return array<string,string>
 	 */
 	public static function build( $config, $selections ) {
+		$defaults = isset( $config['defaults'] ) ? $config['defaults'] : array();
+
 		if ( self::has_happybeds_manifest() ) {
 			$imported = self::build_from_manifest( $config, $selections );
 			if ( $imported ) {
@@ -191,57 +193,7 @@ class WCBC_Layer_Builder {
 			}
 		}
 
-		$defaults = isset( $config['defaults'] ) ? $config['defaults'] : array();
-		$base     = self::layer_base();
-
-		$size       = self::pick( $selections, $defaults, 'size' );
-		$colour     = self::pick( $selections, $defaults, 'colour' );
-		$headboard  = self::pick( $selections, $defaults, 'headboard' );
-		$base_depth = self::pick( $selections, $defaults, 'base_depth' );
-		$storage    = self::pick( $selections, $defaults, 'storage' );
-
-		if ( ! $size ) {
-			$size = 'small-double';
-		}
-		if ( ! $colour ) {
-			$colour = 'beige-velvet';
-		}
-		if ( ! $base_depth ) {
-			$base_depth = '14-inch';
-		}
-		if ( ! $storage ) {
-			$storage = 'no-drawers';
-		}
-
-		$shape         = self::headboard_shape( $headboard );
-		$drawer_suffix = self::has_drawers( $storage ) ? '-drawers' : '';
-		$base_path     = sprintf( 'base/%s/%s/%s%s.png', $size, $colour, $base_depth, $drawer_suffix );
-		$legs_path     = sprintf( 'legs/%s.png', $size );
-
-		if ( ! file_exists( WCBC_PLUGIN_DIR . 'demo-images/layers/' . $base_path ) ) {
-			$base_path = self::has_drawers( $storage ) ? 'base-beige-2drawers.png' : 'base-beige.png';
-		}
-		if ( ! file_exists( WCBC_PLUGIN_DIR . 'demo-images/layers/' . $legs_path ) ) {
-			$legs_path = 'transparent.png';
-		}
-
-		$headboard_path = 'transparent.png';
-		if ( 'none' !== $shape ) {
-			$headboard_path = sprintf( 'headboard/%s/%s/%s.png', $size, $shape, $colour );
-			if ( ! file_exists( WCBC_PLUGIN_DIR . 'demo-images/layers/' . $headboard_path ) ) {
-				$headboard_path = 'headboard-cornell.png';
-			}
-		}
-
-		return array(
-			'shadow'       => $base . 'shadow-only.png',
-			'legs'         => $base . $legs_path,
-			'storage_back' => $base . 'transparent.png',
-			'base'         => $base . $base_path,
-			'headboard'    => $base . $headboard_path,
-			'storage_1'    => $base . 'transparent.png',
-			'storage_2'    => $base . 'transparent.png',
-			'storage_3'    => $base . 'transparent.png',
-		);
+		// Live Happy Beds CDN layers (same URLs as happybeds.co.uk build-your-own-bed).
+		return WCBC_HappyBeds_Resolver::build_layers( $selections, $defaults );
 	}
 }

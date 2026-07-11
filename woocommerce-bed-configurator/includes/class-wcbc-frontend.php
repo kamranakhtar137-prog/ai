@@ -167,6 +167,8 @@ class WCBC_Frontend {
 				'config'    => $config,
 				'layers'    => WCBC_Config::get_layers(),
 				'layerBase' => WCBC_PLUGIN_URL . 'demo-images/layers/',
+				'happyBeds' => WCBC_HappyBeds_Resolver::js_config(),
+				'useHappyBeds' => true,
 				'currency'  => get_woocommerce_currency_symbol(),
 				'i18n'      => array(
 					'optionsAvailable' => __( '%d options available', 'wc-bed-configurator' ),
