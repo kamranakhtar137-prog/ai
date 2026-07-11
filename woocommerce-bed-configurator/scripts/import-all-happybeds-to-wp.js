@@ -77,6 +77,11 @@
 		return map[storage] || storage;
 	}
 
+	function storageBackFromFront(storageFrontRelative) {
+		if (!storageFrontRelative) return null;
+		return storageFrontRelative.replace(/4ft6/g, '4ft').replace(/_front_/g, '_front_left_');
+	}
+
 	function buildRelativePaths(selections) {
 		var paths = [];
 		var size = selections.size;
@@ -111,19 +116,27 @@
 		}
 
 		if (storage === '2-drawers' || storage === 'end-drawer') {
+			var frontRel = drawerFrontPath(drawerFolder, sizeCode, drawerRef, suffix);
 			paths.push(drawerBackPath(drawerFolder, sizeCode, drawerRef, suffix));
-			paths.push(drawerFrontPath(drawerFolder, sizeCode, drawerRef, suffix));
+			paths.push(frontRel);
+			var backRel = storageBackFromFront(frontRel);
+			if (backRel) paths.push(backRel);
 		} else if (storage === '4-drawers') {
 			var ref = drawerRef === null ? sizeCode : drawerRef;
+			var storage3Rel;
 			paths.push(drawerBackPath(drawerFolder, sizeCode, drawerRef, suffix));
 			paths.push(drawerFrontPath(drawerFolder, sizeCode, drawerRef, suffix));
 			if (drawerRef === null) {
 				paths.push(drawerFolder + '/reference_drawer_jumbo_front_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png');
-				paths.push(drawerFolder + '/reference_drawer_jumbo_back_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png');
+				storage3Rel = drawerFolder + '/reference_drawer_jumbo_back_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png';
+				paths.push(storage3Rel);
 			} else {
 				paths.push(drawerFolder + '/reference_drawer_jumbo_front_' + ref + '_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png');
-				paths.push(drawerFolder + '/reference_drawer_jumbo_back_' + ref + '_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png');
+				storage3Rel = drawerFolder + '/reference_drawer_jumbo_back_' + ref + '_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png';
+				paths.push(storage3Rel);
 			}
+			backRel = storageBackFromFront(storage3Rel);
+			if (backRel) paths.push(backRel);
 		}
 
 		return paths;

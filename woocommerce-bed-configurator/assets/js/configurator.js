@@ -67,6 +67,23 @@
 		return aliases[colour] || colour;
 	}
 
+	function storageBackFromFront(storageFrontRelative) {
+		if (!storageFrontRelative) {
+			return null;
+		}
+		return storageFrontRelative.replace(/4ft6/g, '4ft').replace(/_front_/g, '_front_left_');
+	}
+
+	function isVariationDrivenLayer(layer) {
+		var driven = wcbcData.variationDrivenLayers || [];
+		return driven.indexOf(layer) !== -1;
+	}
+
+	function shouldApplyOptionOverrides() {
+		var source = wcbcData.imageSource || 'auto';
+		return source === 'hybrid' || source === 'media';
+	}
+
 	function isDemoLayerUrl(url) {
 		return /demo-images\/layers/i.test(url || '');
 	}
@@ -126,6 +143,7 @@
 		var headboard = pick(selections, 'headboard') || defaults.headboard || 'cornell-lined';
 		var baseDepth = pick(selections, 'base_depth') || defaults.base_depth || '14-inch';
 		var storage = normalizeStorage(pick(selections, 'storage') || defaults.storage || 'no-drawers');
+		var drawersOpen = storage === 'ottoman' && (state.drawersOpen || selections.drawers_open === '1');
 
 		var sizeCodes = hb.sizeCodes || {};
 		var colourMeta = hb.colourMeta || {};
@@ -142,11 +160,27 @@
 		var hbFolder = paths.headboard;
 		var drawerRef = drawerRefForSize(sizeCode, meta.drawer);
 
+		var baseRel = 'bases/' + paths.base + '/bedbase_' + sizeCode + '_' + depthCode + '_' + meta.code + '.png';
+		if (drawersOpen) {
+			baseRel = 'bases/' + paths.base + '/ottoman_open/bedbase_' + sizeCode + '_' + depthCode + '_' + meta.code + '.png';
+		}
+
+		var legsRel = 'legs/bedding_legs_' + sizeCode + '.png';
+		if (storage === 'ottoman') {
+			if (sizeCode === '4ft6') {
+				legsRel = 'legs/hb_legs_4ft6_ottoman.png';
+			} else if (sizeCode === '5ft') {
+				legsRel = 'legs/hb_legs_5ft_ottoman.png';
+			} else if (sizeCode === '6ft') {
+				legsRel = 'legs/hb_legs_6ft_ottoman.png';
+			}
+		}
+
 		var layers = {
 			shadow: happyBedsUrl(cdn, 'new_shadow/shadow_wrk_' + sizeCode + '.jpg', mode),
-			legs: happyBedsUrl(cdn, 'legs/bedding_legs_' + sizeCode + '.png', mode),
+			legs: happyBedsUrl(cdn, legsRel, mode),
 			storage_back: transparent,
-			base: happyBedsUrl(cdn, 'bases/' + paths.base + '/bedbase_' + sizeCode + '_' + depthCode + '_' + meta.code + '.png', mode),
+			base: happyBedsUrl(cdn, baseRel, mode),
 			headboard: transparent,
 			storage_1: transparent,
 			storage_2: transparent,
@@ -160,16 +194,27 @@
 		if (storage === '2-drawers' || storage === 'end-drawer') {
 			layers.storage_2 = happyBedsUrl(cdn, drawerBackPath(drawerFolder, sizeCode, drawerRef, suffix), mode);
 			layers.storage_3 = happyBedsUrl(cdn, drawerFrontPath(drawerFolder, sizeCode, drawerRef, suffix), mode);
+			var backRel = storageBackFromFront(drawerFrontPath(drawerFolder, sizeCode, drawerRef, suffix));
+			if (backRel) {
+				layers.storage_back = happyBedsUrl(cdn, backRel, mode);
+			}
 		} else if (storage === '4-drawers') {
 			var ref = drawerRef === null ? sizeCode : drawerRef;
 			layers.storage_2 = happyBedsUrl(cdn, drawerBackPath(drawerFolder, sizeCode, drawerRef, suffix), mode);
 			layers.storage_1 = happyBedsUrl(cdn, drawerFrontPath(drawerFolder, sizeCode, drawerRef, suffix), mode);
+			var storage3Rel;
 			if (drawerRef === null) {
 				layers.storage_2 = happyBedsUrl(cdn, drawerFolder + '/reference_drawer_jumbo_front_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png', mode);
-				layers.storage_3 = happyBedsUrl(cdn, drawerFolder + '/reference_drawer_jumbo_back_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png', mode);
+				storage3Rel = drawerFolder + '/reference_drawer_jumbo_back_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png';
+				layers.storage_3 = happyBedsUrl(cdn, storage3Rel, mode);
 			} else {
 				layers.storage_2 = happyBedsUrl(cdn, drawerFolder + '/reference_drawer_jumbo_front_' + ref + '_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png', mode);
-				layers.storage_3 = happyBedsUrl(cdn, drawerFolder + '/reference_drawer_jumbo_back_' + ref + '_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png', mode);
+				storage3Rel = drawerFolder + '/reference_drawer_jumbo_back_' + ref + '_' + sizeCode + '_drawer_jumbo_front_' + suffix + '.png';
+				layers.storage_3 = happyBedsUrl(cdn, storage3Rel, mode);
+			}
+			var backRel = storageBackFromFront(storage3Rel);
+			if (backRel) {
+				layers.storage_back = happyBedsUrl(cdn, backRel, mode);
 			}
 		}
 
@@ -177,9 +222,15 @@
 	}
 
 	function applyOptionLayerOverrides(layers, selections) {
+		if (!shouldApplyOptionOverrides()) {
+			return layers;
+		}
+
 		var config = wcbcData.config || {};
 		var defaults = config.defaults || {};
 		var validLayers = {};
+		var source = wcbcData.imageSource || 'auto';
+		var allowVariationUrl = source === 'media';
 		if (wcbcData.layers) {
 			wcbcData.layers.forEach(function (layer) {
 				validLayers[layer] = true;
@@ -199,6 +250,9 @@
 				}
 				Object.keys(opt.layers).forEach(function (layerKey) {
 					if (!validLayers[layerKey] || !opt.layers[layerKey] || layers[layerKey] === undefined) {
+						return;
+					}
+					if (!allowVariationUrl && isVariationDrivenLayer(layerKey)) {
 						return;
 					}
 					if (wcbcData.useHappyBeds && isDemoLayerUrl(opt.layers[layerKey])) {
@@ -223,8 +277,9 @@
 
 	function mergeHybridMedia(layers, selections) {
 		var media = wcbcData.layerMedia || {};
+		var staticLayers = wcbcData.staticOverrideLayers || ['shadow', 'legs'];
 		Object.keys(media).forEach(function (layer) {
-			if (media[layer]) {
+			if (media[layer] && staticLayers.indexOf(layer) !== -1) {
 				layers[layer] = media[layer];
 			}
 		});
@@ -249,7 +304,11 @@
 			return mergeHybridMedia(layers, selections);
 		}
 
-		return applyOptionLayerOverrides(layers, selections);
+		if (shouldApplyOptionOverrides()) {
+			return applyOptionLayerOverrides(layers, selections);
+		}
+
+		return layers;
 	}
 
 	function demoLayers(selections) {
@@ -379,6 +438,7 @@
 			nonce: wcbcData.nonce,
 			product_id: wcbcData.productId,
 			selections: state.selections,
+			drawers_open: state.drawersOpen ? '1' : '0',
 		});
 	}
 

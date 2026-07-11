@@ -274,6 +274,124 @@ class WCBC_HappyBeds_Resolver {
 	}
 
 	/**
+	 * Whether ottoman storage is shown with the lift base open.
+	 *
+	 * @param string              $storage Storage option id.
+	 * @param array<string,mixed> $selections Selections (may include drawers_open).
+	 * @return bool
+	 */
+	public static function drawers_open( $storage, $selections = array() ) {
+		if ( 'ottoman' !== self::normalize_storage( $storage ) ) {
+			return false;
+		}
+		if ( isset( $selections['drawers_open'] ) && in_array( (string) $selections['drawers_open'], array( '1', 'true', 'yes' ), true ) ) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Base layer relative path — closed base or ottoman open variant.
+	 *
+	 * @param string $size_code Size code.
+	 * @param string $depth_code Depth code.
+	 * @param string $colour_code Colour numeric code.
+	 * @param string $hb_fabric Happy Beds fabric key.
+	 * @param string $storage Storage option id.
+	 * @param bool   $open Ottoman open state.
+	 * @return string
+	 */
+	public static function base_relative_path( $size_code, $depth_code, $colour_code, $hb_fabric, $storage, $open = false ) {
+		$paths        = self::fabric_paths( $hb_fabric );
+		$base_folder  = $paths['base'];
+		$storage_norm = self::normalize_storage( $storage );
+
+		if ( 'ottoman' === $storage_norm && $open ) {
+			return sprintf(
+				'bases/%s/ottoman_open/bedbase_%s_%s_%s.png',
+				$base_folder,
+				$size_code,
+				$depth_code,
+				$colour_code
+			);
+		}
+
+		return sprintf(
+			'bases/%s/bedbase_%s_%s_%s.png',
+			$base_folder,
+			$size_code,
+			$depth_code,
+			$colour_code
+		);
+	}
+
+	/**
+	 * Legs layer relative path — standard or ottoman-specific.
+	 *
+	 * @param string $size_code Size code.
+	 * @param string $storage Storage option id.
+	 * @return string
+	 */
+	public static function legs_relative_path( $size_code, $storage ) {
+		if ( 'ottoman' === self::normalize_storage( $storage ) ) {
+			$ottoman_map = array(
+				'4ft6' => 'legs/hb_legs_4ft6_ottoman.png',
+				'5ft'  => 'legs/hb_legs_5ft_ottoman.png',
+				'6ft'  => 'legs/hb_legs_6ft_ottoman.png',
+			);
+			if ( isset( $ottoman_map[ $size_code ] ) ) {
+				return $ottoman_map[ $size_code ];
+			}
+		}
+
+		return 'legs/bedding_legs_' . $size_code . '.png';
+	}
+
+	/**
+	 * Headboard layer relative path.
+	 *
+	 * @param string|null $hb_style Headboard style slug or null.
+	 * @param string      $size_code Size code.
+	 * @param string      $depth_code Depth code.
+	 * @param string      $colour_code Colour numeric code.
+	 * @param string      $hb_fabric Happy Beds fabric key.
+	 * @return string|null
+	 */
+	public static function headboard_relative_path( $hb_style, $size_code, $depth_code, $colour_code, $hb_fabric ) {
+		if ( ! $hb_style ) {
+			return null;
+		}
+
+		$paths  = self::fabric_paths( $hb_fabric );
+		$suffix = $depth_code . $colour_code;
+
+		return sprintf(
+			'%s/%s_%s_%s.png',
+			$paths['headboard'],
+			$hb_style,
+			$size_code,
+			$suffix
+		);
+	}
+
+	/**
+	 * Derive storage back layer from the drawer front path (Happy Beds convention).
+	 *
+	 * @param string $storage_front_relative Storage front relative path.
+	 * @return string|null
+	 */
+	public static function storage_back_from_front( $storage_front_relative ) {
+		if ( ! $storage_front_relative ) {
+			return null;
+		}
+
+		$back = str_replace( '4ft6', '4ft', $storage_front_relative );
+		$back = str_replace( '_front_', '_front_left_', $back );
+
+		return $back;
+	}
+
+	/**
 	 * Build drawer layer relative paths for storage option.
 	 *
 	 * Happy Beds DOM maps back drawer → #dynamic_storage_2, front → #dynamic_storage_3.
@@ -305,6 +423,7 @@ class WCBC_HappyBeds_Resolver {
 		if ( '2-drawers' === $storage || 'end-drawer' === $storage ) {
 			$empty['storage_2'] = self::drawer_back_path( $folder, $size_code, $drawer_ref, $suffix );
 			$empty['storage_3'] = self::drawer_front_path( $folder, $size_code, $drawer_ref, $suffix );
+			$empty['storage_back'] = self::storage_back_from_front( $empty['storage_3'] );
 			return $empty;
 		}
 
@@ -331,6 +450,7 @@ class WCBC_HappyBeds_Resolver {
 					$suffix
 				);
 			}
+			$empty['storage_back'] = self::storage_back_from_front( $empty['storage_3'] );
 		}
 
 		return $empty;
@@ -369,46 +489,27 @@ class WCBC_HappyBeds_Resolver {
 		}
 
 		$storage = self::normalize_storage( $storage );
+		$open    = self::drawers_open( $storage, $selections );
 
 		$size_code  = self::size_code( $size );
 		$depth_code = self::depth_code( $base_depth );
 		$meta       = self::colour_meta( $colour, $config );
 		$hb_style   = self::headboard_style( $headboard );
-		$dc_suffix  = $depth_code . $meta['code'];
-		$paths      = self::fabric_paths( $meta['hb_fabric'] );
+		$head_rel   = self::headboard_relative_path( $hb_style, $size_code, $depth_code, $meta['code'], $meta['hb_fabric'] );
 
 		$layers = array(
 			'shadow'       => self::cdn_url( 'new_shadow/shadow_wrk_' . $size_code . '.jpg', $mode ),
-			'legs'         => self::cdn_url( 'legs/bedding_legs_' . $size_code . '.png', $mode ),
+			'legs'         => self::cdn_url( self::legs_relative_path( $size_code, $storage ), $mode ),
 			'storage_back' => self::transparent_url( $mode ),
 			'base'         => self::cdn_url(
-				sprintf(
-					'bases/%s/bedbase_%s_%s_%s.png',
-					$paths['base'],
-					$size_code,
-					$depth_code,
-					$meta['code']
-				),
+				self::base_relative_path( $size_code, $depth_code, $meta['code'], $meta['hb_fabric'], $storage, $open ),
 				$mode
 			),
-			'headboard'    => self::transparent_url( $mode ),
+			'headboard'    => $head_rel ? self::cdn_url( $head_rel, $mode ) : self::transparent_url( $mode ),
 			'storage_1'    => self::transparent_url( $mode ),
 			'storage_2'    => self::transparent_url( $mode ),
 			'storage_3'    => self::transparent_url( $mode ),
 		);
-
-		if ( $hb_style ) {
-			$layers['headboard'] = self::cdn_url(
-				sprintf(
-					'%s/%s_%s_%s.png',
-					$paths['headboard'],
-					$hb_style,
-					$size_code,
-					$dc_suffix
-				),
-				$mode
-			);
-		}
 
 		$storage_paths = self::storage_layers( $storage, $size_code, $depth_code, $meta['code'], $meta['drawer'], $meta['hb_fabric'] );
 		foreach ( $storage_paths as $layer => $relative ) {

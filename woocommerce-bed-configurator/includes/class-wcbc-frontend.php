@@ -174,6 +174,8 @@ class WCBC_Frontend {
 				'imageMode'    => $image_mode,
 				'imageSource'  => WCBC_Config::get_image_source( $product_id ),
 				'layerMedia'   => $layer_media,
+				'variationDrivenLayers' => WCBC_Config::variation_driven_layers(),
+				'staticOverrideLayers'  => WCBC_Config::static_override_layers(),
 				'useHappyBeds' => in_array( $image_mode, array( 'happybeds-cdn', 'happybeds-proxy' ), true ),
 				'layerProxy'   => admin_url( 'admin-ajax.php?action=wcbc_layer_image&path=' ),
 				'importToken'  => current_user_can( 'manage_woocommerce' ) ? WCBC_Cache_API::import_token() : '',

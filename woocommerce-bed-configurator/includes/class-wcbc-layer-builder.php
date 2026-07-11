@@ -256,7 +256,40 @@ class WCBC_Layer_Builder {
 			}
 		}
 
-		return self::apply_option_layer_overrides( $layers, $config, $selections );
+		if ( self::should_apply_option_layer_overrides( $config ) ) {
+			return self::apply_option_layer_overrides( $layers, $config, $selections );
+		}
+
+		return $layers;
+	}
+
+	/**
+	 * Whether option-level layer URL overrides should be merged.
+	 *
+	 * @param array<string,mixed> $config Product config.
+	 * @return bool
+	 */
+	private static function should_apply_option_layer_overrides( $config ) {
+		$source = isset( $config['image_source'] ) ? $config['image_source'] : 'auto';
+		return in_array( $source, array( 'hybrid', 'media' ), true );
+	}
+
+	/**
+	 * Layers that may be replaced by a single Media Library upload in hybrid mode.
+	 *
+	 * @return string[]
+	 */
+	private static function static_override_layers() {
+		return WCBC_Config::static_override_layers();
+	}
+
+	/**
+	 * Layers whose image file changes per customer selection.
+	 *
+	 * @return string[]
+	 */
+	private static function variation_driven_layers() {
+		return WCBC_Config::variation_driven_layers();
 	}
 
 	/**
@@ -290,9 +323,10 @@ class WCBC_Layer_Builder {
 	private static function merge_product_media( $layers, $config ) {
 		$attachment_ids = isset( $config['layer_media'] ) && is_array( $config['layer_media'] ) ? $config['layer_media'] : array();
 		$media_layers   = WCBC_Config::layer_urls_from_media( $attachment_ids );
+		$allowed        = array_flip( self::static_override_layers() );
 
 		foreach ( $media_layers as $layer => $url ) {
-			if ( $url ) {
+			if ( $url && isset( $allowed[ $layer ] ) ) {
 				$layers[ $layer ] = $url;
 			}
 		}
@@ -313,9 +347,11 @@ class WCBC_Layer_Builder {
 			return $layers;
 		}
 
-		$defaults = isset( $config['defaults'] ) ? $config['defaults'] : array();
-
-		$valid_layers = array_flip( WCBC_Config::get_layers() );
+		$defaults            = isset( $config['defaults'] ) ? $config['defaults'] : array();
+		$valid_layers        = array_flip( WCBC_Config::get_layers() );
+		$source              = isset( $config['image_source'] ) ? $config['image_source'] : 'auto';
+		$variation_driven    = array_flip( self::variation_driven_layers() );
+		$allow_variation_url = ( 'media' === $source );
 
 		foreach ( $config['groups'] as $group ) {
 			$gid    = $group['id'];
@@ -332,6 +368,9 @@ class WCBC_Layer_Builder {
 			}
 			foreach ( $option['layers'] as $layer_key => $url ) {
 				if ( ! isset( $valid_layers[ $layer_key ] ) || ! $url ) {
+					continue;
+				}
+				if ( isset( $variation_driven[ $layer_key ] ) && ! $allow_variation_url ) {
 					continue;
 				}
 				if ( is_string( $url ) && false !== strpos( $url, 'demo-images/layers' ) ) {

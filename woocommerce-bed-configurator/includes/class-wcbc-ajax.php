@@ -29,6 +29,10 @@ class WCBC_Ajax {
 		$selections = isset( $_POST['selections'] ) ? (array) wp_unslash( $_POST['selections'] ) : array(); // phpcs:ignore WordPress.Security.NonceVerification
 		$selections = array_map( 'sanitize_text_field', $selections );
 
+		if ( isset( $_POST['drawers_open'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+			$selections['drawers_open'] = sanitize_text_field( wp_unslash( $_POST['drawers_open'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
+		}
+
 		if ( ! $product_id || ! WCBC_Frontend::is_enabled( $product_id ) ) {
 			wp_send_json_error( array( 'message' => 'Invalid product' ), 400 );
 		}

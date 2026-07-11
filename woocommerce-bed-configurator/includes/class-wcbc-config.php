@@ -115,6 +115,24 @@ class WCBC_Config {
 	}
 
 	/**
+	 * Layers whose image file changes with customer selections (not one fixed upload).
+	 *
+	 * @return string[]
+	 */
+	public static function variation_driven_layers() {
+		return array( 'headboard', 'storage_back', 'base', 'storage_1', 'storage_2', 'storage_3' );
+	}
+
+	/**
+	 * Layers that may use a single manual Media Library override in hybrid mode.
+	 *
+	 * @return string[]
+	 */
+	public static function static_override_layers() {
+		return array( 'shadow', 'legs' );
+	}
+
+	/**
 	 * Build default demo configuration.
 	 *
 	 * @return array<string,mixed>

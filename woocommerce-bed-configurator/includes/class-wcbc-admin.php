@@ -70,6 +70,8 @@ class WCBC_Admin {
 		$layer_media       = WCBC_Config::get_layer_media( $post->ID );
 		$image_source      = WCBC_Config::get_image_source( $post->ID );
 		$layer_labels      = WCBC_Config::get_layer_labels();
+		$variation_driven  = array_flip( WCBC_Config::variation_driven_layers() );
+		$static_layers     = array_flip( WCBC_Config::static_override_layers() );
 		?>
 		<div id="wcbc_product_data" class="panel woocommerce_options_panel hidden">
 			<div class="options_group">
@@ -106,14 +108,16 @@ class WCBC_Admin {
 							'media'    => __( 'WordPress Media Library only', 'wc-bed-configurator' ),
 							'hybrid'   => __( 'Happy Beds + Media Library overrides', 'wc-bed-configurator' ),
 						),
-						'description' => __( 'Media Library mode uses the layer images below. Hybrid replaces individual layers when you set a media image.', 'wc-bed-configurator' ),
+						'description' => __( 'Auto/Happy Beds resolve headboard, base, and storage from selections. Hybrid only overrides shadow and legs from Media Library.', 'wc-bed-configurator' ),
 					)
 				);
 				?>
 				<div class="wcbc-layer-media-section options_group">
 					<p class="form-field">
 						<strong><?php esc_html_e( 'Preview layer images (Media Library)', 'wc-bed-configurator' ); ?></strong><br />
-						<span class="description"><?php esc_html_e( 'Upload one image per preview layer. Used when source is Media Library or Hybrid.', 'wc-bed-configurator' ); ?></span>
+						<span class="description">
+							<?php esc_html_e( 'Shadow and legs can use a single uploaded image in Hybrid mode. Headboard, base, and storage layers are variation-driven — one preview slot loads many different image files depending on size, colour, depth, headboard style, and storage (same as Happy Beds).', 'wc-bed-configurator' ); ?>
+						</span>
 					</p>
 					<div class="wcbc-layer-media-grid">
 						<?php foreach ( WCBC_Config::get_layers() as $layer ) : ?>
@@ -121,21 +125,32 @@ class WCBC_Admin {
 							$attachment_id = isset( $layer_media[ $layer ] ) ? (int) $layer_media[ $layer ] : 0;
 							$preview_url   = $attachment_id ? wp_get_attachment_image_url( $attachment_id, 'medium' ) : '';
 							$label         = isset( $layer_labels[ $layer ] ) ? $layer_labels[ $layer ] : $layer;
+							$is_dynamic    = isset( $variation_driven[ $layer ] );
+							$can_upload    = isset( $static_layers[ $layer ] ) || 'media' === $image_source;
 							?>
-							<div class="wcbc-layer-media-item">
-								<label><?php echo esc_html( $label ); ?></label>
+							<div class="wcbc-layer-media-item <?php echo $is_dynamic ? 'is-variation-driven' : ''; ?>">
+								<label>
+									<?php echo esc_html( $label ); ?>
+									<?php if ( $is_dynamic ) : ?>
+										<br /><span class="description"><?php esc_html_e( 'Varies by selection', 'wc-bed-configurator' ); ?></span>
+									<?php endif; ?>
+								</label>
 								<img
 									class="wcbc-layer-media-preview <?php echo $preview_url ? '' : 'is-empty'; ?>"
 									src="<?php echo esc_url( $preview_url ); ?>"
 									alt=""
 								/>
 								<input type="hidden" name="wcbc_layer_media[<?php echo esc_attr( $layer ); ?>]" value="<?php echo esc_attr( $attachment_id ); ?>" />
+								<?php if ( $can_upload ) : ?>
 								<button type="button" class="button wcbc-upload-layer" data-layer="<?php echo esc_attr( $layer ); ?>" data-title="<?php echo esc_attr( $label ); ?>">
 									<?php esc_html_e( 'Select image', 'wc-bed-configurator' ); ?>
 								</button>
 								<button type="button" class="button wcbc-remove-layer" <?php echo $attachment_id ? '' : 'style="display:none"'; ?>>
 									<?php esc_html_e( 'Remove', 'wc-bed-configurator' ); ?>
 								</button>
+								<?php else : ?>
+								<p class="description"><?php esc_html_e( 'Resolved automatically from Happy Beds paths.', 'wc-bed-configurator' ); ?></p>
+								<?php endif; ?>
 							</div>
 						<?php endforeach; ?>
 					</div>
