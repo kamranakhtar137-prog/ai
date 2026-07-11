@@ -132,12 +132,70 @@
 		return layers;
 	}
 
-	function buildLayers(selections) {
-		var mode = wcbcData.imageMode || (wcbcData.useHappyBeds ? 'happybeds-cdn' : 'demo');
-		if (mode === 'demo') {
-			return demoLayers(selections);
+	function applyOptionLayerOverrides(layers, selections) {
+		var config = wcbcData.config || {};
+		var defaults = config.defaults || {};
+		if (!config.groups) {
+			return layers;
 		}
-		return happyBedsLayers(selections, mode);
+		config.groups.forEach(function (group) {
+			var sel = selections[group.id] || defaults[group.id] || '';
+			if (!group.options) {
+				return;
+			}
+			group.options.forEach(function (opt) {
+				if (opt.id !== sel || !opt.layers) {
+					return;
+				}
+				Object.keys(opt.layers).forEach(function (layerKey) {
+					if (opt.layers[layerKey] && layers[layerKey] !== undefined) {
+						layers[layerKey] = opt.layers[layerKey];
+					}
+				});
+			});
+		});
+		return layers;
+	}
+
+	function buildMediaLayers(selections) {
+		var transparent = (wcbcData.layerBase || '') + 'transparent.png';
+		var media = wcbcData.layerMedia || {};
+		var layers = {};
+		wcbcData.layers.forEach(function (layer) {
+			layers[layer] = media[layer] || transparent;
+		});
+		return applyOptionLayerOverrides(layers, selections);
+	}
+
+	function mergeHybridMedia(layers, selections) {
+		var media = wcbcData.layerMedia || {};
+		Object.keys(media).forEach(function (layer) {
+			if (media[layer]) {
+				layers[layer] = media[layer];
+			}
+		});
+		return applyOptionLayerOverrides(layers, selections);
+	}
+
+	function buildLayers(selections) {
+		var source = wcbcData.imageSource || 'auto';
+		if (source === 'media') {
+			return buildMediaLayers(selections);
+		}
+
+		var mode = wcbcData.imageMode || (wcbcData.useHappyBeds ? 'happybeds-cdn' : 'demo');
+		var layers;
+		if (mode === 'demo') {
+			layers = demoLayers(selections);
+		} else {
+			layers = happyBedsLayers(selections, mode);
+		}
+
+		if (source === 'hybrid') {
+			return mergeHybridMedia(layers, selections);
+		}
+
+		return applyOptionLayerOverrides(layers, selections);
 	}
 
 	function demoLayers(selections) {

@@ -155,6 +155,7 @@ class WCBC_Frontend {
 	 */
 	private static function enqueue_assets( $product_id, $config ) {
 		$image_mode = wcbc_get_image_mode();
+		$layer_media = WCBC_Config::layer_urls_from_media( WCBC_Config::get_layer_media( $product_id ) );
 
 		wp_enqueue_style( 'wcbc-configurator' );
 		wp_enqueue_script( 'wcbc-accordion' );

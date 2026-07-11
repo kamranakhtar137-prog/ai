@@ -230,19 +230,111 @@ class WCBC_Layer_Builder {
 	 */
 	public static function build( $config, $selections ) {
 		$defaults = isset( $config['defaults'] ) ? $config['defaults'] : array();
-		$mode     = function_exists( 'wcbc_get_image_mode' ) ? wcbc_get_image_mode() : 'demo';
+		$source   = isset( $config['image_source'] ) ? $config['image_source'] : 'auto';
+		$layers   = array();
 
-		if ( 'demo' === $mode ) {
-			return self::build_demo_layers( $selections, $defaults );
-		}
+		if ( 'media' === $source ) {
+			$layers = self::build_from_product_media( $config );
+		} elseif ( 'happybeds' === $source ) {
+			$mode   = WCBC_Layer_Serve::cache_has_files() ? 'happybeds-proxy' : 'happybeds-cdn';
+			$layers = WCBC_HappyBeds_Resolver::build_layers( $selections, $defaults, $mode );
+		} else {
+			$mode = function_exists( 'wcbc_get_image_mode' ) ? wcbc_get_image_mode() : 'demo';
 
-		if ( self::has_happybeds_manifest() ) {
-			$imported = self::build_from_manifest( $config, $selections );
-			if ( $imported ) {
-				return $imported;
+			if ( 'demo' === $mode ) {
+				$layers = self::build_demo_layers( $selections, $defaults );
+			} elseif ( self::has_happybeds_manifest() ) {
+				$imported = self::build_from_manifest( $config, $selections );
+				$layers   = $imported ? $imported : WCBC_HappyBeds_Resolver::build_layers( $selections, $defaults, $mode );
+			} else {
+				$layers = WCBC_HappyBeds_Resolver::build_layers( $selections, $defaults, $mode );
+			}
+
+			if ( 'hybrid' === $source ) {
+				$layers = self::merge_product_media( $layers, $config );
 			}
 		}
 
-		return WCBC_HappyBeds_Resolver::build_layers( $selections, $defaults, $mode );
+		return self::apply_option_layer_overrides( $layers, $config, $selections );
+	}
+
+	/**
+	 * Build layers purely from product media library attachments.
+	 *
+	 * @param array<string,mixed> $config Product config.
+	 * @return array<string,string>
+	 */
+	private static function build_from_product_media( $config ) {
+		$transparent = WCBC_PLUGIN_URL . 'demo-images/layers/transparent.png';
+		$layers      = array_fill_keys( WCBC_Config::get_layers(), $transparent );
+		$attachment_ids = isset( $config['layer_media'] ) && is_array( $config['layer_media'] ) ? $config['layer_media'] : array();
+		$media_layers   = WCBC_Config::layer_urls_from_media( $attachment_ids );
+
+		foreach ( $media_layers as $layer => $url ) {
+			if ( $url ) {
+				$layers[ $layer ] = $url;
+			}
+		}
+
+		return $layers;
+	}
+
+	/**
+	 * Replace individual layers with product media attachments when set.
+	 *
+	 * @param array<string,string> $layers Current layers.
+	 * @param array<string,mixed>  $config Product config.
+	 * @return array<string,string>
+	 */
+	private static function merge_product_media( $layers, $config ) {
+		$attachment_ids = isset( $config['layer_media'] ) && is_array( $config['layer_media'] ) ? $config['layer_media'] : array();
+		$media_layers   = WCBC_Config::layer_urls_from_media( $attachment_ids );
+
+		foreach ( $media_layers as $layer => $url ) {
+			if ( $url ) {
+				$layers[ $layer ] = $url;
+			}
+		}
+
+		return $layers;
+	}
+
+	/**
+	 * Merge layer URLs contributed by the currently selected options.
+	 *
+	 * @param array<string,string> $layers Layer URLs.
+	 * @param array<string,mixed>  $config Config.
+	 * @param array<string,string> $selections Selections.
+	 * @return array<string,string>
+	 */
+	private static function apply_option_layer_overrides( $layers, $config, $selections ) {
+		if ( empty( $config['groups'] ) ) {
+			return $layers;
+		}
+
+		$defaults = isset( $config['defaults'] ) ? $config['defaults'] : array();
+
+		foreach ( $config['groups'] as $group ) {
+			$gid    = $group['id'];
+			$sel_id = self::pick( $selections, $defaults, $gid );
+			$option = null;
+			foreach ( $group['options'] as $opt ) {
+				if ( $opt['id'] === $sel_id ) {
+					$option = $opt;
+					break;
+				}
+			}
+			if ( ! $option || empty( $option['layers'] ) || ! is_array( $option['layers'] ) ) {
+				continue;
+			}
+			foreach ( $option['layers'] as $layer_key => $url ) {
+				if ( ! isset( $layers[ $layer_key ] ) || ! $url ) {
+					continue;
+				}
+				$layers[ $layer_key ] = esc_url_raw( $url );
+			}
+		}
+
+		return $layers;
 	}
 }

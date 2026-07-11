@@ -22,6 +22,89 @@ class WCBC_Config {
 	const ENABLED_KEY = '_wcbc_enabled';
 
 	/**
+	 * Product layer attachment IDs keyed by layer slug.
+	 */
+	const LAYER_MEDIA_KEY = '_wcbc_layer_media';
+
+	/**
+	 * Image source: auto, happybeds, media, hybrid.
+	 */
+	const IMAGE_SOURCE_KEY = '_wcbc_image_source';
+
+	/**
+	 * Human labels for preview layers.
+	 *
+	 * @return array<string,string>
+	 */
+	public static function get_layer_labels() {
+		return array(
+			'shadow'       => __( 'Shadow', 'wc-bed-configurator' ),
+			'legs'         => __( 'Legs', 'wc-bed-configurator' ),
+			'headboard'    => __( 'Headboard', 'wc-bed-configurator' ),
+			'storage_back' => __( 'Storage back', 'wc-bed-configurator' ),
+			'base'         => __( 'Base', 'wc-bed-configurator' ),
+			'storage_2'    => __( 'Storage drawer back', 'wc-bed-configurator' ),
+			'storage_3'    => __( 'Storage drawer front', 'wc-bed-configurator' ),
+			'storage_1'    => __( 'Storage extra', 'wc-bed-configurator' ),
+		);
+	}
+
+	/**
+	 * Get saved layer attachment IDs for a product.
+	 *
+	 * @param int $product_id Product ID.
+	 * @return array<string,int>
+	 */
+	public static function get_layer_media( $product_id ) {
+		$raw = get_post_meta( $product_id, self::LAYER_MEDIA_KEY, true );
+		if ( ! is_array( $raw ) ) {
+			return array();
+		}
+		$out = array();
+		foreach ( self::get_layers() as $layer ) {
+			if ( ! empty( $raw[ $layer ] ) ) {
+				$out[ $layer ] = absint( $raw[ $layer ] );
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Resolve layer attachment IDs to public URLs.
+	 *
+	 * @param array<string,int> $attachment_ids Attachment IDs keyed by layer.
+	 * @return array<string,string>
+	 */
+	public static function layer_urls_from_media( $attachment_ids ) {
+		$layers = array();
+		foreach ( self::get_layers() as $layer ) {
+			$layers[ $layer ] = '';
+			if ( empty( $attachment_ids[ $layer ] ) ) {
+				continue;
+			}
+			$url = wp_get_attachment_image_url( (int) $attachment_ids[ $layer ], 'full' );
+			if ( $url ) {
+				$layers[ $layer ] = $url;
+			}
+		}
+		return $layers;
+	}
+
+	/**
+	 * Product image source mode.
+	 *
+	 * @param int $product_id Product ID.
+	 * @return string
+	 */
+	public static function get_image_source( $product_id ) {
+		$source = get_post_meta( $product_id, self::IMAGE_SOURCE_KEY, true );
+		if ( in_array( $source, array( 'auto', 'happybeds', 'media', 'hybrid' ), true ) ) {
+			return $source;
+		}
+		return 'auto';
+	}
+
+	/**
 	 * Image layers rendered in preview stack.
 	 *
 	 * @return string[]
@@ -179,9 +262,12 @@ class WCBC_Config {
 			$config = self::get_default_config();
 		}
 		$defaults = self::get_default_config();
-		$config['layers']     = WCBC_Layer_Builder::build( $config, isset( $config['defaults'] ) ? $config['defaults'] : $defaults['defaults'] );
-		$config['defaults']   = ! empty( $config['defaults'] ) ? $config['defaults'] : $defaults['defaults'];
-		$config['base_price'] = isset( $config['base_price'] ) ? (float) $config['base_price'] : $defaults['base_price'];
+		$config['product_id']   = (int) $product_id;
+		$config['layer_media']  = self::get_layer_media( $product_id );
+		$config['image_source'] = self::get_image_source( $product_id );
+		$config['layers']       = WCBC_Layer_Builder::build( $config, isset( $config['defaults'] ) ? $config['defaults'] : $defaults['defaults'] );
+		$config['defaults']     = ! empty( $config['defaults'] ) ? $config['defaults'] : $defaults['defaults'];
+		$config['base_price']   = isset( $config['base_price'] ) ? (float) $config['base_price'] : $defaults['base_price'];
 		return $config;
 	}
 
