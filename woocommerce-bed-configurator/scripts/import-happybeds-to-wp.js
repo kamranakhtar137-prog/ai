@@ -63,13 +63,15 @@
 	}
 
 	function upload(path, dataUrl) {
-		return fetch(WP_SITE.replace(/\/$/, '') + '/wp-json/wcbc/v1/cache-image', {
+		var base = WP_SITE.replace(/\/$/, '') + '/wp-json/wcbc/v1/cache-image';
+		var url = base + '?wcbc_import_token=' + encodeURIComponent(TOKEN);
+		return fetch(url, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
 				'X-WCBC-Import-Token': TOKEN,
 			},
-			body: JSON.stringify({ path: path, data: dataUrl }),
+			body: JSON.stringify({ path: path, data: dataUrl, token: TOKEN }),
 		}).then(function (r) {
 			return r.json();
 		});

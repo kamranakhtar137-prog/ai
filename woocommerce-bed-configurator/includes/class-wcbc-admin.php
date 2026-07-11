@@ -19,6 +19,43 @@ class WCBC_Admin {
 		add_action( 'woocommerce_product_data_panels', array( __CLASS__, 'render_panel' ) );
 		add_action( 'woocommerce_process_product_meta', array( __CLASS__, 'save' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
+		add_action( 'admin_init', array( __CLASS__, 'maybe_regenerate_import_token' ) );
+	}
+
+	/**
+	 * Regenerate import token when requested from product admin.
+	 */
+	public static function maybe_regenerate_import_token() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( empty( $_GET['wcbc_regenerate_token'] ) ) {
+			return;
+		}
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			return;
+		}
+
+		check_admin_referer( 'wcbc_regenerate_import_token' );
+
+		if ( class_exists( 'WCBC_Cache_API' ) ) {
+			WCBC_Cache_API::import_token( true );
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$post_id = isset( $_GET['post'] ) ? absint( $_GET['post'] ) : 0;
+		$redirect = $post_id
+			? add_query_arg(
+				array(
+					'post'             => $post_id,
+					'action'           => 'edit',
+					'wcbc_token_reset' => '1',
+				),
+				admin_url( 'post.php' )
+			)
+			: admin_url( 'edit.php?post_type=product' );
+
+		wp_safe_redirect( $redirect );
+		exit;
 	}
 
 	/**
@@ -228,6 +265,28 @@ class WCBC_Admin {
 					<br />
 					<textarea id="wcbc_import_all_script" readonly rows="8" style="width:100%;font-family:monospace;font-size:11px;"><?php echo esc_textarea( $import_all_script ); ?></textarea>
 					<button type="button" class="button" id="wcbc-copy-import-all-script"><?php esc_html_e( 'Copy full import (all variations)', 'wc-bed-configurator' ); ?></button>
+					<br /><br />
+					<span class="description" style="color:#b45309;">
+						<?php esc_html_e( '401 Unauthorized? Copy a fresh script below — the token must match your site. Re-copy after every plugin update.', 'wc-bed-configurator' ); ?>
+					</span>
+					<br />
+					<?php
+					$regen_url = wp_nonce_url(
+						add_query_arg(
+							array(
+								'post'                  => $post->ID,
+								'action'                => 'edit',
+								'wcbc_regenerate_token' => '1',
+							),
+							admin_url( 'post.php' )
+						),
+						'wcbc_regenerate_import_token'
+					);
+					?>
+					<a href="<?php echo esc_url( $regen_url ); ?>" class="button"><?php esc_html_e( 'Regenerate import token', 'wc-bed-configurator' ); ?></a>
+					<?php if ( isset( $_GET['wcbc_token_reset'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+						<span style="color:green;margin-left:8px;"><?php esc_html_e( 'Token regenerated — copy a new import script above.', 'wc-bed-configurator' ); ?></span>
+					<?php endif; ?>
 					<br /><br />
 					<?php esc_html_e( 'Paste on https://www.happybeds.co.uk/build-your-own-bed → DevTools Console → Enter.', 'wc-bed-configurator' ); ?>
 					<br />

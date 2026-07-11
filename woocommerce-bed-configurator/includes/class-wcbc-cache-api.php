@@ -18,6 +18,7 @@ class WCBC_Cache_API {
 		add_action( 'rest_api_init', array( __CLASS__, 'register_routes' ) );
 		add_action( 'init', array( __CLASS__, 'handle_preflight' ) );
 		add_filter( 'rest_pre_serve_request', array( __CLASS__, 'add_cors_headers' ), 10, 4 );
+		add_filter( 'rest_authentication_errors', array( __CLASS__, 'allow_token_import_auth' ), 99 );
 	}
 
 	/**
@@ -86,6 +87,10 @@ class WCBC_Cache_API {
 						'required' => true,
 						'type'     => 'string',
 					),
+					'token' => array(
+						'required' => false,
+						'type'     => 'string',
+					),
 				),
 			)
 		);
@@ -102,25 +107,111 @@ class WCBC_Cache_API {
 	}
 
 	/**
+	 * Allow cross-origin Happy Beds import when the site token is valid.
+	 *
+	 * Some hosts (TasteWP, security plugins) block anonymous REST before permission_callback runs.
+	 *
+	 * @param WP_Error|null|true $errors Existing auth errors.
+	 * @return WP_Error|null|true
+	 */
+	public static function allow_token_import_auth( $errors ) {
+		if ( ! self::is_cache_image_request() ) {
+			return $errors;
+		}
+
+		$token = self::get_token_from_superglobals();
+		if ( $token && hash_equals( self::import_token(), $token ) ) {
+			return null;
+		}
+
+		return $errors;
+	}
+
+	/**
+	 * Whether the current HTTP request targets cache-image.
+	 *
+	 * @return bool
+	 */
+	private static function is_cache_image_request() {
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+		if ( empty( $_SERVER['REQUEST_URI'] ) ) {
+			return false;
+		}
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+		$uri = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+		return false !== strpos( $uri, '/wp-json/wcbc/v1/cache-image' );
+	}
+
+	/**
+	 * Read import token from superglobals (header or query) before REST body is parsed.
+	 *
+	 * @return string
+	 */
+	private static function get_token_from_superglobals() {
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+		if ( ! empty( $_SERVER['HTTP_X_WCBC_IMPORT_TOKEN'] ) ) {
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+			return sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_WCBC_IMPORT_TOKEN'] ) );
+		}
+
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+		if ( ! empty( $_GET['wcbc_import_token'] ) ) {
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+			return sanitize_text_field( wp_unslash( $_GET['wcbc_import_token'] ) );
+		}
+
+		return '';
+	}
+
+	/**
+	 * Extract import token from header, query string, or JSON body.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return string
+	 */
+	private static function get_request_token( $request ) {
+		$token = self::get_token_from_superglobals();
+		if ( $token ) {
+			return $token;
+		}
+
+		$header = $request->get_header( 'x-wcbc-import-token' );
+		if ( $header ) {
+			return sanitize_text_field( (string) $header );
+		}
+
+		$body_token = $request->get_param( 'token' );
+		if ( $body_token ) {
+			return sanitize_text_field( (string) $body_token );
+		}
+
+		return '';
+	}
+
+	/**
 	 * Allow admins or cross-origin browser import with site token.
 	 *
 	 * WordPress nonces are tied to the logged-in user and fail from happybeds.co.uk,
 	 * so external imports must use the persistent site token instead.
 	 *
 	 * @param WP_REST_Request $request Request.
-	 * @return bool
+	 * @return bool|WP_Error
 	 */
 	public static function can_cache( $request ) {
 		if ( current_user_can( 'manage_woocommerce' ) ) {
 			return true;
 		}
 
-		$token = $request->get_header( 'x-wcbc-import-token' );
-		if ( $token && hash_equals( self::import_token(), (string) $token ) ) {
+		$token = self::get_request_token( $request );
+		if ( $token && hash_equals( self::import_token(), $token ) ) {
 			return true;
 		}
 
-		return false;
+		return new WP_Error(
+			'wcbc_import_forbidden',
+			__( 'Invalid or missing import token. Open your product in WordPress admin → Bed Configurator tab → copy a fresh import script (token changes when the plugin is re-activated).', 'wc-bed-configurator' ),
+			array( 'status' => 401 )
+		);
 	}
 
 	/**
