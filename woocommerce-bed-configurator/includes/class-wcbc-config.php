@@ -27,6 +27,13 @@ class WCBC_Config {
 	const LAYER_MEDIA_KEY = '_wcbc_layer_media';
 
 	/**
+	 * Per-size and per-colour layer attachment IDs.
+	 *
+	 * Shape: [ 'size' => [ size_id => [ layer => attachment_id ] ], 'colour' => [ ... ] ].
+	 */
+	const VARIATION_LAYER_MEDIA_KEY = '_wcbc_variation_layer_media';
+
+	/**
 	 * Image source: auto, happybeds, media, hybrid.
 	 */
 	const IMAGE_SOURCE_KEY = '_wcbc_image_source';
@@ -91,6 +98,210 @@ class WCBC_Config {
 	}
 
 	/**
+	 * Transparent fallback layer URL.
+	 *
+	 * @return string
+	 */
+	public static function transparent_layer_url() {
+		return WCBC_PLUGIN_URL . 'demo-images/layers/transparent.png';
+	}
+
+	/**
+	 * Get per-size / per-colour layer attachment IDs.
+	 *
+	 * @param int $product_id Product ID.
+	 * @return array{size:array<string,array<string,int>>,colour:array<string,array<string,int>>}
+	 */
+	public static function get_variation_layer_media( $product_id ) {
+		$raw = get_post_meta( $product_id, self::VARIATION_LAYER_MEDIA_KEY, true );
+		$out = array(
+			'size'   => array(),
+			'colour' => array(),
+		);
+
+		if ( ! is_array( $raw ) ) {
+			return $out;
+		}
+
+		foreach ( array( 'size', 'colour' ) as $dimension ) {
+			if ( empty( $raw[ $dimension ] ) || ! is_array( $raw[ $dimension ] ) ) {
+				continue;
+			}
+			foreach ( $raw[ $dimension ] as $variant_id => $layers ) {
+				$variant_id = sanitize_title( (string) $variant_id );
+				if ( ! is_array( $layers ) ) {
+					continue;
+				}
+				foreach ( self::get_layers() as $layer ) {
+					if ( ! empty( $layers[ $layer ] ) ) {
+						$out[ $dimension ][ $variant_id ][ $layer ] = absint( $layers[ $layer ] );
+					}
+				}
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Sanitize posted variation layer media.
+	 *
+	 * @param array<string,mixed> $posted Posted form data.
+	 * @return array{size:array<string,array<string,int>>,colour:array<string,array<string,int>>}
+	 */
+	public static function sanitize_variation_layer_media_post( $posted ) {
+		$out = array(
+			'size'   => array(),
+			'colour' => array(),
+		);
+
+		if ( ! is_array( $posted ) ) {
+			return $out;
+		}
+
+		foreach ( array( 'size', 'colour' ) as $dimension ) {
+			if ( empty( $posted[ $dimension ] ) || ! is_array( $posted[ $dimension ] ) ) {
+				continue;
+			}
+			foreach ( $posted[ $dimension ] as $variant_id => $layers ) {
+				$variant_id = sanitize_title( (string) $variant_id );
+				if ( ! is_array( $layers ) ) {
+					continue;
+				}
+				foreach ( self::get_layers() as $layer ) {
+					if ( ! empty( $layers[ $layer ] ) ) {
+						$out[ $dimension ][ $variant_id ][ $layer ] = absint( $layers[ $layer ] );
+					}
+				}
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Resolve variation layer attachment IDs to URLs for frontend JS.
+	 *
+	 * @param int $product_id Product ID.
+	 * @return array{size:array<string,array<string,string>>,colour:array<string,array<string,string>>}
+	 */
+	public static function variation_layer_urls_for_js( $product_id ) {
+		$raw = self::get_variation_layer_media( $product_id );
+		$out = array(
+			'size'   => array(),
+			'colour' => array(),
+		);
+
+		foreach ( array( 'size', 'colour' ) as $dimension ) {
+			foreach ( $raw[ $dimension ] as $variant_id => $layers ) {
+				foreach ( $layers as $layer => $attachment_id ) {
+					$url = wp_get_attachment_image_url( (int) $attachment_id, 'full' );
+					if ( $url ) {
+						$out[ $dimension ][ $variant_id ][ $layer ] = $url;
+					}
+				}
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Resolve preview layer URLs from per-size and per-colour Media Library assignments.
+	 *
+	 * @param int                  $product_id Product ID.
+	 * @param array<string,string> $selections Current selections.
+	 * @param array<string,string> $defaults Default selections.
+	 * @return array<string,string>
+	 */
+	public static function resolve_variation_layer_urls( $product_id, $selections, $defaults = array() ) {
+		$media       = self::get_variation_layer_media( $product_id );
+		$transparent = self::transparent_layer_url();
+		$size_id     = ! empty( $selections['size'] ) ? sanitize_title( $selections['size'] ) : ( ! empty( $defaults['size'] ) ? sanitize_title( $defaults['size'] ) : '' );
+		$colour_id   = ! empty( $selections['colour'] ) ? sanitize_title( $selections['colour'] ) : ( ! empty( $defaults['colour'] ) ? sanitize_title( $defaults['colour'] ) : '' );
+
+		if ( class_exists( 'WCBC_Colour_Registry' ) ) {
+			$colour_id = WCBC_Colour_Registry::resolve_slug( $colour_id );
+		}
+
+		$size_set   = ( $size_id && ! empty( $media['size'][ $size_id ] ) ) ? $media['size'][ $size_id ] : array();
+		$colour_set = ( $colour_id && ! empty( $media['colour'][ $colour_id ] ) ) ? $media['colour'][ $colour_id ] : array();
+
+		$layers = array();
+		foreach ( self::get_layers() as $layer ) {
+			$attachment_id = 0;
+			if ( ! empty( $size_set[ $layer ] ) ) {
+				$attachment_id = (int) $size_set[ $layer ];
+			}
+			if ( ! empty( $colour_set[ $layer ] ) ) {
+				$attachment_id = (int) $colour_set[ $layer ];
+			}
+
+			$url = $attachment_id ? wp_get_attachment_image_url( $attachment_id, 'full' ) : '';
+			$layers[ $layer ] = $url ? $url : $transparent;
+		}
+
+		$headboard = ! empty( $selections['headboard'] ) ? sanitize_title( $selections['headboard'] ) : ( ! empty( $defaults['headboard'] ) ? sanitize_title( $defaults['headboard'] ) : '' );
+		if ( $headboard && false !== strpos( $headboard, 'no-headboard' ) ) {
+			$layers['headboard'] = $transparent;
+		}
+
+		return $layers;
+	}
+
+	/**
+	 * Size options from config for admin layer assignment.
+	 *
+	 * @param array<string,mixed> $config Config.
+	 * @return array<int,array<string,string>>
+	 */
+	public static function size_options_for_admin( $config ) {
+		$options = array();
+		if ( empty( $config['groups'] ) ) {
+			return $options;
+		}
+		foreach ( $config['groups'] as $group ) {
+			if ( 'size' !== $group['id'] || empty( $group['options'] ) ) {
+				continue;
+			}
+			foreach ( $group['options'] as $option ) {
+				$options[] = array(
+					'id'       => $option['id'],
+					'label'    => $option['label'],
+					'sublabel' => isset( $option['sublabel'] ) ? $option['sublabel'] : '',
+				);
+			}
+		}
+		return $options;
+	}
+
+	/**
+	 * Colour options from config for admin layer assignment.
+	 *
+	 * @param array<string,mixed> $config Config.
+	 * @return array<int,array<string,string>>
+	 */
+	public static function colour_options_for_admin( $config ) {
+		$options = array();
+		if ( empty( $config['groups'] ) ) {
+			return $options;
+		}
+		foreach ( $config['groups'] as $group ) {
+			if ( 'colour' !== $group['id'] || empty( $group['options'] ) ) {
+				continue;
+			}
+			foreach ( $group['options'] as $option ) {
+				$options[] = array(
+					'id'       => $option['id'],
+					'label'    => $option['label'],
+					'sublabel' => isset( $option['sublabel'] ) ? $option['sublabel'] : '',
+				);
+			}
+		}
+		return $options;
+	}
+
+	/**
 	 * Product image source mode.
 	 *
 	 * @param int $product_id Product ID.
@@ -98,10 +309,10 @@ class WCBC_Config {
 	 */
 	public static function get_image_source( $product_id ) {
 		$source = get_post_meta( $product_id, self::IMAGE_SOURCE_KEY, true );
-		if ( in_array( $source, array( 'demo', 'auto', 'happybeds', 'media', 'hybrid' ), true ) ) {
+		if ( in_array( $source, array( 'media', 'demo', 'auto', 'happybeds', 'hybrid' ), true ) ) {
 			return $source;
 		}
-		return 'demo';
+		return 'media';
 	}
 
 	/**
@@ -276,9 +487,9 @@ class WCBC_Config {
 		$defaults = self::get_default_config();
 		$config['defaults']     = self::normalize_defaults( $config );
 		$config['product_id']   = (int) $product_id;
-		$config['layer_media']  = self::get_layer_media( $product_id );
 		$config['image_source'] = self::get_image_source( $product_id );
 		$config['layers']       = WCBC_Layer_Builder::build( $config, $config['defaults'] );
+		unset( $config['layer_media'] );
 		$config['base_price']   = isset( $config['base_price'] ) ? (float) $config['base_price'] : $defaults['base_price'];
 		return $config;
 	}

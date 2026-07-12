@@ -101,8 +101,8 @@
 	}
 
 	function shouldApplyOptionOverrides() {
-		var source = wcbcData.imageSource || 'auto';
-		return source === 'hybrid' || source === 'media';
+		var source = wcbcData.imageSource || 'media';
+		return source === 'hybrid';
 	}
 
 	function isDemoLayerUrl(url) {
@@ -287,14 +287,34 @@
 		return layers;
 	}
 
-	function buildMediaLayers(selections) {
-		var transparent = (wcbcData.layerBase || '') + 'transparent.png';
-		var media = wcbcData.layerMedia || {};
+	function buildVariationMediaLayers(selections) {
+		var transparent = wcbcData.transparentLayer || (wcbcData.layerBase || '') + 'transparent.png';
+		var maps = wcbcData.variationLayerMedia || { size: {}, colour: {} };
+		var size = pick(selections, 'size') || 'small-single';
+		var colour = resolveColourSlug(pick(selections, 'colour') || 'beige-velvet');
+		var headboard = pick(selections, 'headboard');
+		var sizeSet = maps.size[size] || {};
+		var colourSet = maps.colour[colour] || {};
 		var layers = {};
+
 		wcbcData.layers.forEach(function (layer) {
-			layers[layer] = media[layer] || transparent;
+			layers[layer] = sizeSet[layer] || transparent;
 		});
-		return applyOptionLayerOverrides(layers, selections);
+		wcbcData.layers.forEach(function (layer) {
+			if (colourSet[layer]) {
+				layers[layer] = colourSet[layer];
+			}
+		});
+
+		if (headboardShape(headboard) === 'none') {
+			layers.headboard = transparent;
+		}
+
+		return layers;
+	}
+
+	function buildMediaLayers(selections) {
+		return buildVariationMediaLayers(selections);
 	}
 
 	function mergeHybridMedia(layers, selections) {
@@ -309,9 +329,9 @@
 	}
 
 	function buildLayers(selections) {
-		var source = wcbcData.imageSource || 'demo';
+		var source = wcbcData.imageSource || 'media';
 		if (source === 'media') {
-			return buildMediaLayers(selections);
+			return buildVariationMediaLayers(selections);
 		}
 		if (source === 'demo') {
 			return demoLayers(selections);

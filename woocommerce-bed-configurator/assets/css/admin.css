@@ -62,3 +62,27 @@
 .wcbc-option-thumb.is-empty {
 	display: none;
 }
+
+.wcbc-variation-layer-set {
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	margin: 0 12px 12px;
+	background: #fff;
+}
+
+.wcbc-variation-layer-set summary {
+	padding: 12px 14px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.wcbc-variation-layer-set .wcbc-layer-media-grid {
+	padding: 0 12px 12px;
+}
+
+.wcbc-advanced-panel {
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	padding: 12px;
+	background: #f6f7f7;
+}

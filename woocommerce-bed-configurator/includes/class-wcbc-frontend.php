@@ -156,6 +156,8 @@ class WCBC_Frontend {
 	private static function enqueue_assets( $product_id, $config ) {
 		$image_mode = wcbc_get_image_mode();
 		$layer_media = WCBC_Config::layer_urls_from_media( WCBC_Config::get_layer_media( $product_id ) );
+		$config_js   = $config;
+		unset( $config_js['layers'] );
 
 		wp_enqueue_style( 'wcbc-configurator' );
 		wp_enqueue_script( 'wcbc-accordion' );
@@ -167,13 +169,15 @@ class WCBC_Frontend {
 				'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
 				'nonce'        => wp_create_nonce( 'wcbc_configurator' ),
 				'productId'    => $product_id,
-				'config'       => $config,
+				'config'       => $config_js,
 				'layers'       => WCBC_Config::get_layers(),
 				'layerBase'    => WCBC_PLUGIN_URL . 'demo-images/layers/',
 				'happyBeds'    => WCBC_HappyBeds_Resolver::js_config( $config ),
 				'imageMode'    => $image_mode,
 				'imageSource'  => WCBC_Config::get_image_source( $product_id ),
 				'layerMedia'   => $layer_media,
+				'variationLayerMedia' => WCBC_Config::variation_layer_urls_for_js( $product_id ),
+				'transparentLayer'    => WCBC_Config::transparent_layer_url(),
 				'variationDrivenLayers' => WCBC_Config::variation_driven_layers(),
 				'staticOverrideLayers'  => WCBC_Config::static_override_layers(),
 				'corePreviewLayers'     => WCBC_Config::core_preview_layers(),

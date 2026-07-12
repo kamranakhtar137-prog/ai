@@ -287,11 +287,16 @@ class WCBC_Layer_Builder {
 	 */
 	public static function build( $config, $selections ) {
 		$defaults = isset( $config['defaults'] ) ? $config['defaults'] : array();
-		$source   = isset( $config['image_source'] ) ? $config['image_source'] : 'demo';
+		$source   = isset( $config['image_source'] ) ? $config['image_source'] : 'media';
 		$layers   = array();
 
 		if ( 'media' === $source ) {
-			$layers = self::build_from_product_media( $config );
+			$product_id = isset( $config['product_id'] ) ? (int) $config['product_id'] : 0;
+			if ( $product_id ) {
+				$layers = WCBC_Config::resolve_variation_layer_urls( $product_id, $selections, $defaults );
+			} else {
+				$layers = self::build_from_product_media( $config );
+			}
 		} elseif ( 'demo' === $source ) {
 			$layers = self::build_demo_layers( $selections, $defaults );
 		} elseif ( 'happybeds' === $source ) {
@@ -328,8 +333,8 @@ class WCBC_Layer_Builder {
 	 * @return bool
 	 */
 	private static function should_apply_option_layer_overrides( $config ) {
-		$source = isset( $config['image_source'] ) ? $config['image_source'] : 'auto';
-		return in_array( $source, array( 'hybrid', 'media' ), true );
+		$source = isset( $config['image_source'] ) ? $config['image_source'] : 'media';
+		return 'hybrid' === $source;
 	}
 
 	/**
