@@ -589,7 +589,9 @@ button.wcbc-accordian-head:focus-visible {
 	max-width: 33.333%;
 }
 
-.wcbc-headboard-grid > li.wcbc-filter-hidden {
+.wcbc-headboard-grid > li.wcbc-filter-hidden,
+.wcbc-filterable-grid > li.wcbc-filter-hidden,
+.wcbc-options-grid > li.wcbc-option.wcbc-filter-hidden {
 	display: none !important;
 }
 

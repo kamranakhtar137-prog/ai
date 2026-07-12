@@ -422,11 +422,10 @@
 			var isMatch = $(this).data('filter') === shape;
 			$(this).toggleClass('is-checked', isMatch);
 		});
-		$section.find('.wcbc-filterable-grid li').each(function () {
+		$section.find('.wcbc-filterable-grid li.wcbc-option').each(function () {
 			var $li = $(this);
 			var matchKey = $li.data('shape') || '';
-			var isSelected = $li.find('input.wcbc-radio').is(':checked');
-			$li.toggleClass('wcbc-filter-hidden', matchKey !== shape && !isSelected);
+			$li.toggleClass('wcbc-filter-hidden', matchKey !== shape);
 		});
 	}
 
@@ -658,10 +657,9 @@
 			$section.find('.wcbc-filter-btn').removeClass('is-checked');
 			$(this).addClass('is-checked');
 
-			$section.find('.wcbc-filterable-grid li').each(function () {
+			$section.find('.wcbc-filterable-grid li.wcbc-option').each(function () {
 				var matchKey = filterType === 'fabric' ? ($(this).data('fabric') || '') : ($(this).data('shape') || '');
-				var isSelected = $(this).find('input.wcbc-radio').is(':checked');
-				$(this).toggleClass('wcbc-filter-hidden', matchKey !== filter && !isSelected);
+				$(this).toggleClass('wcbc-filter-hidden', matchKey !== filter);
 			});
 
 			if (groupId === 'headboard') {

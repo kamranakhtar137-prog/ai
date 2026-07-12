@@ -164,6 +164,15 @@ if ( 'options' === $part ) : ?>
 									<?php
 									$is_fabric_sections = ( 'fabric' === ( $group['filter_type'] ?? '' ) && 'sections' === ( $group['display_mode'] ?? '' ) );
 									$default_filter     = ! empty( $group['filters'][0]['filter'] ) ? $group['filters'][0]['filter'] : '';
+									$active_filter      = $default_filter;
+									if ( 'shape' === ( $group['filter_type'] ?? '' ) ) {
+										foreach ( $group['options'] as $opt ) {
+											if ( sanitize_title( $opt['id'] ) === $selected && ! empty( $opt['layers']['shape'] ) ) {
+												$active_filter = $opt['layers']['shape'];
+												break;
+											}
+										}
+									}
 									?>
 									<?php if ( ! empty( $group['filter_type'] ) && ! empty( $group['filters'] ) && ! $is_fabric_sections ) : ?>
 										<?php
@@ -174,7 +183,7 @@ if ( 'options' === $part ) : ?>
 										<h2><?php echo esc_html( $filter_heading ); ?></h2>
 										<div class="button-group filters-button-group wcbc-option-filters">
 											<?php foreach ( $group['filters'] as $fi => $filter ) : ?>
-												<button type="button" class="button wcbc-filter-btn <?php echo 0 === $fi ? 'is-checked' : ''; ?>" data-filter="<?php echo esc_attr( $filter['filter'] ); ?>">
+												<button type="button" class="button wcbc-filter-btn <?php echo $active_filter === $filter['filter'] ? 'is-checked' : ''; ?>" data-filter="<?php echo esc_attr( $filter['filter'] ); ?>">
 													<?php echo esc_html( $filter['label'] ); ?>
 												</button>
 											<?php endforeach; ?>
@@ -190,11 +199,11 @@ if ( 'options' === $part ) : ?>
 											$fabric  = ! empty( $option['layers']['fabric'] ) ? $option['layers']['fabric'] : '';
 											$checked = ( sanitize_title( $option['id'] ) === $selected );
 											$hidden  = false;
-											if ( ! $is_fabric_sections && ! empty( $group['filter_type'] ) && ! $checked ) {
-												if ( 'shape' === $group['filter_type'] && $shape && $default_filter !== $shape ) {
+											if ( ! $is_fabric_sections && ! empty( $group['filter_type'] ) ) {
+												if ( 'shape' === $group['filter_type'] && $shape && $active_filter !== $shape ) {
 													$hidden = true;
 												}
-												if ( 'fabric' === $group['filter_type'] && $fabric && $default_filter !== $fabric ) {
+												if ( 'fabric' === $group['filter_type'] && $fabric && $default_filter !== $fabric && ! $checked ) {
 													$hidden = true;
 												}
 											}
