@@ -217,6 +217,46 @@ class WCBC_Config {
 	}
 
 	/**
+	 * Resolve headboard preview URL for size + style + colour.
+	 *
+	 * @param array<string,mixed>  $size_set Size layer map.
+	 * @param array<string,int>    $colour_set Colour layer map.
+	 * @param string               $headboard_id Selected headboard option id.
+	 * @return string Attachment URL or empty.
+	 */
+	private static function resolve_headboard_layer_url( $size_set, $colour_set, $headboard_id ) {
+		if ( ! $headboard_id || false !== strpos( $headboard_id, 'no-headboard' ) ) {
+			return '';
+		}
+
+		$headboard_id = sanitize_title( $headboard_id );
+
+		if ( ! empty( $size_set['headboard'] ) && is_array( $size_set['headboard'] ) ) {
+			if ( ! empty( $size_set['headboard'][ $headboard_id ] ) ) {
+				$url = wp_get_attachment_image_url( (int) $size_set['headboard'][ $headboard_id ], 'full' );
+				if ( $url ) {
+					return $url;
+				}
+			}
+			if ( ! empty( $size_set['headboard']['_legacy'] ) ) {
+				$url = wp_get_attachment_image_url( (int) $size_set['headboard']['_legacy'], 'full' );
+				if ( $url ) {
+					return $url;
+				}
+			}
+		}
+
+		if ( ! empty( $colour_set['headboard'] ) ) {
+			$url = wp_get_attachment_image_url( (int) $colour_set['headboard'], 'full' );
+			if ( $url ) {
+				return $url;
+			}
+		}
+
+		return '';
+	}
+
+	/**
 	 * Sanitize posted variation layer media.
 	 *
 	 * @param array<string,mixed> $posted Posted form data.
@@ -364,28 +404,18 @@ class WCBC_Config {
 			}
 		}
 
-		if ( $headboard_id && false === strpos( $headboard_id, 'no-headboard' ) && ! empty( $size_set['headboard'] ) && is_array( $size_set['headboard'] ) ) {
-			$hb_attachment = 0;
-			if ( ! empty( $size_set['headboard'][ $headboard_id ] ) ) {
-				$hb_attachment = (int) $size_set['headboard'][ $headboard_id ];
-			} elseif ( ! empty( $size_set['headboard']['_legacy'] ) ) {
-				$hb_attachment = (int) $size_set['headboard']['_legacy'];
-			}
-			if ( $hb_attachment ) {
-				$url = wp_get_attachment_image_url( $hb_attachment, 'full' );
-				if ( $url ) {
-					$layers['headboard'] = $url;
-				}
-			}
-		}
-
-		foreach ( self::colour_layer_slots() as $layer ) {
+		foreach ( self::colour_fabric_layer_slots() as $layer ) {
 			if ( ! empty( $colour_set[ $layer ] ) ) {
 				$url = wp_get_attachment_image_url( (int) $colour_set[ $layer ], 'full' );
 				if ( $url ) {
 					$layers[ $layer ] = $url;
 				}
 			}
+		}
+
+		$headboard_url = self::resolve_headboard_layer_url( $size_set, $colour_set, $headboard_id );
+		if ( $headboard_url ) {
+			$layers['headboard'] = $headboard_url;
 		}
 
 		if ( $headboard_id && false !== strpos( $headboard_id, 'no-headboard' ) ) {
@@ -566,12 +596,21 @@ class WCBC_Config {
 	}
 
 	/**
+	 * Fabric layers that swap when colour changes (scoped to the selected size).
+	 *
+	 * @return string[]
+	 */
+	public static function colour_fabric_layer_slots() {
+		return array( 'storage_back', 'base', 'storage_2', 'storage_3' );
+	}
+
+	/**
 	 * Layers that swap when colour changes (scoped to the selected size).
 	 *
 	 * @return string[]
 	 */
 	public static function colour_layer_slots() {
-		return array( 'storage_back', 'base', 'storage_2', 'storage_3', 'headboard' );
+		return array_merge( self::colour_fabric_layer_slots(), array( 'headboard' ) );
 	}
 
 	/**

@@ -290,7 +290,7 @@
 	function buildVariationMediaLayers(selections) {
 		var transparent = wcbcData.transparentLayer || (wcbcData.layerBase || '') + 'transparent.png';
 		var maps = wcbcData.variationLayerMedia || { size: {}, sizeHeadboards: {}, colour: {} };
-		var colourSlots = wcbcData.colourLayerSlots || ['storage_back', 'base', 'storage_2', 'storage_3', 'headboard'];
+		var fabricSlots = wcbcData.colourFabricSlots || ['storage_back', 'base', 'storage_2', 'storage_3'];
 		var size = pick(selections, 'size') || 'small-single';
 		var colour = resolveColourSlug(pick(selections, 'colour') || 'light-silver-velvet');
 		var headboard = pick(selections, 'headboard');
@@ -309,15 +309,7 @@
 			}
 		});
 
-		if (headboard && headboardShape(headboard) !== 'none') {
-			if (sizeHeadboards[headboard]) {
-				layers.headboard = sizeHeadboards[headboard];
-			} else if (sizeHeadboards._legacy) {
-				layers.headboard = sizeHeadboards._legacy;
-			}
-		}
-
-		colourSlots.forEach(function (layer) {
+		fabricSlots.forEach(function (layer) {
 			if (colourSet[layer]) {
 				layers[layer] = colourSet[layer];
 			}
@@ -325,6 +317,12 @@
 
 		if (headboardShape(headboard) === 'none') {
 			layers.headboard = transparent;
+		} else if (headboard && sizeHeadboards[headboard]) {
+			layers.headboard = sizeHeadboards[headboard];
+		} else if (sizeHeadboards._legacy) {
+			layers.headboard = sizeHeadboards._legacy;
+		} else if (colourSet.headboard) {
+			layers.headboard = colourSet.headboard;
 		}
 
 		return layers;

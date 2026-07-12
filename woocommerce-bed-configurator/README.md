@@ -49,9 +49,19 @@ Each layer is **one** `<img>` in the preview, but the `src` changes with custome
 
 ### Create ZIP for upload
 
+The full repo includes ~10,000 demo layer PNGs (~140MB). For a **small install ZIP** (Media Library mode), run:
+
+```bash
+bash woocommerce-bed-configurator/scripts/build-release-zip.sh
+```
+
+This creates `woocommerce-bed-configurator.zip` (~1–2MB) with swatches and essentials only — assign preview images via **Bed Configurator → Media Library** in the product admin.
+
+To include all bundled demo layers (large ~70MB+ zip):
+
 ```bash
 cd /path/to/plugins
-zip -r woocommerce-bed-configurator.zip woocommerce-bed-configurator \
+zip -9 -r woocommerce-bed-configurator-full.zip woocommerce-bed-configurator \
   -x "*.git*" -x "*scripts/*"
 ```
 
