@@ -874,14 +874,13 @@ class WCBC_Config {
 	}
 
 	/**
-	 * Merge incoming swatch media with existing (supports clearing removed entries).
+	 * Merge posted swatch media with existing (supports clearing removed entries).
 	 *
 	 * @param array<string,array<string,int>> $existing Existing map.
-	 * @param array<string,array<string,int>> $incoming Incoming map.
 	 * @param array<string,mixed>             $posted Raw posted map.
 	 * @return array<string,array<string,int>>
 	 */
-	public static function merge_option_swatch_media( $existing, $incoming, $posted ) {
+	public static function merge_option_swatch_media( $existing, $posted ) {
 		$merged = is_array( $existing ) ? $existing : array();
 
 		if ( ! is_array( $posted ) ) {
