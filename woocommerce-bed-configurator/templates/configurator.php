@@ -22,9 +22,10 @@ $layer_alts = array(
 	'headboard'    => __( 'Bed Headboard', 'wc-bed-configurator' ),
 	'storage_back' => __( 'Bed Storage Back', 'wc-bed-configurator' ),
 	'base'         => __( 'Bed Base', 'wc-bed-configurator' ),
-	'storage_1'    => __( 'Bed Storage 3', 'wc-bed-configurator' ),
-	'storage_2'    => __( 'Bed Storage 1', 'wc-bed-configurator' ),
-	'storage_3'    => __( 'Bed Storage 2', 'wc-bed-configurator' ),
+	'storage_1'    => __( 'Bed Storage 1', 'wc-bed-configurator' ),
+	'storage_2'    => __( 'Bed Storage 2', 'wc-bed-configurator' ),
+	'storage_3'    => __( 'Bed Storage 3', 'wc-bed-configurator' ),
+	'storage_4'    => __( 'Bed Storage 4', 'wc-bed-configurator' ),
 );
 $icons = array(
 	'size'      => $plugin_url . 'assets/icons/size.svg',

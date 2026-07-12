@@ -289,35 +289,31 @@
 
 	function buildVariationMediaLayers(selections) {
 		var transparent = wcbcData.transparentLayer || (wcbcData.layerBase || '') + 'transparent.png';
-		var maps = wcbcData.variationLayerMedia || { size: {}, sizeHeadboards: {}, colour: {} };
-		var fabricSlots = wcbcData.colourFabricSlots || ['storage_back', 'base', 'storage_2', 'storage_3'];
+		var maps = wcbcData.variationLayerMedia || { colour: {}, headboardStyles: {}, sizeHeadboards: {} };
+		var colourSlots = wcbcData.colourLayerSlots || ['legs', 'storage_back', 'base', 'storage_1', 'storage_2', 'storage_3', 'storage_4'];
 		var size = pick(selections, 'size') || 'small-single';
 		var colour = resolveColourSlug(pick(selections, 'colour') || 'light-silver-velvet');
 		var headboard = pick(selections, 'headboard');
-		var sizeSet = maps.size[size] || {};
 		var colourSet = (maps.colour[size] && maps.colour[size][colour]) ? maps.colour[size][colour] : {};
-		var sizeHeadboards = maps.sizeHeadboards[size] || {};
+		var headboardStyles = maps.headboardStyles || {};
+		var legacyHeadboards = maps.sizeHeadboards || {};
 		var layers = {};
 
 		wcbcData.layers.forEach(function (layer) {
 			layers[layer] = transparent;
 		});
 
-		['shadow', 'legs'].forEach(function (layer) {
-			if (sizeSet[layer]) {
-				layers[layer] = sizeSet[layer];
-			}
-		});
-
-		fabricSlots.forEach(function (layer) {
+		colourSlots.forEach(function (layer) {
 			if (colourSet[layer]) {
 				layers[layer] = colourSet[layer];
 			}
 		});
 
-		// Headboard is style-driven only — always swap from per-size style media, never colour fabric.
-		if (headboard && sizeHeadboards[headboard]) {
-			layers.headboard = sizeHeadboards[headboard];
+		var styleColours = (headboardStyles[size] && headboardStyles[size][headboard]) ? headboardStyles[size][headboard] : {};
+		if (headboard && styleColours[colour]) {
+			layers.headboard = styleColours[colour];
+		} else if (headboard && legacyHeadboards[size] && legacyHeadboards[size][headboard]) {
+			layers.headboard = legacyHeadboards[size][headboard];
 		}
 
 		return layers;
@@ -488,6 +484,7 @@
 			storage_1: 'bs_storage_1',
 			storage_2: 'bs_storage_2',
 			storage_3: 'bs_storage_3',
+			storage_4: 'bs_storage_4',
 		};
 		Object.keys(map).forEach(function (layer) {
 			var $field = $('#' + map[layer]);
@@ -549,7 +546,7 @@
 		syncHiddenFields();
 		syncGroupSelectionUI(groupId, optionId);
 
-		var previewOpts = (groupId === 'headboard' || groupId === 'size') ? { forceHeadboard: true } : {};
+		var previewOpts = (groupId === 'headboard' || groupId === 'size' || groupId === 'colour') ? { forceHeadboard: true } : {};
 
 		// Update bed preview immediately from local layer map.
 		refreshPreview(previewOpts);

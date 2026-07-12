@@ -29,7 +29,9 @@ class WCBC_Config {
 	/**
 	 * Per-size and per-colour layer attachment IDs.
 	 *
-	 * Shape: [ 'size' => [ size_id => [ layer => attachment_id ] ], 'colour' => [ ... ] ].
+	 * Shape:
+	 * [ 'colour' => [ size_id => [ colour_id => [ layer => attachment_id ] ] ],
+	 *   'headboard' => [ size_id => [ style_id => [ colour_id => attachment_id ] ] ] ].
 	 */
 	const VARIATION_LAYER_MEDIA_KEY = '_wcbc_variation_layer_media';
 
@@ -46,13 +48,14 @@ class WCBC_Config {
 	public static function get_layer_labels() {
 		return array(
 			'shadow'       => __( 'Shadow', 'wc-bed-configurator' ),
-			'legs'         => __( 'Legs', 'wc-bed-configurator' ),
-			'headboard'    => __( 'Headboard', 'wc-bed-configurator' ),
-			'storage_back' => __( 'Storage back', 'wc-bed-configurator' ),
-			'base'         => __( 'Base', 'wc-bed-configurator' ),
-			'storage_2'    => __( 'Storage drawer back', 'wc-bed-configurator' ),
-			'storage_3'    => __( 'Storage drawer front', 'wc-bed-configurator' ),
-			'storage_1'    => __( 'Storage extra', 'wc-bed-configurator' ),
+			'legs'         => __( 'Bed Legs', 'wc-bed-configurator' ),
+			'headboard'    => __( 'Bed Headboard', 'wc-bed-configurator' ),
+			'storage_back' => __( 'Bed Storage Back', 'wc-bed-configurator' ),
+			'base'         => __( 'Bed Base', 'wc-bed-configurator' ),
+			'storage_1'    => __( 'Bed Storage 1', 'wc-bed-configurator' ),
+			'storage_2'    => __( 'Bed Storage 2', 'wc-bed-configurator' ),
+			'storage_3'    => __( 'Bed Storage 3', 'wc-bed-configurator' ),
+			'storage_4'    => __( 'Bed Storage 4', 'wc-bed-configurator' ),
 		);
 	}
 
@@ -112,39 +115,53 @@ class WCBC_Config {
 	 * Colour shape: colour[size_id][colour_id][layer] = attachment_id.
 	 *
 	 * @param int $product_id Product ID.
-	 * @return array{size:array<string,array<string,int>>,colour:array<string,array<string,array<string,int>>>}
+	 * @return array{size:array<string,array<string,mixed>>,colour:array<string,array<string,array<string,int>>>,headboard:array<string,array<string,array<string,int>>>}
 	 */
 	public static function get_variation_layer_media( $product_id ) {
 		$raw = get_post_meta( $product_id, self::VARIATION_LAYER_MEDIA_KEY, true );
 		$out = array(
-			'size'   => array(),
-			'colour' => array(),
+			'size'      => array(),
+			'colour'    => array(),
+			'headboard' => array(),
 		);
 
 		if ( ! is_array( $raw ) ) {
 			return $out;
 		}
 
+		// Legacy size-level headboard images (style only, no colour).
 		if ( ! empty( $raw['size'] ) && is_array( $raw['size'] ) ) {
 			foreach ( $raw['size'] as $size_id => $layers ) {
 				$size_id = sanitize_title( (string) $size_id );
-				if ( ! is_array( $layers ) ) {
+				if ( ! is_array( $layers ) || empty( $layers['headboard'] ) ) {
 					continue;
 				}
-				foreach ( self::size_base_layer_slots() as $layer ) {
-					if ( ! empty( $layers[ $layer ] ) ) {
-						$out['size'][ $size_id ][ $layer ] = absint( $layers[ $layer ] );
-					}
-				}
-				if ( ! empty( $layers['headboard'] ) && is_array( $layers['headboard'] ) ) {
+				if ( is_array( $layers['headboard'] ) ) {
 					foreach ( $layers['headboard'] as $headboard_id => $attachment_id ) {
 						$headboard_id = sanitize_title( (string) $headboard_id );
 						if ( $headboard_id && $attachment_id ) {
 							$out['size'][ $size_id ]['headboard'][ $headboard_id ] = absint( $attachment_id );
 						}
 					}
-				} elseif ( ! empty( $layers['headboard'] ) ) {
-					$out['size'][ $size_id ]['headboard']['_legacy'] = absint( $layers['headboard'] );
+				}
+			}
+		}
+
+		if ( ! empty( $raw['headboard'] ) && is_array( $raw['headboard'] ) ) {
+			foreach ( $raw['headboard'] as $size_id => $styles ) {
+				$size_id = sanitize_title( (string) $size_id );
+				if ( ! is_array( $styles ) ) {
+					continue;
+				}
+				foreach ( $styles as $style_id => $colours ) {
+					$style_id = sanitize_title( (string) $style_id );
+					if ( ! is_array( $colours ) ) {
+						continue;
+					}
+					$clean = self::sanitize_headboard_colour_map( $colours );
+					if ( $clean ) {
+						$out['headboard'][ $size_id ][ $style_id ] = $clean;
+					}
 				}
 			}
 		}
@@ -217,32 +234,59 @@ class WCBC_Config {
 	}
 
 	/**
+	 * Sanitize headboard style images keyed by colour id.
+	 *
+	 * @param array<string,mixed> $map Colour id => attachment id.
+	 * @return array<string,int>
+	 */
+	private static function sanitize_headboard_colour_map( $map ) {
+		$out = array();
+		if ( ! is_array( $map ) ) {
+			return $out;
+		}
+		foreach ( $map as $colour_id => $attachment_id ) {
+			$colour_id = sanitize_title( (string) $colour_id );
+			if ( $colour_id && $attachment_id ) {
+				$out[ $colour_id ] = absint( $attachment_id );
+			}
+		}
+		return $out;
+	}
+
+	/**
 	 * Resolve headboard preview URL for size + style + colour.
 	 *
-	 * @param array<string,mixed>  $size_set Size layer map.
-	 * @param array<string,int>    $colour_set Colour layer map.
-	 * @param string               $headboard_id Selected headboard option id.
+	 * @param array<string,mixed> $media Full variation media map.
+	 * @param string              $size_id Selected size id.
+	 * @param string              $colour_id Selected colour id.
+	 * @param string              $headboard_id Selected headboard option id.
 	 * @return string Attachment URL or empty.
 	 */
-	private static function resolve_headboard_layer_url( $size_set, $colour_set, $headboard_id ) {
-		unset( $colour_set );
-
+	private static function resolve_headboard_layer_url( $media, $size_id, $colour_id, $headboard_id ) {
 		if ( ! $headboard_id || false !== strpos( $headboard_id, 'no-headboard' ) ) {
 			return '';
 		}
 
 		$headboard_id = sanitize_title( $headboard_id );
+		$size_id      = sanitize_title( $size_id );
+		$colour_id    = sanitize_title( $colour_id );
 
-		if ( empty( $size_set['headboard'] ) || ! is_array( $size_set['headboard'] ) ) {
-			return '';
+		if ( ! empty( $media['headboard'][ $size_id ][ $headboard_id ][ $colour_id ] ) ) {
+			$url = wp_get_attachment_image_url( (int) $media['headboard'][ $size_id ][ $headboard_id ][ $colour_id ], 'full' );
+			if ( $url ) {
+				return $url;
+			}
 		}
 
-		if ( empty( $size_set['headboard'][ $headboard_id ] ) ) {
-			return '';
+		// Legacy: one image per style at size level (no colour).
+		if ( ! empty( $media['size'][ $size_id ]['headboard'][ $headboard_id ] ) ) {
+			$url = wp_get_attachment_image_url( (int) $media['size'][ $size_id ]['headboard'][ $headboard_id ], 'full' );
+			if ( $url ) {
+				return $url;
+			}
 		}
 
-		$url = wp_get_attachment_image_url( (int) $size_set['headboard'][ $headboard_id ], 'full' );
-		return $url ? $url : '';
+		return '';
 	}
 
 	/**
@@ -253,31 +297,28 @@ class WCBC_Config {
 	 */
 	public static function sanitize_variation_layer_media_post( $posted ) {
 		$out = array(
-			'size'   => array(),
-			'colour' => array(),
+			'colour'    => array(),
+			'headboard' => array(),
 		);
 
 		if ( ! is_array( $posted ) ) {
 			return $out;
 		}
 
-		if ( ! empty( $posted['size'] ) && is_array( $posted['size'] ) ) {
-			foreach ( $posted['size'] as $size_id => $layers ) {
+		if ( ! empty( $posted['headboard'] ) && is_array( $posted['headboard'] ) ) {
+			foreach ( $posted['headboard'] as $size_id => $styles ) {
 				$size_id = sanitize_title( (string) $size_id );
-				if ( ! is_array( $layers ) ) {
+				if ( ! is_array( $styles ) ) {
 					continue;
 				}
-				foreach ( self::size_base_layer_slots() as $layer ) {
-					if ( ! empty( $layers[ $layer ] ) ) {
-						$out['size'][ $size_id ][ $layer ] = absint( $layers[ $layer ] );
+				foreach ( $styles as $style_id => $colours ) {
+					$style_id = sanitize_title( (string) $style_id );
+					if ( ! is_array( $colours ) ) {
+						continue;
 					}
-				}
-				if ( ! empty( $layers['headboard'] ) && is_array( $layers['headboard'] ) ) {
-					foreach ( $layers['headboard'] as $headboard_id => $attachment_id ) {
-						$headboard_id = sanitize_title( (string) $headboard_id );
-						if ( $headboard_id && $attachment_id ) {
-							$out['size'][ $size_id ]['headboard'][ $headboard_id ] = absint( $attachment_id );
-						}
+					$clean = self::sanitize_headboard_colour_map( $colours );
+					if ( $clean ) {
+						$out['headboard'][ $size_id ][ $style_id ] = $clean;
 					}
 				}
 			}
@@ -314,27 +355,30 @@ class WCBC_Config {
 	public static function variation_layer_urls_for_js( $product_id ) {
 		$raw = self::get_variation_layer_media( $product_id );
 		$out = array(
-			'size'           => array(),
-			'sizeHeadboards' => array(),
-			'colour'         => array(),
+			'headboardStyles' => array(),
+			'sizeHeadboards'  => array(),
+			'colour'          => array(),
 		);
 
-		foreach ( $raw['size'] as $size_id => $layers ) {
-			foreach ( self::size_base_layer_slots() as $layer ) {
-				if ( empty( $layers[ $layer ] ) ) {
-					continue;
-				}
-				$url = wp_get_attachment_image_url( (int) $layers[ $layer ], 'full' );
-				if ( $url ) {
-					$out['size'][ $size_id ][ $layer ] = $url;
-				}
-			}
-			if ( ! empty( $layers['headboard'] ) && is_array( $layers['headboard'] ) ) {
-				foreach ( $layers['headboard'] as $headboard_id => $attachment_id ) {
+		foreach ( $raw['headboard'] as $size_id => $styles ) {
+			foreach ( $styles as $style_id => $colours ) {
+				foreach ( $colours as $colour_id => $attachment_id ) {
 					$url = wp_get_attachment_image_url( (int) $attachment_id, 'full' );
 					if ( $url ) {
-						$out['sizeHeadboards'][ $size_id ][ $headboard_id ] = $url;
+						$out['headboardStyles'][ $size_id ][ $style_id ][ $colour_id ] = $url;
 					}
+				}
+			}
+		}
+
+		foreach ( $raw['size'] as $size_id => $layers ) {
+			if ( empty( $layers['headboard'] ) || ! is_array( $layers['headboard'] ) ) {
+				continue;
+			}
+			foreach ( $layers['headboard'] as $headboard_id => $attachment_id ) {
+				$url = wp_get_attachment_image_url( (int) $attachment_id, 'full' );
+				if ( $url ) {
+					$out['sizeHeadboards'][ $size_id ][ $headboard_id ] = $url;
 				}
 			}
 		}
@@ -371,11 +415,7 @@ class WCBC_Config {
 			$colour_id = WCBC_Colour_Registry::resolve_slug( $colour_id );
 		}
 
-		$size_set = ( $size_id && ! empty( $media['size'][ $size_id ] ) ) ? $media['size'][ $size_id ] : array();
-		$colour_set = array();
-		if ( $size_id && $colour_id && ! empty( $media['colour'][ $size_id ][ $colour_id ] ) ) {
-			$colour_set = $media['colour'][ $size_id ][ $colour_id ];
-		}
+		$size_set = ( $size_id && ! empty( $media['colour'][ $size_id ][ $colour_id ] ) ) ? $media['colour'][ $size_id ][ $colour_id ] : array();
 
 		$headboard_id = ! empty( $selections['headboard'] ) ? sanitize_title( $selections['headboard'] ) : ( ! empty( $defaults['headboard'] ) ? sanitize_title( $defaults['headboard'] ) : '' );
 
@@ -384,7 +424,7 @@ class WCBC_Config {
 			$layers[ $layer ] = $transparent;
 		}
 
-		foreach ( self::size_base_layer_slots() as $layer ) {
+		foreach ( self::colour_layer_slots() as $layer ) {
 			if ( ! empty( $size_set[ $layer ] ) ) {
 				$url = wp_get_attachment_image_url( (int) $size_set[ $layer ], 'full' );
 				if ( $url ) {
@@ -393,16 +433,7 @@ class WCBC_Config {
 			}
 		}
 
-		foreach ( self::colour_fabric_layer_slots() as $layer ) {
-			if ( ! empty( $colour_set[ $layer ] ) ) {
-				$url = wp_get_attachment_image_url( (int) $colour_set[ $layer ], 'full' );
-				if ( $url ) {
-					$layers[ $layer ] = $url;
-				}
-			}
-		}
-
-		$headboard_url = self::resolve_headboard_layer_url( $size_set, $colour_set, $headboard_id );
+		$headboard_url = self::resolve_headboard_layer_url( $media, $size_id, $colour_id, $headboard_id );
 		if ( $headboard_url ) {
 			$layers['headboard'] = $headboard_url;
 		}
@@ -512,7 +543,7 @@ class WCBC_Config {
 	 * @return string[]
 	 */
 	public static function customer_headboard_option_ids() {
-		return array( 'cornell-lined', 'cornell-buttoned', 'victor-plain' );
+		return array( 'cornell-plain', 'cornell-lined', 'cornell-buttoned' );
 	}
 
 	/**
@@ -585,7 +616,7 @@ class WCBC_Config {
 	 */
 	public static function get_layers() {
 		// Match Happy Beds DOM stacking order.
-		return array( 'shadow', 'legs', 'headboard', 'storage_back', 'base', 'storage_2', 'storage_3', 'storage_1' );
+		return array( 'shadow', 'legs', 'headboard', 'storage_back', 'base', 'storage_1', 'storage_2', 'storage_3', 'storage_4' );
 	}
 
 	/**
@@ -612,7 +643,7 @@ class WCBC_Config {
 	 * @return string[]
 	 */
 	public static function size_base_layer_slots() {
-		return array( 'shadow', 'legs' );
+		return array();
 	}
 
 	/**
@@ -630,16 +661,16 @@ class WCBC_Config {
 	 * @return string[]
 	 */
 	public static function colour_fabric_layer_slots() {
-		return array( 'storage_back', 'base', 'storage_2', 'storage_3' );
+		return self::colour_layer_slots();
 	}
 
 	/**
-	 * Layers that swap when colour changes (scoped to the selected size).
+	 * Layers assigned per size + colour in the Media Library admin.
 	 *
 	 * @return string[]
 	 */
 	public static function colour_layer_slots() {
-		return array_merge( self::colour_fabric_layer_slots(), array( 'headboard' ) );
+		return array( 'legs', 'storage_back', 'base', 'storage_1', 'storage_2', 'storage_3', 'storage_4' );
 	}
 
 	/**
@@ -648,7 +679,7 @@ class WCBC_Config {
 	 * @return string[]
 	 */
 	public static function variation_driven_layers() {
-		return self::colour_fabric_layer_slots();
+		return array_merge( self::colour_layer_slots(), array( 'headboard' ) );
 	}
 
 	/**
@@ -701,9 +732,9 @@ class WCBC_Config {
 					'icon'     => 'headboard',
 					'required' => true,
 					'options'  => array(
+						self::opt( 'cornell-plain', 'Cornell Plain', '', 0, $base . 'swatches/headboard/cornell-plain.png', array( 'shape' => 'cornell' ) ),
 						self::opt( 'cornell-lined', 'Cornell Lined', '', 25, $base . 'swatches/headboard/cornell-lined.png', array( 'shape' => 'cornell' ) ),
 						self::opt( 'cornell-buttoned', 'Cornell Buttoned', '', 35, $base . 'swatches/headboard/cornell-buttoned.png', array( 'shape' => 'cornell' ) ),
-						self::opt( 'victor-plain', 'Victor Plain', '', 30, $base . 'swatches/headboard/victor-plain.png', array( 'shape' => 'victor' ) ),
 					),
 				),
 				array(

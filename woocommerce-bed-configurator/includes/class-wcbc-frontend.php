@@ -263,6 +263,7 @@ class WCBC_Frontend {
 			'storage_1'    => 'bs_storage_1',
 			'storage_2'    => 'bs_storage_2',
 			'storage_3'    => 'bs_storage_3',
+			'storage_4'    => 'bs_storage_4',
 		);
 		$calc = WCBC_Config::calculate( $config, $config['defaults'] );
 		foreach ( $layer_fields as $layer => $field_id ) {
