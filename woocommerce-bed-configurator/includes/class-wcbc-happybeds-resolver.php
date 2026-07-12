@@ -1,0 +1,586 @@
+<?php
+/**
+ * Build Happy Beds CDN layer URLs (new_configurator path scheme).
+ *
+ * @package WCBedConfigurator
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+class WCBC_HappyBeds_Resolver {
+
+	const CDN = 'https://www.happybeds.co.uk/media/new_configurator/';
+
+	/**
+	 * Size slug → Happy Beds filename code.
+	 *
+	 * @var array<string,string>
+	 */
+	private static $size_codes = array(
+		'small-single' => '3ft',
+		'single'       => '3ft',
+		'small-double' => '4ft6',
+		'double'       => '4ft6',
+		'king'         => '5ft',
+		'super-king'   => '6ft',
+	);
+
+	/**
+	 * Colour slug → fabric folder + numeric codes used in filenames (legacy fallback).
+	 *
+	 * @var array<string,array{fabric:string,hb_fabric:string,code:string,drawer:string}>
+	 */
+	private static $colour_meta = array(
+		'beige-velvet'         => array( 'fabric' => 'velvet', 'hb_fabric' => 'velvet', 'code' => '30', 'drawer' => '190' ),
+		'black-velvet'         => array( 'fabric' => 'velvet', 'hb_fabric' => 'velvet', 'code' => '10', 'drawer' => '110' ),
+		'graphite-velvet'      => array( 'fabric' => 'velvet', 'hb_fabric' => 'velvet', 'code' => '20', 'drawer' => '120' ),
+		'mustard-velvet'       => array( 'fabric' => 'velvet', 'hb_fabric' => 'velvet', 'code' => '36', 'drawer' => '136' ),
+		'cream-cotton'         => array( 'fabric' => 'linen', 'hb_fabric' => 'linoso', 'code' => '14', 'drawer' => '114' ),
+		'midnight-blue-cotton' => array( 'fabric' => 'linen', 'hb_fabric' => 'linoso', 'code' => '17', 'drawer' => '117' ),
+	);
+
+	/**
+	 * Happy Beds folder names per fabric for base, headboard, and drawer layers.
+	 *
+	 * @param string $hb_fabric Fabric key (velvet, linoso, cotton).
+	 * @return array{base:string,headboard:string,drawer:string}
+	 */
+	public static function fabric_paths( $hb_fabric ) {
+		$hb_fabric = self::slug( $hb_fabric );
+		$map       = array(
+			'velvet'  => array(
+				'base'      => 'velvet',
+				'headboard' => 'headboards_velvet',
+				'drawer'    => 'drawers_velvet',
+			),
+			'linoso'  => array(
+				'base'      => 'linoso',
+				'headboard' => 'headboards_linoso',
+				'drawer'    => 'drawers_linoso',
+			),
+			'linen'   => array(
+				'base'      => 'linoso',
+				'headboard' => 'headboards_linoso',
+				'drawer'    => 'drawers_linoso',
+			),
+			'cotton'  => array(
+				'base'      => 'cotton',
+				'headboard' => 'headboards_cotton',
+				'drawer'    => 'drawers_cotton',
+			),
+		);
+
+		return isset( $map[ $hb_fabric ] ) ? $map[ $hb_fabric ] : $map['velvet'];
+	}
+
+	/**
+	 * CDN URL helper.
+	 *
+	 * @param string $relative Relative path under new_configurator.
+	 * @param string $mode Image mode.
+	 * @return string
+	 */
+	public static function cdn_url( $relative, $mode = 'happybeds-cdn' ) {
+		$relative = ltrim( (string) $relative, '/' );
+
+		if ( 'happybeds-proxy' === $mode && class_exists( 'WCBC_Layer_Serve' ) ) {
+			return WCBC_Layer_Serve::proxy_url( $relative );
+		}
+
+		return self::CDN . $relative;
+	}
+
+	/**
+	 * Transparent placeholder used by Happy Beds.
+	 *
+	 * @param string $mode Image mode.
+	 * @return string
+	 */
+	public static function transparent_url( $mode = 'happybeds-cdn' ) {
+		return self::cdn_url( 'FFFFFF-0.png', $mode );
+	}
+
+	/**
+	 * Map headboard option id to Happy Beds style slug.
+	 *
+	 * @param string $headboard_id Headboard option id.
+	 * @return string|null Null when no headboard.
+	 */
+	public static function headboard_style( $headboard_id ) {
+		if ( false !== strpos( $headboard_id, 'no-headboard' ) ) {
+			return null;
+		}
+
+		$map = array(
+			'cornell-plain'    => 'cornell_plain',
+			'cornell-lined'    => 'cornell_lined',
+			'cornell-buttoned' => 'cornell_buttoned',
+			'dudley-plain'     => 'dudley_plain',
+			'victor-plain'     => 'victor_plain',
+		);
+
+		return isset( $map[ $headboard_id ] ) ? $map[ $headboard_id ] : 'cornell_plain';
+	}
+
+	/**
+	 * Depth slug → Happy Beds depth code (e.g. 14-inch → 14i).
+	 *
+	 * @param string $depth Depth option id.
+	 * @return string
+	 */
+	public static function depth_code( $depth ) {
+		$depth = self::slug( $depth );
+		return str_replace( '-inch', 'i', $depth );
+	}
+
+	/**
+	 * Map plugin storage slug to Happy Beds drawer layer logic.
+	 *
+	 * @param string $storage Storage option id.
+	 * @return string
+	 */
+	public static function normalize_storage( $storage ) {
+		$storage = self::slug( $storage );
+		$map     = array(
+			'2-drawers-same-side'          => '2-drawers',
+			'2-drawers-with-end-drawer'    => '2-drawers',
+			'2-drawers-with-2-mini-drawers' => '2-drawers',
+			'end-drawer-with-2-mini-drawers' => 'end-drawer',
+		);
+
+		return isset( $map[ $storage ] ) ? $map[ $storage ] : $storage;
+	}
+
+	/**
+	 * Size slug → Happy Beds size code.
+	 *
+	 * @param string $size Size option id.
+	 * @return string
+	 */
+	public static function size_code( $size ) {
+		$size = self::slug( $size );
+		return isset( self::$size_codes[ $size ] ) ? self::$size_codes[ $size ] : '4ft6';
+	}
+
+	/**
+	 * Colour metadata with config option override, then legacy map, then beige fallback.
+	 *
+	 * @param string              $colour Colour option id.
+	 * @param array<string,mixed> $config Product config.
+	 * @return array{fabric:string,hb_fabric:string,code:string,drawer:string}
+	 */
+	public static function colour_meta( $colour, $config = array() ) {
+		$colour = self::slug( $colour );
+		if ( class_exists( 'WCBC_Colour_Registry' ) ) {
+			$colour = WCBC_Colour_Registry::resolve_slug( $colour );
+		}
+
+		if ( ! empty( $config['groups'] ) && class_exists( 'WCBC_Colour_Registry' ) ) {
+			foreach ( $config['groups'] as $group ) {
+				if ( 'colour' !== $group['id'] || empty( $group['options'] ) ) {
+					continue;
+				}
+				foreach ( $group['options'] as $option ) {
+					if ( $option['id'] === $colour ) {
+						$meta = WCBC_Colour_Registry::meta_from_option( $option );
+						if ( $meta ) {
+							return $meta;
+						}
+					}
+				}
+			}
+		}
+
+		if ( isset( self::$colour_meta[ $colour ] ) ) {
+			return self::$colour_meta[ $colour ];
+		}
+
+		return self::$colour_meta['beige-velvet'];
+	}
+
+	/**
+	 * Drawer reference token in filename — varies by rendered size code.
+	 *
+	 * @param string $size_code Render size code (3ft, 4ft6, 5ft, 6ft).
+	 * @param string $drawer_code Colour drawer code (e.g. 190 for beige on 4ft6).
+	 * @return string|null Null when the size omits the drawer reference segment.
+	 */
+	private static function drawer_ref_for_size( $size_code, $drawer_code ) {
+		if ( '3ft' === $size_code ) {
+			return null;
+		}
+		if ( in_array( $size_code, array( '5ft', '6ft' ), true ) ) {
+			return '200';
+		}
+		return $drawer_code;
+	}
+
+	/**
+	 * Build drawer back image relative path.
+	 *
+	 * @param string      $folder Drawer folder.
+	 * @param string      $size_code Size code.
+	 * @param string|null $drawer_ref Drawer reference or null for 3ft.
+	 * @param string      $suffix Depth + colour suffix.
+	 * @return string
+	 */
+	private static function drawer_back_path( $folder, $size_code, $drawer_ref, $suffix ) {
+		if ( null === $drawer_ref ) {
+			return sprintf(
+				'%s/reference_drawer_normal_back_%s_drawer_normal_front_%s.png',
+				$folder,
+				$size_code,
+				$suffix
+			);
+		}
+
+		return sprintf(
+			'%s/reference_drawer_normal_back_%s_%s_drawer_normal_front_%s.png',
+			$folder,
+			$drawer_ref,
+			$size_code,
+			$suffix
+		);
+	}
+
+	/**
+	 * Build drawer front image relative path.
+	 *
+	 * @param string      $folder Drawer folder.
+	 * @param string      $size_code Size code.
+	 * @param string|null $drawer_ref Drawer reference or null for 3ft.
+	 * @param string      $suffix Depth + colour suffix.
+	 * @return string
+	 */
+	private static function drawer_front_path( $folder, $size_code, $drawer_ref, $suffix ) {
+		if ( null === $drawer_ref ) {
+			return sprintf(
+				'%s/reference_drawer_normal_front_%s_drawer_normal_front_%s.png',
+				$folder,
+				$size_code,
+				$suffix
+			);
+		}
+
+		return sprintf(
+			'%s/reference_drawer_normal_front_%s_%s_drawer_normal_front_%s.png',
+			$folder,
+			$drawer_ref,
+			$size_code,
+			$suffix
+		);
+	}
+
+	/**
+	 * Whether ottoman storage is shown with the lift base open.
+	 *
+	 * @param string              $storage Storage option id.
+	 * @param array<string,mixed> $selections Selections (may include drawers_open).
+	 * @return bool
+	 */
+	public static function drawers_open( $storage, $selections = array() ) {
+		if ( 'ottoman' !== self::normalize_storage( $storage ) ) {
+			return false;
+		}
+		if ( isset( $selections['drawers_open'] ) && in_array( (string) $selections['drawers_open'], array( '1', 'true', 'yes' ), true ) ) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Base layer relative path — closed base or ottoman open variant.
+	 *
+	 * @param string $size_code Size code.
+	 * @param string $depth_code Depth code.
+	 * @param string $colour_code Colour numeric code.
+	 * @param string $hb_fabric Happy Beds fabric key.
+	 * @param string $storage Storage option id.
+	 * @param bool   $open Ottoman open state.
+	 * @return string
+	 */
+	public static function base_relative_path( $size_code, $depth_code, $colour_code, $hb_fabric, $storage, $open = false ) {
+		$paths        = self::fabric_paths( $hb_fabric );
+		$base_folder  = $paths['base'];
+		$storage_norm = self::normalize_storage( $storage );
+
+		if ( 'ottoman' === $storage_norm && $open ) {
+			return sprintf(
+				'bases/%s/ottoman_open/bedbase_%s_%s_%s.png',
+				$base_folder,
+				$size_code,
+				$depth_code,
+				$colour_code
+			);
+		}
+
+		return sprintf(
+			'bases/%s/bedbase_%s_%s_%s.png',
+			$base_folder,
+			$size_code,
+			$depth_code,
+			$colour_code
+		);
+	}
+
+	/**
+	 * Legs layer relative path — standard or ottoman-specific.
+	 *
+	 * @param string $size_code Size code.
+	 * @param string $storage Storage option id.
+	 * @return string
+	 */
+	public static function legs_relative_path( $size_code, $storage ) {
+		if ( 'ottoman' === self::normalize_storage( $storage ) ) {
+			$ottoman_map = array(
+				'4ft6' => 'legs/hb_legs_4ft6_ottoman.png',
+				'5ft'  => 'legs/hb_legs_5ft_ottoman.png',
+				'6ft'  => 'legs/hb_legs_6ft_ottoman.png',
+			);
+			if ( isset( $ottoman_map[ $size_code ] ) ) {
+				return $ottoman_map[ $size_code ];
+			}
+		}
+
+		return 'legs/bedding_legs_' . $size_code . '.png';
+	}
+
+	/**
+	 * Headboard layer relative path.
+	 *
+	 * @param string|null $hb_style Headboard style slug or null.
+	 * @param string      $size_code Size code.
+	 * @param string      $depth_code Depth code.
+	 * @param string      $colour_code Colour numeric code.
+	 * @param string      $hb_fabric Happy Beds fabric key.
+	 * @return string|null
+	 */
+	public static function headboard_relative_path( $hb_style, $size_code, $depth_code, $colour_code, $hb_fabric ) {
+		if ( ! $hb_style ) {
+			return null;
+		}
+
+		$paths  = self::fabric_paths( $hb_fabric );
+		$suffix = $depth_code . $colour_code;
+
+		return sprintf(
+			'%s/%s_%s_%s.png',
+			$paths['headboard'],
+			$hb_style,
+			$size_code,
+			$suffix
+		);
+	}
+
+	/**
+	 * Derive storage back layer from the drawer front path (Happy Beds convention).
+	 *
+	 * @param string $storage_front_relative Storage front relative path.
+	 * @return string|null
+	 */
+	public static function storage_back_from_front( $storage_front_relative ) {
+		if ( ! $storage_front_relative ) {
+			return null;
+		}
+
+		$back = str_replace( '4ft6', '4ft', $storage_front_relative );
+		$back = str_replace( '_front_', '_front_left_', $back );
+
+		return $back;
+	}
+
+	/**
+	 * Build drawer layer relative paths for storage option.
+	 *
+	 * Happy Beds DOM maps back drawer → #dynamic_storage_2, front → #dynamic_storage_3.
+	 *
+	 * @param string $storage Storage option id.
+	 * @param string $size_code Size code.
+	 * @param string $depth_code Depth code.
+	 * @param string $colour_code Colour numeric code.
+	 * @param string $drawer_code Drawer reference for 4ft6 sizes.
+	 * @param string $fabric Fabric folder key.
+	 * @return array{storage_1:?string,storage_2:?string,storage_3:?string,storage_back:?string}
+	 */
+	private static function storage_layers( $storage, $size_code, $depth_code, $colour_code, $drawer_code, $fabric ) {
+		$empty = array(
+			'storage_1'    => null,
+			'storage_2'    => null,
+			'storage_3'    => null,
+			'storage_back' => null,
+		);
+
+		if ( in_array( $storage, array( 'no-drawers', 'ottoman' ), true ) ) {
+			return $empty;
+		}
+
+		$folder     = self::fabric_paths( $fabric )['drawer'];
+		$suffix     = $depth_code . $colour_code;
+		$drawer_ref = self::drawer_ref_for_size( $size_code, $drawer_code );
+
+		if ( '2-drawers' === $storage || 'end-drawer' === $storage ) {
+			$empty['storage_2'] = self::drawer_back_path( $folder, $size_code, $drawer_ref, $suffix );
+			$empty['storage_3'] = self::drawer_front_path( $folder, $size_code, $drawer_ref, $suffix );
+			$empty['storage_back'] = self::storage_back_from_front( $empty['storage_3'] );
+			return $empty;
+		}
+
+		if ( '4-drawers' === $storage ) {
+			$ref = null !== $drawer_ref ? $drawer_ref : $size_code;
+			$empty['storage_2'] = self::drawer_back_path( $folder, $size_code, $drawer_ref, $suffix );
+			$empty['storage_1'] = self::drawer_front_path( $folder, $size_code, $drawer_ref, $suffix );
+			if ( null === $drawer_ref ) {
+				$empty['storage_3'] = sprintf( '%s/reference_drawer_jumbo_back_%s_drawer_jumbo_front_%s.png', $folder, $size_code, $suffix );
+				$empty['storage_2'] = sprintf( '%s/reference_drawer_jumbo_front_%s_drawer_jumbo_front_%s.png', $folder, $size_code, $suffix );
+			} else {
+				$empty['storage_3'] = sprintf(
+					'%s/reference_drawer_jumbo_back_%s_%s_drawer_jumbo_front_%s.png',
+					$folder,
+					$ref,
+					$size_code,
+					$suffix
+				);
+				$empty['storage_2'] = sprintf(
+					'%s/reference_drawer_jumbo_front_%s_%s_drawer_jumbo_front_%s.png',
+					$folder,
+					$ref,
+					$size_code,
+					$suffix
+				);
+			}
+			$empty['storage_back'] = self::storage_back_from_front( $empty['storage_3'] );
+		}
+
+		return $empty;
+	}
+
+	/**
+	 * Build all preview layer URLs from selections.
+	 *
+	 * @param array<string,string> $selections Selections.
+	 * @param array<string,string> $defaults Defaults.
+	 * @param string               $mode Image mode.
+	 * @param array<string,mixed>  $config Product config for colour meta.
+	 * @return array<string,string>
+	 */
+	public static function build_layers( $selections, $defaults = array(), $mode = 'happybeds-cdn', $config = array() ) {
+		$size       = self::pick_selection( $selections, $defaults, 'size' );
+		$colour     = self::pick_selection( $selections, $defaults, 'colour' );
+		$headboard  = self::pick_selection( $selections, $defaults, 'headboard' );
+		$base_depth = self::pick_selection( $selections, $defaults, 'base_depth' );
+		$storage    = self::pick_selection( $selections, $defaults, 'storage' );
+
+		if ( ! $size ) {
+			$size = 'double';
+		}
+		if ( ! $colour ) {
+			$colour = 'beige-velvet';
+		}
+		if ( ! $headboard ) {
+			$headboard = 'cornell-lined';
+		}
+		if ( ! $base_depth ) {
+			$base_depth = '14-inch';
+		}
+		if ( ! $storage ) {
+			$storage = 'no-drawers';
+		}
+
+		$storage = self::normalize_storage( $storage );
+		$open    = self::drawers_open( $storage, $selections );
+
+		$size_code  = self::size_code( $size );
+		$depth_code = self::depth_code( $base_depth );
+		$meta       = self::colour_meta( $colour, $config );
+		$hb_style   = self::headboard_style( $headboard );
+		$head_rel   = self::headboard_relative_path( $hb_style, $size_code, $depth_code, $meta['code'], $meta['hb_fabric'] );
+
+		$layers = array(
+			'shadow'       => self::cdn_url( 'new_shadow/shadow_wrk_' . $size_code . '.jpg', $mode ),
+			'legs'         => self::cdn_url( self::legs_relative_path( $size_code, $storage ), $mode ),
+			'storage_back' => self::transparent_url( $mode ),
+			'base'         => self::cdn_url(
+				self::base_relative_path( $size_code, $depth_code, $meta['code'], $meta['hb_fabric'], $storage, $open ),
+				$mode
+			),
+			'headboard'    => $head_rel ? self::cdn_url( $head_rel, $mode ) : self::transparent_url( $mode ),
+			'storage_1'    => self::transparent_url( $mode ),
+			'storage_2'    => self::transparent_url( $mode ),
+			'storage_3'    => self::transparent_url( $mode ),
+		);
+
+		$storage_paths = self::storage_layers( $storage, $size_code, $depth_code, $meta['code'], $meta['drawer'], $meta['hb_fabric'] );
+		foreach ( $storage_paths as $layer => $relative ) {
+			if ( $relative ) {
+				$layers[ $layer ] = self::cdn_url( $relative, $mode );
+			}
+		}
+
+		return $layers;
+	}
+
+	/**
+	 * Pick a selection value with fallback to defaults.
+	 *
+	 * @param array<string,string> $selections Selections.
+	 * @param array<string,string> $defaults Defaults.
+	 * @param string               $key Key.
+	 * @return string
+	 */
+	private static function pick_selection( $selections, $defaults, $key ) {
+		if ( ! empty( $selections[ $key ] ) ) {
+			return self::slug( $selections[ $key ] );
+		}
+		if ( ! empty( $defaults[ $key ] ) ) {
+			return self::slug( $defaults[ $key ] );
+		}
+		return '';
+	}
+
+	/**
+	 * Normalize option slug without requiring WordPress helpers.
+	 *
+	 * @param string $value Raw value.
+	 * @return string
+	 */
+	private static function slug( $value ) {
+		$value = strtolower( (string) $value );
+		$value = preg_replace( '/[^a-z0-9\-]+/', '-', $value );
+		return trim( $value, '-' );
+	}
+
+	/**
+	 * Export mapping for frontend JS.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public static function js_config( $config = array() ) {
+		$colour_meta = class_exists( 'WCBC_Colour_Registry' ) ? WCBC_Colour_Registry::meta_map_from_config( $config ) : array();
+		if ( empty( $colour_meta ) ) {
+			$colour_meta = self::$colour_meta;
+		}
+
+		return array(
+			'cdn'          => self::CDN,
+			'sizeCodes'    => self::$size_codes,
+			'colourMeta'   => $colour_meta,
+			'fabricPaths'  => array(
+				'velvet' => self::fabric_paths( 'velvet' ),
+				'linoso' => self::fabric_paths( 'linoso' ),
+				'linen'  => self::fabric_paths( 'linen' ),
+				'cotton' => self::fabric_paths( 'cotton' ),
+			),
+			'headboards'   => array(
+				'cornell-plain'    => 'cornell_plain',
+				'cornell-lined'    => 'cornell_lined',
+				'cornell-buttoned' => 'cornell_buttoned',
+				'dudley-plain'     => 'dudley_plain',
+				'victor-plain'     => 'victor_plain',
+				'no-headboard'     => null,
+			),
+			'transparent' => 'FFFFFF-0.png',
+		);
+	}
+}
