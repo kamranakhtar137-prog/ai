@@ -106,6 +106,7 @@ class WCBC_Admin {
 		$image_source       = WCBC_Config::get_image_source( $post->ID );
 		$layer_labels       = WCBC_Config::get_layer_labels();
 		$variation_media    = WCBC_Config::get_variation_layer_media( $post->ID );
+		$swatch_media       = WCBC_Config::get_option_swatch_media( $post->ID );
 		$size_options       = WCBC_Config::size_options_for_admin( $config );
 		$colour_options     = WCBC_Config::colour_options_for_admin( $config );
 		?>
@@ -175,8 +176,14 @@ class WCBC_Admin {
 							<tbody>
 								<?php foreach ( $group['options'] as $option ) : ?>
 									<?php
-									$img_url = ! empty( $option['image'] ) ? $option['image'] : '';
-									$img_id  = $img_url ? attachment_url_to_postid( $img_url ) : 0;
+									$option_id = $option['id'];
+									$img_id    = 0;
+									if ( ! empty( $swatch_media[ $group['id'] ][ $option_id ] ) ) {
+										$img_id = (int) $swatch_media[ $group['id'] ][ $option_id ];
+									} elseif ( ! empty( $option['image'] ) ) {
+										$img_id = attachment_url_to_postid( $option['image'] );
+									}
+									$img_url = $img_id ? wp_get_attachment_image_url( $img_id, 'full' ) : ( ! empty( $option['image'] ) ? $option['image'] : '' );
 									?>
 									<tr>
 										<td><?php echo esc_html( trim( $option['label'] . ' ' . $option['sublabel'] ) ); ?></td>
@@ -408,7 +415,13 @@ class WCBC_Admin {
 		}
 
 		if ( isset( $_POST['wcbc_option_images'] ) && is_array( $_POST['wcbc_option_images'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
-			$config = self::apply_option_images_from_post( $config, $_POST['wcbc_option_images'] ); // phpcs:ignore WordPress.Security.NonceVerification
+			$posted_swatches = wp_unslash( $_POST['wcbc_option_images'] ); // phpcs:ignore WordPress.Security.NonceVerification
+			$existing        = WCBC_Config::get_option_swatch_media( $post_id );
+			$merged_swatches = WCBC_Config::merge_option_swatch_media( $existing, WCBC_Config::sanitize_option_swatch_media_post( $posted_swatches ), $posted_swatches );
+			update_post_meta( $post_id, WCBC_Config::OPTION_SWATCH_MEDIA_KEY, $merged_swatches );
+
+			$config = WCBC_Config::merge_colour_group( $config );
+			$config = self::apply_option_images_from_post( $config, $posted_swatches );
 		}
 
 		if ( isset( $base ) ) {
@@ -428,6 +441,9 @@ class WCBC_Admin {
 	 * @return array<string,mixed>
 	 */
 	private static function apply_option_images_from_post( $config, $posted ) {
+		if ( ! is_array( $posted ) ) {
+			return $config;
+		}
 		foreach ( $config['groups'] as $gi => $group ) {
 			$gid = $group['id'];
 			if ( empty( $posted[ $gid ] ) || ! is_array( $posted[ $gid ] ) ) {
@@ -435,12 +451,15 @@ class WCBC_Admin {
 			}
 			foreach ( $group['options'] as $oi => $option ) {
 				$oid = $option['id'];
-				if ( empty( $posted[ $gid ][ $oid ] ) ) {
+				if ( ! array_key_exists( $oid, $posted[ $gid ] ) ) {
 					continue;
 				}
-				$url = wp_get_attachment_image_url( absint( $posted[ $gid ][ $oid ] ), 'full' );
-				if ( $url ) {
-					$config['groups'][ $gi ]['options'][ $oi ]['image'] = $url;
+				$attachment_id = absint( $posted[ $gid ][ $oid ] );
+				if ( $attachment_id ) {
+					$url = wp_get_attachment_image_url( $attachment_id, 'full' );
+					if ( $url ) {
+						$config['groups'][ $gi ]['options'][ $oi ]['image'] = $url;
+					}
 				}
 			}
 		}

@@ -41,6 +41,11 @@ class WCBC_Config {
 	const IMAGE_SOURCE_KEY = '_wcbc_image_source';
 
 	/**
+	 * Option swatch attachment IDs: [ group_id => [ option_id => attachment_id ] ].
+	 */
+	const OPTION_SWATCH_MEDIA_KEY = '_wcbc_option_swatch_media';
+
+	/**
 	 * Human labels for preview layers.
 	 *
 	 * @return array<string,string>
@@ -779,6 +784,136 @@ class WCBC_Config {
 	}
 
 	/**
+	 * Get saved option swatch attachment IDs for a product.
+	 *
+	 * @param int $product_id Product ID.
+	 * @return array<string,array<string,int>>
+	 */
+	public static function get_option_swatch_media( $product_id ) {
+		$raw = get_post_meta( $product_id, self::OPTION_SWATCH_MEDIA_KEY, true );
+		if ( ! is_array( $raw ) ) {
+			return array();
+		}
+		$out = array();
+		foreach ( $raw as $group_id => $options ) {
+			$group_id = sanitize_title( (string) $group_id );
+			if ( ! $group_id || ! is_array( $options ) ) {
+				continue;
+			}
+			foreach ( $options as $option_id => $attachment_id ) {
+				$option_id = sanitize_title( (string) $option_id );
+				if ( $option_id && $attachment_id ) {
+					$out[ $group_id ][ $option_id ] = absint( $attachment_id );
+				}
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Sanitize posted option swatch attachment IDs.
+	 *
+	 * @param array<string,mixed> $posted Posted wcbc_option_images.
+	 * @return array<string,array<string,int>>
+	 */
+	public static function sanitize_option_swatch_media_post( $posted ) {
+		$out = array();
+		if ( ! is_array( $posted ) ) {
+			return $out;
+		}
+		foreach ( $posted as $group_id => $options ) {
+			$group_id = sanitize_title( (string) $group_id );
+			if ( ! $group_id || ! is_array( $options ) ) {
+				continue;
+			}
+			foreach ( $options as $option_id => $attachment_id ) {
+				$option_id = sanitize_title( (string) $option_id );
+				if ( ! $option_id ) {
+					continue;
+				}
+				$id = absint( $attachment_id );
+				if ( $id ) {
+					$out[ $group_id ][ $option_id ] = $id;
+				}
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Merge saved swatch attachment IDs into config option images.
+	 *
+	 * @param array<string,mixed> $config Config.
+	 * @param int                 $product_id Product ID.
+	 * @return array<string,mixed>
+	 */
+	public static function apply_option_swatch_media( $config, $product_id ) {
+		$media = self::get_option_swatch_media( $product_id );
+		if ( empty( $media ) || empty( $config['groups'] ) ) {
+			return $config;
+		}
+
+		foreach ( $config['groups'] as $gi => $group ) {
+			$gid = ! empty( $group['id'] ) ? $group['id'] : '';
+			if ( ! $gid || empty( $media[ $gid ] ) || empty( $group['options'] ) ) {
+				continue;
+			}
+			foreach ( $group['options'] as $oi => $option ) {
+				$oid = ! empty( $option['id'] ) ? sanitize_title( $option['id'] ) : '';
+				if ( ! $oid || empty( $media[ $gid ][ $oid ] ) ) {
+					continue;
+				}
+				$url = wp_get_attachment_image_url( (int) $media[ $gid ][ $oid ], 'full' );
+				if ( $url ) {
+					$config['groups'][ $gi ]['options'][ $oi ]['image'] = $url;
+				}
+			}
+		}
+
+		return $config;
+	}
+
+	/**
+	 * Merge incoming swatch media with existing (supports clearing removed entries).
+	 *
+	 * @param array<string,array<string,int>> $existing Existing map.
+	 * @param array<string,array<string,int>> $incoming Incoming map.
+	 * @param array<string,mixed>             $posted Raw posted map.
+	 * @return array<string,array<string,int>>
+	 */
+	public static function merge_option_swatch_media( $existing, $incoming, $posted ) {
+		$merged = is_array( $existing ) ? $existing : array();
+
+		if ( ! is_array( $posted ) ) {
+			return $merged;
+		}
+
+		foreach ( $posted as $group_id => $options ) {
+			$group_id = sanitize_title( (string) $group_id );
+			if ( ! $group_id || ! is_array( $options ) ) {
+				continue;
+			}
+			if ( ! isset( $merged[ $group_id ] ) ) {
+				$merged[ $group_id ] = array();
+			}
+			foreach ( $options as $option_id => $attachment_id ) {
+				$option_id = sanitize_title( (string) $option_id );
+				if ( ! $option_id ) {
+					continue;
+				}
+				$id = absint( $attachment_id );
+				if ( $id ) {
+					$merged[ $group_id ][ $option_id ] = $id;
+				} else {
+					unset( $merged[ $group_id ][ $option_id ] );
+				}
+			}
+		}
+
+		return $merged;
+	}
+
+	/**
 	 * Image layers rendered in preview stack.
 	 *
 	 * @return string[]
@@ -983,6 +1118,7 @@ class WCBC_Config {
 		}
 		$config = self::merge_colour_group( $config );
 		$config = self::sanitize_option_layers( $config );
+		$config = self::apply_option_swatch_media( $config, $product_id );
 		$defaults = self::get_default_config();
 		$config['defaults']     = self::normalize_defaults( $config );
 		$config['product_id']   = (int) $product_id;
@@ -1120,7 +1256,32 @@ class WCBC_Config {
 		}
 
 		$colour_group = WCBC_Colour_Registry::colour_group();
-		$merged       = false;
+		$saved_images = array();
+
+		if ( ! empty( $config['groups'] ) ) {
+			foreach ( $config['groups'] as $group ) {
+				if ( 'colour' !== $group['id'] || empty( $group['options'] ) ) {
+					continue;
+				}
+				foreach ( $group['options'] as $option ) {
+					if ( ! empty( $option['id'] ) && ! empty( $option['image'] ) ) {
+						$saved_images[ sanitize_title( $option['id'] ) ] = $option['image'];
+					}
+				}
+				break;
+			}
+		}
+
+		if ( $saved_images ) {
+			foreach ( $colour_group['options'] as $oi => $option ) {
+				$oid = sanitize_title( $option['id'] );
+				if ( ! empty( $saved_images[ $oid ] ) ) {
+					$colour_group['options'][ $oi ]['image'] = $saved_images[ $oid ];
+				}
+			}
+		}
+
+		$merged = false;
 
 		if ( ! empty( $config['groups'] ) ) {
 			foreach ( $config['groups'] as $index => $group ) {
