@@ -98,10 +98,10 @@ class WCBC_Config {
 	 */
 	public static function get_image_source( $product_id ) {
 		$source = get_post_meta( $product_id, self::IMAGE_SOURCE_KEY, true );
-		if ( in_array( $source, array( 'auto', 'happybeds', 'media', 'hybrid' ), true ) ) {
+		if ( in_array( $source, array( 'demo', 'auto', 'happybeds', 'media', 'hybrid' ), true ) ) {
 			return $source;
 		}
-		return 'auto';
+		return 'demo';
 	}
 
 	/**

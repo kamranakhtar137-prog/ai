@@ -167,6 +167,57 @@ class WCBC_Layer_Builder {
 	}
 
 	/**
+	 * Map headboard option id to style variant slug.
+	 *
+	 * @param string $headboard_id Headboard option id.
+	 * @return string
+	 */
+	private static function headboard_variant( $headboard_id ) {
+		if ( false !== strpos( $headboard_id, 'buttoned' ) ) {
+			return 'buttoned';
+		}
+		if ( false !== strpos( $headboard_id, 'lined' ) ) {
+			return 'lined';
+		}
+		return 'plain';
+	}
+
+	/**
+	 * Resolve colour slug for demo layer paths.
+	 *
+	 * @param string $colour Colour slug.
+	 * @return string
+	 */
+	private static function resolve_colour_slug( $colour ) {
+		return class_exists( 'WCBC_Colour_Registry' )
+			? WCBC_Colour_Registry::resolve_slug( $colour )
+			: $colour;
+	}
+
+	/**
+	 * Build a demo storage layer URL.
+	 *
+	 * @param string $layer Layer key.
+	 * @param string $base Base URL.
+	 * @param string $storage Storage id.
+	 * @param string $size Size id.
+	 * @param string $colour Colour slug.
+	 * @param string $depth Base depth id.
+	 * @return string
+	 */
+	private static function demo_storage_url( $layer, $base, $storage, $size, $colour, $depth ) {
+		if ( 'no-drawers' === $storage || '' === $storage ) {
+			return $base . 'transparent.png';
+		}
+
+		$storage = class_exists( 'WCBC_HappyBeds_Resolver' )
+			? WCBC_HappyBeds_Resolver::normalize_storage( $storage )
+			: $storage;
+
+		return $base . 'storage/' . $layer . '/' . $storage . '/' . $size . '/' . $colour . '/' . $depth . '.png';
+	}
+
+	/**
 	 * Whether storage option uses drawer base image.
 	 *
 	 * @param string $storage_id Storage option id.
@@ -185,14 +236,15 @@ class WCBC_Layer_Builder {
 	 * @return array<string,string>
 	 */
 	public static function build_demo_layers( $selections, $defaults = array() ) {
-		$base     = self::layer_base();
-		$size     = self::pick( $selections, $defaults, 'size' );
-		$colour   = self::pick( $selections, $defaults, 'colour' );
+		$base      = self::layer_base();
+		$size      = self::pick( $selections, $defaults, 'size' );
+		$colour    = self::resolve_colour_slug( self::pick( $selections, $defaults, 'colour' ) );
 		$headboard = self::pick( $selections, $defaults, 'headboard' );
-		$depth    = self::pick( $selections, $defaults, 'base_depth' );
-		$storage  = self::pick( $selections, $defaults, 'storage' );
-		$shape    = self::headboard_shape( $headboard );
-		$suffix   = self::has_drawers( $storage ) ? '-drawers' : '';
+		$depth     = self::pick( $selections, $defaults, 'base_depth' );
+		$storage   = self::pick( $selections, $defaults, 'storage' );
+		$shape     = self::headboard_shape( $headboard );
+		$variant   = self::headboard_variant( $headboard );
+		$suffix    = self::has_drawers( $storage ) ? '-drawers' : '';
 
 		if ( ! $size ) {
 			$size = 'double';
@@ -207,16 +259,20 @@ class WCBC_Layer_Builder {
 		$layers = array(
 			'shadow'       => $base . 'shadow-only.png',
 			'legs'         => $base . 'legs/' . $size . '.png',
-			'storage_back' => $base . 'transparent.png',
+			'storage_back' => self::demo_storage_url( 'storage_back', $base, $storage, $size, $colour, $depth ),
 			'base'         => $base . 'base/' . $size . '/' . $colour . '/' . $depth . $suffix . '.png',
 			'headboard'    => $base . 'transparent.png',
-			'storage_1'    => $base . 'transparent.png',
-			'storage_2'    => $base . 'transparent.png',
-			'storage_3'    => $base . 'transparent.png',
+			'storage_1'    => self::demo_storage_url( 'storage_1', $base, $storage, $size, $colour, $depth ),
+			'storage_2'    => self::demo_storage_url( 'storage_2', $base, $storage, $size, $colour, $depth ),
+			'storage_3'    => self::demo_storage_url( 'storage_3', $base, $storage, $size, $colour, $depth ),
 		);
 
 		if ( 'none' !== $shape ) {
-			$layers['headboard'] = $base . 'headboard/' . $size . '/' . $shape . '/' . $colour . '.png';
+			if ( 'cornell' === $shape ) {
+				$layers['headboard'] = $base . 'headboard/' . $size . '/' . $shape . '/' . $variant . '/' . $colour . '.png';
+			} else {
+				$layers['headboard'] = $base . 'headboard/' . $size . '/' . $shape . '/plain/' . $colour . '.png';
+			}
 		}
 
 		return $layers;
@@ -231,11 +287,13 @@ class WCBC_Layer_Builder {
 	 */
 	public static function build( $config, $selections ) {
 		$defaults = isset( $config['defaults'] ) ? $config['defaults'] : array();
-		$source   = isset( $config['image_source'] ) ? $config['image_source'] : 'auto';
+		$source   = isset( $config['image_source'] ) ? $config['image_source'] : 'demo';
 		$layers   = array();
 
 		if ( 'media' === $source ) {
 			$layers = self::build_from_product_media( $config );
+		} elseif ( 'demo' === $source ) {
+			$layers = self::build_demo_layers( $selections, $defaults );
 		} elseif ( 'happybeds' === $source ) {
 			$mode   = WCBC_Layer_Serve::cache_has_files() ? 'happybeds-proxy' : 'happybeds-cdn';
 			$layers = WCBC_HappyBeds_Resolver::build_layers( $selections, $defaults, $mode, $config );

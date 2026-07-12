@@ -240,15 +240,11 @@ class WCBC_Layer_Serve {
  * @return string
  */
 function wcbc_get_image_mode() {
-	$mode = apply_filters( 'wcbc_image_mode', 'auto' );
+	$mode = apply_filters( 'wcbc_image_mode', 'demo' );
 
-	if ( 'auto' !== $mode ) {
-		return $mode;
+	if ( 'auto' === $mode ) {
+		return 'demo';
 	}
 
-	if ( WCBC_Layer_Serve::cache_has_files() ) {
-		return 'happybeds-proxy';
-	}
-
-	return 'happybeds-cdn';
+	return $mode;
 }

@@ -141,12 +141,13 @@ class WCBC_Admin {
 						'label'       => __( 'Preview image source', 'wc-bed-configurator' ),
 						'value'       => $image_source,
 						'options'     => array(
-							'auto'     => __( 'Auto — Happy Beds cache / CDN', 'wc-bed-configurator' ),
-							'happybeds' => __( 'Happy Beds only', 'wc-bed-configurator' ),
-							'media'    => __( 'WordPress Media Library only', 'wc-bed-configurator' ),
-							'hybrid'   => __( 'Happy Beds + Media Library overrides', 'wc-bed-configurator' ),
+							'demo'      => __( 'Bundled layers (recommended)', 'wc-bed-configurator' ),
+							'auto'      => __( 'Auto — bundled demo layers', 'wc-bed-configurator' ),
+							'happybeds' => __( 'Happy Beds CDN / cache', 'wc-bed-configurator' ),
+							'media'     => __( 'WordPress Media Library only', 'wc-bed-configurator' ),
+							'hybrid'    => __( 'Bundled layers + Media Library overrides', 'wc-bed-configurator' ),
 						),
-						'description' => __( 'Auto/Happy Beds resolve headboard, base, and storage from selections. Hybrid only overrides shadow and legs from Media Library.', 'wc-bed-configurator' ),
+						'description' => __( 'Bundled layers update headboard, base, and storage automatically when colour, size, depth, or storage changes. Happy Beds mode requires importing images separately.', 'wc-bed-configurator' ),
 					)
 				);
 				?>
@@ -187,7 +188,7 @@ class WCBC_Admin {
 									<?php esc_html_e( 'Remove', 'wc-bed-configurator' ); ?>
 								</button>
 								<?php else : ?>
-								<p class="description"><?php esc_html_e( 'Resolved automatically from Happy Beds paths.', 'wc-bed-configurator' ); ?></p>
+								<p class="description"><?php esc_html_e( 'Resolved automatically from bundled layer images.', 'wc-bed-configurator' ); ?></p>
 								<?php endif; ?>
 							</div>
 						<?php endforeach; ?>
@@ -352,7 +353,7 @@ class WCBC_Admin {
 
 		if ( isset( $_POST['wcbc_image_source'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 			$source = sanitize_text_field( wp_unslash( $_POST['wcbc_image_source'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
-			if ( in_array( $source, array( 'auto', 'happybeds', 'media', 'hybrid' ), true ) ) {
+			if ( in_array( $source, array( 'demo', 'auto', 'happybeds', 'media', 'hybrid' ), true ) ) {
 				update_post_meta( $post_id, WCBC_Config::IMAGE_SOURCE_KEY, $source );
 			}
 		}

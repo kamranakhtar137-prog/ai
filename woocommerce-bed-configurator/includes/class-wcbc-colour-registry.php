@@ -14,6 +14,61 @@ class WCBC_Colour_Registry {
 	const HB_SWATCH_BASE = 'https://www.happybeds.co.uk/media/configurator/fabric-colors/';
 
 	/**
+	 * RGB values for bundled demo layer generation (slug => [r,g,b]).
+	 *
+	 * @return array<string,array{0:int,1:int,2:int}>
+	 */
+	public static function demo_rgb_map() {
+		return array(
+			'light-silver-velvet'   => array( 192, 192, 198 ),
+			'asphalt-velvet'        => array( 58, 58, 62 ),
+			'graphite-velvet'       => array( 88, 88, 94 ),
+			'black-velvet'          => array( 32, 32, 36 ),
+			'blue-marine-velvet'    => array( 20, 48, 88 ),
+			'emerald-velvet'        => array( 24, 92, 68 ),
+			'duck-egg-blue-velvet'  => array( 148, 198, 208 ),
+			'pink-velvet'           => array( 218, 148, 168 ),
+			'beige-velvet'          => array( 206, 186, 158 ),
+			'mustard-velvet'        => array( 198, 158, 52 ),
+			'black-cotton'          => array( 36, 36, 40 ),
+			'charcoal-cotton'       => array( 72, 72, 78 ),
+			'chocolate-cotton'      => array( 88, 58, 42 ),
+			'cream-cotton'          => array( 242, 236, 220 ),
+			'duck-egg-blue-cotton'  => array( 168, 208, 218 ),
+			'lime-cotton'           => array( 178, 208, 98 ),
+			'midnight-blue-cotton'  => array( 26, 40, 82 ),
+			'orchid-cotton'         => array( 168, 118, 178 ),
+			'plum-cotton'           => array( 98, 48, 78 ),
+			'red-cotton'            => array( 168, 42, 48 ),
+			'slate-grey-cotton'     => array( 118, 128, 138 ),
+			'white-cotton'          => array( 248, 248, 248 ),
+			'silver-grey-cotton'    => array( 178, 182, 188 ),
+		);
+	}
+
+	/**
+	 * Demo fabric RGB for a colour slug.
+	 *
+	 * @param string $slug Colour slug.
+	 * @return array{0:int,1:int,2:int}
+	 */
+	public static function demo_rgb( $slug ) {
+		$slug = self::resolve_slug( $slug );
+		$map  = self::demo_rgb_map();
+		return isset( $map[ $slug ] ) ? $map[ $slug ] : array( 206, 186, 158 );
+	}
+
+	/**
+	 * Local bundled colour swatch URL.
+	 *
+	 * @param string $slug Colour slug.
+	 * @return string
+	 */
+	public static function local_swatch_url( $slug ) {
+		return WCBC_PLUGIN_URL . 'demo-images/swatches/colour/' . sanitize_title( self::resolve_slug( $slug ) ) . '.png';
+	}
+
+	/**
 	 * Default Happy Beds colour definitions.
 	 *
 	 * hb_fabric = folder under bases/ (velvet, linoso).
@@ -109,17 +164,19 @@ class WCBC_Colour_Registry {
 	 * @return array<string,mixed>
 	 */
 	private static function build_option( $row, $fabric_group, $hb_fabric ) {
+		$rgb = self::demo_rgb( $row['id'] );
 		return array(
 			'id'       => $row['id'],
 			'label'    => $row['label'],
 			'sublabel' => ucfirst( $fabric_group ),
 			'price'    => 0.0,
-			'image'    => self::HB_SWATCH_BASE . $row['id'] . '.png',
+			'image'    => self::local_swatch_url( $row['id'] ),
 			'layers'   => array(
 				'fabric'    => $fabric_group,
 				'hb_fabric' => $hb_fabric,
 				'hb_code'   => $row['code'],
 				'hb_drawer' => $row['drawer'],
+				'demo_rgb'  => $rgb,
 			),
 			'badge'    => '',
 		);

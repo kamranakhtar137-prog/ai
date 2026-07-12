@@ -33,6 +33,27 @@
 		return 'cornell';
 	}
 
+	function headboardVariant(headboardId) {
+		if (!headboardId || headboardId.indexOf('no-headboard') !== -1) {
+			return 'plain';
+		}
+		if (headboardId.indexOf('buttoned') !== -1) {
+			return 'buttoned';
+		}
+		if (headboardId.indexOf('lined') !== -1) {
+			return 'lined';
+		}
+		return 'plain';
+	}
+
+	function demoStorageUrl(layer, base, storage, size, colour, depth) {
+		if (!storage || storage === 'no-drawers') {
+			return base + 'transparent.png';
+		}
+		storage = normalizeStorage(storage);
+		return base + 'storage/' + layer + '/' + storage + '/' + size + '/' + colour + '/' + depth + '.png';
+	}
+
 	function hasDrawers(storageId) {
 		storageId = normalizeStorage(storageId);
 		return storageId === '2-drawers' || storageId === '4-drawers' || storageId === 'end-drawer';
@@ -288,12 +309,15 @@
 	}
 
 	function buildLayers(selections) {
-		var source = wcbcData.imageSource || 'auto';
+		var source = wcbcData.imageSource || 'demo';
 		if (source === 'media') {
 			return buildMediaLayers(selections);
 		}
+		if (source === 'demo') {
+			return demoLayers(selections);
+		}
 
-		var mode = wcbcData.imageMode || (wcbcData.useHappyBeds ? 'happybeds-cdn' : 'demo');
+		var mode = wcbcData.imageMode || 'demo';
 		var layers;
 		if (mode === 'demo') {
 			layers = demoLayers(selections);
@@ -315,26 +339,31 @@
 	function demoLayers(selections) {
 		var base = wcbcData.layerBase || '';
 		var size = pick(selections, 'size') || 'small-double';
-		var colour = pick(selections, 'colour') || 'beige-velvet';
+		var colour = resolveColourSlug(pick(selections, 'colour') || 'beige-velvet');
 		var headboard = pick(selections, 'headboard');
 		var baseDepth = pick(selections, 'base_depth') || '14-inch';
 		var storage = normalizeStorage(pick(selections, 'storage') || 'no-drawers');
 		var shape = headboardShape(headboard);
+		var variant = headboardVariant(headboard);
 		var drawerSuffix = hasDrawers(storage) ? '-drawers' : '';
 
 		var layers = {
 			shadow: base + 'shadow-only.png',
 			legs: base + 'legs/' + size + '.png',
-			storage_back: base + 'transparent.png',
+			storage_back: demoStorageUrl('storage_back', base, storage, size, colour, baseDepth),
 			base: base + 'base/' + size + '/' + colour + '/' + baseDepth + drawerSuffix + '.png',
 			headboard: base + 'transparent.png',
-			storage_1: base + 'transparent.png',
-			storage_2: base + 'transparent.png',
-			storage_3: base + 'transparent.png',
+			storage_1: demoStorageUrl('storage_1', base, storage, size, colour, baseDepth),
+			storage_2: demoStorageUrl('storage_2', base, storage, size, colour, baseDepth),
+			storage_3: demoStorageUrl('storage_3', base, storage, size, colour, baseDepth),
 		};
 
 		if (shape !== 'none') {
-			layers.headboard = base + 'headboard/' + size + '/' + shape + '/' + colour + '.png';
+			if (shape === 'cornell') {
+				layers.headboard = base + 'headboard/' + size + '/' + shape + '/' + variant + '/' + colour + '.png';
+			} else {
+				layers.headboard = base + 'headboard/' + size + '/' + shape + '/plain/' + colour + '.png';
+			}
 		}
 
 		return layers;
