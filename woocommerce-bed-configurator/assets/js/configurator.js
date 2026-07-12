@@ -315,14 +315,9 @@
 			}
 		});
 
-		if (headboardShape(headboard) === 'none') {
-			layers.headboard = transparent;
-		} else if (headboard && sizeHeadboards[headboard]) {
+		// Headboard is style-driven only — always swap from per-size style media, never colour fabric.
+		if (headboard && sizeHeadboards[headboard]) {
 			layers.headboard = sizeHeadboards[headboard];
-		} else if (sizeHeadboards._legacy) {
-			layers.headboard = sizeHeadboards._legacy;
-		} else if (colourSet.headboard) {
-			layers.headboard = colourSet.headboard;
 		}
 
 		return layers;
@@ -466,9 +461,12 @@
 		});
 	}
 
-	function applyLayerImage($img, nextSrc) {
+	function applyLayerImage($img, nextSrc, forceReload) {
 		var isTransparent = isTransparentUrl(nextSrc);
-		if ($img.attr('src') !== nextSrc) {
+		if (forceReload) {
+			$img.attr('src', '');
+		}
+		if (forceReload || $img.attr('src') !== nextSrc) {
 			$img.attr('src', nextSrc);
 		}
 		$img.css({
@@ -499,7 +497,8 @@
 		});
 	}
 
-	function updateLayers(layers) {
+	function updateLayers(layers, opts) {
+		opts = opts || {};
 		if (!layers) {
 			return;
 		}
@@ -514,7 +513,8 @@
 			}
 			var nextSrc = layers[layer];
 			var fallbackSrc = $img.data('fallback') || demoFallback[layer] || (wcbcData.layerBase || '') + 'transparent.png';
-			applyLayerImage($img, nextSrc);
+			var forceReload = opts.forceHeadboard && layer === 'headboard';
+			applyLayerImage($img, nextSrc, forceReload);
 			$img.off('error.wcbc').on('error.wcbc', function () {
 				if (fallbackSrc && $img.attr('src') !== fallbackSrc) {
 					applyLayerImage($img, fallbackSrc);
@@ -530,8 +530,8 @@
 		}
 	}
 
-	function refreshPreview() {
-		updateLayers(buildLayers(state.selections));
+	function refreshPreview(opts) {
+		updateLayers(buildLayers(state.selections), opts);
 	}
 
 	function calculate() {
@@ -549,8 +549,10 @@
 		syncHiddenFields();
 		syncGroupSelectionUI(groupId, optionId);
 
+		var previewOpts = (groupId === 'headboard' || groupId === 'size') ? { forceHeadboard: true } : {};
+
 		// Update bed preview immediately from local layer map.
-		refreshPreview();
+		refreshPreview(previewOpts);
 
 		calculate().done(function (response) {
 			if (!response || !response.success) {
@@ -558,7 +560,7 @@
 			}
 			updatePrices(response.data.price_html);
 			if (response.data.layers) {
-				updateLayers(response.data.layers);
+				updateLayers(response.data.layers, previewOpts);
 			}
 			if (response.data.selections) {
 				Object.keys(response.data.selections).forEach(function (groupId) {

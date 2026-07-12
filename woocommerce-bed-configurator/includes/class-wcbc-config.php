@@ -225,35 +225,24 @@ class WCBC_Config {
 	 * @return string Attachment URL or empty.
 	 */
 	private static function resolve_headboard_layer_url( $size_set, $colour_set, $headboard_id ) {
+		unset( $colour_set );
+
 		if ( ! $headboard_id || false !== strpos( $headboard_id, 'no-headboard' ) ) {
 			return '';
 		}
 
 		$headboard_id = sanitize_title( $headboard_id );
 
-		if ( ! empty( $size_set['headboard'] ) && is_array( $size_set['headboard'] ) ) {
-			if ( ! empty( $size_set['headboard'][ $headboard_id ] ) ) {
-				$url = wp_get_attachment_image_url( (int) $size_set['headboard'][ $headboard_id ], 'full' );
-				if ( $url ) {
-					return $url;
-				}
-			}
-			if ( ! empty( $size_set['headboard']['_legacy'] ) ) {
-				$url = wp_get_attachment_image_url( (int) $size_set['headboard']['_legacy'], 'full' );
-				if ( $url ) {
-					return $url;
-				}
-			}
+		if ( empty( $size_set['headboard'] ) || ! is_array( $size_set['headboard'] ) ) {
+			return '';
 		}
 
-		if ( ! empty( $colour_set['headboard'] ) ) {
-			$url = wp_get_attachment_image_url( (int) $colour_set['headboard'], 'full' );
-			if ( $url ) {
-				return $url;
-			}
+		if ( empty( $size_set['headboard'][ $headboard_id ] ) ) {
+			return '';
 		}
 
-		return '';
+		$url = wp_get_attachment_image_url( (int) $size_set['headboard'][ $headboard_id ], 'full' );
+		return $url ? $url : '';
 	}
 
 	/**
@@ -485,6 +474,7 @@ class WCBC_Config {
 	 */
 	public static function headboard_options_for_admin( $config ) {
 		$options = array();
+		$allowed = array_flip( self::customer_headboard_option_ids() );
 		if ( empty( $config['groups'] ) ) {
 			return $options;
 		}
@@ -493,7 +483,8 @@ class WCBC_Config {
 				continue;
 			}
 			foreach ( $group['options'] as $option ) {
-				if ( empty( $option['id'] ) || false !== strpos( $option['id'], 'no-headboard' ) ) {
+				$option_id = ! empty( $option['id'] ) ? sanitize_title( $option['id'] ) : '';
+				if ( ! $option_id || ! isset( $allowed[ $option_id ] ) ) {
 					continue;
 				}
 				$options[] = array(
@@ -516,6 +507,40 @@ class WCBC_Config {
 	}
 
 	/**
+	 * Headboard styles shown on the storefront and in per-size media pickers.
+	 *
+	 * @return string[]
+	 */
+	public static function customer_headboard_option_ids() {
+		return array( 'cornell-lined', 'cornell-buttoned', 'victor-plain' );
+	}
+
+	/**
+	 * Limit headboard group to the three customer-facing styles (no shape filters).
+	 *
+	 * @param array<string,mixed> $group Headboard option group.
+	 * @return array<string,mixed>
+	 */
+	private static function filter_headboard_group_for_storefront( $group ) {
+		$allowed = array_flip( self::customer_headboard_option_ids() );
+		$options = array();
+
+		if ( ! empty( $group['options'] ) ) {
+			foreach ( $group['options'] as $option ) {
+				$option_id = ! empty( $option['id'] ) ? sanitize_title( $option['id'] ) : '';
+				if ( $option_id && isset( $allowed[ $option_id ] ) ) {
+					$options[] = $option;
+				}
+			}
+		}
+
+		$group['options'] = $options;
+		unset( $group['filter_type'], $group['filters'] );
+
+		return $group;
+	}
+
+	/**
 	 * Filter config groups shown in the storefront accordion.
 	 *
 	 * @param array<string,mixed> $config Config.
@@ -528,9 +553,13 @@ class WCBC_Config {
 			return $groups;
 		}
 		foreach ( $config['groups'] as $group ) {
-			if ( ! empty( $group['id'] ) && isset( $allowed[ $group['id'] ] ) ) {
-				$groups[] = $group;
+			if ( empty( $group['id'] ) || ! isset( $allowed[ $group['id'] ] ) ) {
+				continue;
 			}
+			if ( 'headboard' === $group['id'] ) {
+				$group = self::filter_headboard_group_for_storefront( $group );
+			}
+			$groups[] = $group;
 		}
 		return $groups;
 	}
@@ -619,7 +648,7 @@ class WCBC_Config {
 	 * @return string[]
 	 */
 	public static function variation_driven_layers() {
-		return self::colour_layer_slots();
+		return self::colour_fabric_layer_slots();
 	}
 
 	/**
@@ -667,24 +696,14 @@ class WCBC_Config {
 				),
 				WCBC_Colour_Registry::colour_group(),
 				array(
-					'id'          => 'headboard',
-					'label'       => 'Headboard',
-					'icon'        => 'headboard',
-					'required'    => true,
-					'filter_type' => 'shape',
-					'filters'     => array(
-						array( 'id' => 'cornell', 'label' => 'Cornell', 'filter' => 'cornell' ),
-						array( 'id' => 'dudley', 'label' => 'Dudley', 'filter' => 'dudley' ),
-						array( 'id' => 'victor', 'label' => 'Victor', 'filter' => 'victor' ),
-						array( 'id' => 'none', 'label' => 'No Headboard', 'filter' => 'none' ),
-					),
-					'options'     => array(
-						self::opt( 'cornell-plain', 'Cornell Plain', '', 0, $base . 'swatches/headboard/cornell-plain.png', array( 'shape' => 'cornell' ) ),
+					'id'       => 'headboard',
+					'label'    => 'Headboard',
+					'icon'     => 'headboard',
+					'required' => true,
+					'options'  => array(
 						self::opt( 'cornell-lined', 'Cornell Lined', '', 25, $base . 'swatches/headboard/cornell-lined.png', array( 'shape' => 'cornell' ) ),
 						self::opt( 'cornell-buttoned', 'Cornell Buttoned', '', 35, $base . 'swatches/headboard/cornell-buttoned.png', array( 'shape' => 'cornell' ) ),
-						self::opt( 'dudley-plain', 'Dudley Plain', '', 20, $base . 'swatches/headboard/dudley-plain.png', array( 'shape' => 'dudley' ) ),
 						self::opt( 'victor-plain', 'Victor Plain', '', 30, $base . 'swatches/headboard/victor-plain.png', array( 'shape' => 'victor' ) ),
-						self::opt( 'no-headboard', 'No Headboard', '', -50, $base . 'swatches/headboard/no-headboard.png', array( 'shape' => 'none' ) ),
 					),
 				),
 				array(
