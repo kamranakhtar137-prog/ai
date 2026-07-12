@@ -148,6 +148,7 @@ class WCBC_Admin {
 				);
 				?>
 				<div class="wcbc-variation-layers-section options_group" <?php echo 'media' === $image_source ? '' : 'style="display:none"'; ?>>
+					<input type="hidden" name="wcbc_variation_layers_save" value="1" />
 					<p class="form-field">
 						<strong><?php esc_html_e( 'Preview layers by size & colour', 'wc-bed-configurator' ); ?></strong><br />
 						<span class="description">
@@ -387,9 +388,14 @@ class WCBC_Admin {
 			}
 		}
 
-		if ( isset( $_POST['wcbc_variation_layers'] ) && is_array( $_POST['wcbc_variation_layers'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
-			$variation_layers = WCBC_Config::sanitize_variation_layer_media_post( wp_unslash( $_POST['wcbc_variation_layers'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
-			update_post_meta( $post_id, WCBC_Config::VARIATION_LAYER_MEDIA_KEY, $variation_layers );
+		if ( isset( $_POST['wcbc_variation_layers_save'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+			$posted = ( isset( $_POST['wcbc_variation_layers'] ) && is_array( $_POST['wcbc_variation_layers'] ) ) // phpcs:ignore WordPress.Security.NonceVerification
+				? wp_unslash( $_POST['wcbc_variation_layers'] ) // phpcs:ignore WordPress.Security.NonceVerification
+				: array();
+			$incoming = WCBC_Config::sanitize_variation_layer_media_post( $posted );
+			$existing = WCBC_Config::get_variation_layer_media( $post_id );
+			$merged   = WCBC_Config::merge_variation_layer_media( $existing, $incoming );
+			update_post_meta( $post_id, WCBC_Config::VARIATION_LAYER_MEDIA_KEY, $merged );
 		}
 
 		if ( isset( $_POST['wcbc_base_price'] ) && '' !== $_POST['wcbc_base_price'] ) { // phpcs:ignore WordPress.Security.NonceVerification

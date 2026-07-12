@@ -310,8 +310,9 @@
 		});
 
 		var styleColours = (headboardStyles[size] && headboardStyles[size][headboard]) ? headboardStyles[size][headboard] : {};
-		// Style headboard replaces the default Bed Headboard from the colour layer set.
-		if (headboard && styleColours[colour]) {
+		if (headboardShape(headboard) === 'none') {
+			layers.headboard = transparent;
+		} else if (headboard && styleColours[colour]) {
 			layers.headboard = styleColours[colour];
 		} else if (headboard && legacyHeadboards[size] && legacyHeadboards[size][headboard]) {
 			layers.headboard = legacyHeadboards[size][headboard];
@@ -411,6 +412,33 @@
 		return found ? selected : group.options[0].id;
 	}
 
+	function syncHeadboardShapeFilter(headboardId) {
+		var shape = headboardShape(headboardId);
+		var $section = $('.wcbc-accordian-body[data-tabid="headboard"]');
+		if (!$section.length) {
+			return;
+		}
+		$section.find('.wcbc-filter-btn').each(function () {
+			var isMatch = $(this).data('filter') === shape;
+			$(this).toggleClass('is-checked', isMatch);
+		});
+		$section.find('.wcbc-filterable-grid li').each(function () {
+			var $li = $(this);
+			var matchKey = $li.data('shape') || '';
+			var isSelected = $li.find('input.wcbc-radio').is(':checked');
+			$li.toggleClass('wcbc-filter-hidden', matchKey !== shape && !isSelected);
+		});
+	}
+
+	function selectFirstHeadboardInShape($section, shape) {
+		var $first = $section.find('.wcbc-filterable-grid li').filter(function () {
+			return ($(this).data('shape') || '') === shape;
+		}).find('input.wcbc-radio').first();
+		if ($first.length) {
+			$first.prop('checked', true);
+			selectOptionRadio($first[0]);
+		}
+	}
 	function syncGroupSelectionUI(groupId, optionId) {
 		var $section = $('.wcbc-accordian-body[data-tabid="' + groupId + '"]');
 		var $radios = $section.length
@@ -425,6 +453,10 @@
 			$option.toggleClass('is-selected', isMatch);
 			$option.find('label').first().toggleClass('is-checked', isMatch);
 		});
+
+		if (groupId === 'headboard') {
+			syncHeadboardShapeFilter(optionId);
+		}
 	}
 
 	function initSelections() {
@@ -621,6 +653,7 @@
 			var filter = $(this).data('filter');
 			var $section = $(this).closest('dd');
 			var filterType = $section.data('filter-type') || 'shape';
+			var groupId = $section.data('tabid') || '';
 
 			$section.find('.wcbc-filter-btn').removeClass('is-checked');
 			$(this).addClass('is-checked');
@@ -630,6 +663,10 @@
 				var isSelected = $(this).find('input.wcbc-radio').is(':checked');
 				$(this).toggleClass('wcbc-filter-hidden', matchKey !== filter && !isSelected);
 			});
+
+			if (groupId === 'headboard') {
+				selectFirstHeadboardInShape($section, filter);
+			}
 		});
 	}
 

@@ -223,11 +223,17 @@ class WCBC_Config {
 	 * @param array<string,mixed> $layers Layer map.
 	 * @return array<string,int>
 	 */
-	private static function sanitize_colour_layer_map( $layers ) {
+	private static function sanitize_colour_layer_map( $layers, $keep_empty = false ) {
 		$out = array();
 		foreach ( self::colour_layer_slots() as $layer ) {
-			if ( ! empty( $layers[ $layer ] ) ) {
-				$out[ $layer ] = absint( $layers[ $layer ] );
+			if ( ! array_key_exists( $layer, $layers ) ) {
+				continue;
+			}
+			$id = absint( $layers[ $layer ] );
+			if ( $id ) {
+				$out[ $layer ] = $id;
+			} elseif ( $keep_empty ) {
+				$out[ $layer ] = 0;
 			}
 		}
 		return $out;
@@ -237,17 +243,24 @@ class WCBC_Config {
 	 * Sanitize headboard style images keyed by colour id.
 	 *
 	 * @param array<string,mixed> $map Colour id => attachment id.
+	 * @param bool                $keep_empty Keep zero values so merge can clear attachments.
 	 * @return array<string,int>
 	 */
-	private static function sanitize_headboard_colour_map( $map ) {
+	private static function sanitize_headboard_colour_map( $map, $keep_empty = false ) {
 		$out = array();
 		if ( ! is_array( $map ) ) {
 			return $out;
 		}
 		foreach ( $map as $colour_id => $attachment_id ) {
 			$colour_id = sanitize_title( (string) $colour_id );
-			if ( $colour_id && $attachment_id ) {
-				$out[ $colour_id ] = absint( $attachment_id );
+			if ( ! $colour_id ) {
+				continue;
+			}
+			$id = absint( $attachment_id );
+			if ( $id ) {
+				$out[ $colour_id ] = $id;
+			} elseif ( $keep_empty ) {
+				$out[ $colour_id ] = 0;
 			}
 		}
 		return $out;
@@ -316,7 +329,7 @@ class WCBC_Config {
 					if ( ! is_array( $colours ) ) {
 						continue;
 					}
-					$clean = self::sanitize_headboard_colour_map( $colours );
+					$clean = self::sanitize_headboard_colour_map( $colours, true );
 					if ( $clean ) {
 						$out['headboard'][ $size_id ][ $style_id ] = $clean;
 					}
@@ -335,7 +348,7 @@ class WCBC_Config {
 					if ( ! is_array( $layers ) ) {
 						continue;
 					}
-					$clean = self::sanitize_colour_layer_map( $layers );
+					$clean = self::sanitize_colour_layer_map( $layers, true );
 					if ( $clean ) {
 						$out['colour'][ $size_id ][ $colour_id ] = $clean;
 					}
@@ -344,6 +357,80 @@ class WCBC_Config {
 		}
 
 		return $out;
+	}
+
+	/**
+	 * Merge incoming variation layer media into existing saved data.
+	 *
+	 * @param array<string,mixed> $existing Existing media map.
+	 * @param array<string,mixed> $incoming Sanitized posted media map.
+	 * @return array<string,mixed>
+	 */
+	public static function merge_variation_layer_media( $existing, $incoming ) {
+		$merged = array(
+			'size'      => ( ! empty( $existing['size'] ) && is_array( $existing['size'] ) ) ? $existing['size'] : array(),
+			'colour'    => ( ! empty( $existing['colour'] ) && is_array( $existing['colour'] ) ) ? $existing['colour'] : array(),
+			'headboard' => ( ! empty( $existing['headboard'] ) && is_array( $existing['headboard'] ) ) ? $existing['headboard'] : array(),
+		);
+
+		if ( empty( $incoming['colour'] ) || ! is_array( $incoming['colour'] ) ) {
+			$incoming['colour'] = array();
+		}
+		if ( empty( $incoming['headboard'] ) || ! is_array( $incoming['headboard'] ) ) {
+			$incoming['headboard'] = array();
+		}
+
+		foreach ( $incoming['colour'] as $size_id => $colours ) {
+			if ( ! is_array( $colours ) ) {
+				continue;
+			}
+			if ( ! isset( $merged['colour'][ $size_id ] ) ) {
+				$merged['colour'][ $size_id ] = array();
+			}
+			foreach ( $colours as $colour_id => $layers ) {
+				if ( ! is_array( $layers ) ) {
+					continue;
+				}
+				if ( ! isset( $merged['colour'][ $size_id ][ $colour_id ] ) ) {
+					$merged['colour'][ $size_id ][ $colour_id ] = array();
+				}
+				foreach ( $layers as $layer => $attachment_id ) {
+					$attachment_id = absint( $attachment_id );
+					if ( $attachment_id ) {
+						$merged['colour'][ $size_id ][ $colour_id ][ $layer ] = $attachment_id;
+					} else {
+						unset( $merged['colour'][ $size_id ][ $colour_id ][ $layer ] );
+					}
+				}
+			}
+		}
+
+		foreach ( $incoming['headboard'] as $size_id => $styles ) {
+			if ( ! is_array( $styles ) ) {
+				continue;
+			}
+			if ( ! isset( $merged['headboard'][ $size_id ] ) ) {
+				$merged['headboard'][ $size_id ] = array();
+			}
+			foreach ( $styles as $style_id => $colours ) {
+				if ( ! is_array( $colours ) ) {
+					continue;
+				}
+				if ( ! isset( $merged['headboard'][ $size_id ][ $style_id ] ) ) {
+					$merged['headboard'][ $size_id ][ $style_id ] = array();
+				}
+				foreach ( $colours as $colour_id => $attachment_id ) {
+					$attachment_id = absint( $attachment_id );
+					if ( $attachment_id ) {
+						$merged['headboard'][ $size_id ][ $style_id ][ $colour_id ] = $attachment_id;
+					} else {
+						unset( $merged['headboard'][ $size_id ][ $style_id ][ $colour_id ] );
+					}
+				}
+			}
+		}
+
+		return $merged;
 	}
 
 	/**
@@ -468,7 +555,7 @@ class WCBC_Config {
 				);
 			}
 		}
-		return $options;
+		return self::filter_catalog_options( $options, self::catalog_size_ids() );
 	}
 
 	/**
@@ -494,7 +581,7 @@ class WCBC_Config {
 				);
 			}
 		}
-		return $options;
+		return self::filter_catalog_options( $options, self::catalog_colour_ids() );
 	}
 
 	/**
@@ -505,7 +592,6 @@ class WCBC_Config {
 	 */
 	public static function headboard_options_for_admin( $config ) {
 		$options = array();
-		$allowed = array_flip( self::customer_headboard_option_ids() );
 		if ( empty( $config['groups'] ) ) {
 			return $options;
 		}
@@ -514,8 +600,7 @@ class WCBC_Config {
 				continue;
 			}
 			foreach ( $group['options'] as $option ) {
-				$option_id = ! empty( $option['id'] ) ? sanitize_title( $option['id'] ) : '';
-				if ( ! $option_id || ! isset( $allowed[ $option_id ] ) ) {
+				if ( empty( $option['id'] ) || false !== strpos( $option['id'], 'no-headboard' ) ) {
 					continue;
 				}
 				$options[] = array(
@@ -529,6 +614,72 @@ class WCBC_Config {
 	}
 
 	/**
+	 * Storefront + admin catalog sizes.
+	 *
+	 * @return string[]
+	 */
+	public static function catalog_size_ids() {
+		return array( 'small-single', 'single' );
+	}
+
+	/**
+	 * Storefront + admin catalog colours (first 4 Velvet + first 4 Linen).
+	 *
+	 * @return string[]
+	 */
+	public static function catalog_colour_ids() {
+		return array(
+			'light-silver-velvet',
+			'asphalt-velvet',
+			'graphite-velvet',
+			'black-velvet',
+			'black-cotton',
+			'charcoal-cotton',
+			'chocolate-cotton',
+			'cream-cotton',
+		);
+	}
+
+	/**
+	 * Filter option rows to catalog ids while preserving order.
+	 *
+	 * @param array<int,array<string,string>> $options Options.
+	 * @param string[]                          $allowed_ids Allowed ids.
+	 * @return array<int,array<string,string>>
+	 */
+	private static function filter_catalog_options( $options, $allowed_ids ) {
+		$allowed = array_flip( $allowed_ids );
+		$out     = array();
+		foreach ( $options as $option ) {
+			$option_id = ! empty( $option['id'] ) ? sanitize_title( $option['id'] ) : '';
+			if ( $option_id && isset( $allowed[ $option_id ] ) ) {
+				$out[] = $option;
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Limit a configurator group to catalog option ids.
+	 *
+	 * @param array<string,mixed> $group Option group.
+	 * @return array<string,mixed>
+	 */
+	private static function filter_group_options_for_catalog( $group ) {
+		if ( empty( $group['id'] ) || empty( $group['options'] ) ) {
+			return $group;
+		}
+
+		if ( 'size' === $group['id'] ) {
+			$group['options'] = self::filter_catalog_options( $group['options'], self::catalog_size_ids() );
+		} elseif ( 'colour' === $group['id'] ) {
+			$group['options'] = self::filter_catalog_options( $group['options'], self::catalog_colour_ids() );
+		}
+
+		return $group;
+	}
+
+	/**
 	 * Customer-facing accordion groups (simplified for now).
 	 *
 	 * @return string[]
@@ -538,16 +689,27 @@ class WCBC_Config {
 	}
 
 	/**
-	 * Headboard styles shown on the storefront and in per-size media pickers.
+	 * Headboard shape/style option ids used on the storefront.
 	 *
 	 * @return string[]
 	 */
 	public static function customer_headboard_option_ids() {
-		return array( 'cornell-plain', 'cornell-lined', 'cornell-buttoned' );
+		return array(
+			'no-headboard',
+			'cornell-plain',
+			'cornell-lined',
+			'cornell-buttoned',
+			'dudley-plain',
+			'dudley-lined',
+			'dudley-buttoned',
+			'victor-plain',
+			'victor-lined',
+			'victor-buttoned',
+		);
 	}
 
 	/**
-	 * Limit headboard group to the three customer-facing styles (no shape filters).
+	 * Ensure headboard group has shape filters and all style options.
 	 *
 	 * @param array<string,mixed> $group Headboard option group.
 	 * @return array<string,mixed>
@@ -565,8 +727,14 @@ class WCBC_Config {
 			}
 		}
 
-		$group['options'] = $options;
-		unset( $group['filter_type'], $group['filters'] );
+		$group['options']     = $options;
+		$group['filter_type'] = 'shape';
+		$group['filters']     = array(
+			array( 'id' => 'cornell', 'label' => 'Cornell', 'filter' => 'cornell' ),
+			array( 'id' => 'dudley', 'label' => 'Dudley', 'filter' => 'dudley' ),
+			array( 'id' => 'victor', 'label' => 'Victor', 'filter' => 'victor' ),
+			array( 'id' => 'none', 'label' => 'No Headboard', 'filter' => 'none' ),
+		);
 
 		return $group;
 	}
@@ -587,6 +755,7 @@ class WCBC_Config {
 			if ( empty( $group['id'] ) || ! isset( $allowed[ $group['id'] ] ) ) {
 				continue;
 			}
+			$group = self::filter_group_options_for_catalog( $group );
 			if ( 'headboard' === $group['id'] ) {
 				$group = self::filter_headboard_group_for_storefront( $group );
 			}
@@ -719,22 +888,32 @@ class WCBC_Config {
 					'options'  => array(
 						self::opt( 'small-single', 'Small Single', '2ft 6', 0, $base . 'swatches/size/small-single.png', array( 'size' => '2ft6' ) ),
 						self::opt( 'single', 'Single', '3ft', 20, $base . 'swatches/size/single.png', array( 'size' => '3ft' ) ),
-						self::opt( 'small-double', 'Small Double', '4ft', 40, $base . 'swatches/size/small-double.png', array( 'size' => '4ft' ) ),
-						self::opt( 'double', 'Double', '4ft 6', 60, $base . 'swatches/size/double.png', array( 'size' => '4ft6' ) ),
-						self::opt( 'king', 'King Size', '5ft', 80, $base . 'swatches/size/king.png', array( 'size' => '5ft' ) ),
-						self::opt( 'super-king', 'Super Kingsize', '6ft', 100, $base . 'swatches/size/super-king.png', array( 'size' => '6ft' ) ),
 					),
 				),
 				WCBC_Colour_Registry::colour_group(),
 				array(
-					'id'       => 'headboard',
-					'label'    => 'Headboard',
-					'icon'     => 'headboard',
-					'required' => true,
-					'options'  => array(
+					'id'          => 'headboard',
+					'label'       => 'Headboard',
+					'icon'        => 'headboard',
+					'required'    => true,
+					'filter_type' => 'shape',
+					'filters'     => array(
+						array( 'id' => 'cornell', 'label' => 'Cornell', 'filter' => 'cornell' ),
+						array( 'id' => 'dudley', 'label' => 'Dudley', 'filter' => 'dudley' ),
+						array( 'id' => 'victor', 'label' => 'Victor', 'filter' => 'victor' ),
+						array( 'id' => 'none', 'label' => 'No Headboard', 'filter' => 'none' ),
+					),
+					'options'     => array(
 						self::opt( 'cornell-plain', 'Cornell Plain', '', 0, $base . 'swatches/headboard/cornell-plain.png', array( 'shape' => 'cornell' ) ),
 						self::opt( 'cornell-lined', 'Cornell Lined', '', 25, $base . 'swatches/headboard/cornell-lined.png', array( 'shape' => 'cornell' ) ),
 						self::opt( 'cornell-buttoned', 'Cornell Buttoned', '', 35, $base . 'swatches/headboard/cornell-buttoned.png', array( 'shape' => 'cornell' ) ),
+						self::opt( 'dudley-plain', 'Dudley Plain', '', 20, $base . 'swatches/headboard/dudley-plain.png', array( 'shape' => 'dudley' ) ),
+						self::opt( 'dudley-lined', 'Dudley Lined', '', 25, $base . 'swatches/headboard/cornell-lined.png', array( 'shape' => 'dudley' ) ),
+						self::opt( 'dudley-buttoned', 'Dudley Buttoned', '', 30, $base . 'swatches/headboard/cornell-buttoned.png', array( 'shape' => 'dudley' ) ),
+						self::opt( 'victor-plain', 'Victor Plain', '', 30, $base . 'swatches/headboard/victor-plain.png', array( 'shape' => 'victor' ) ),
+						self::opt( 'victor-lined', 'Victor Lined', '', 35, $base . 'swatches/headboard/cornell-lined.png', array( 'shape' => 'victor' ) ),
+						self::opt( 'victor-buttoned', 'Victor Buttoned', '', 40, $base . 'swatches/headboard/cornell-buttoned.png', array( 'shape' => 'victor' ) ),
+						self::opt( 'no-headboard', 'No Headboard', '', -50, $base . 'swatches/headboard/no-headboard.png', array( 'shape' => 'none' ) ),
 					),
 				),
 				array(

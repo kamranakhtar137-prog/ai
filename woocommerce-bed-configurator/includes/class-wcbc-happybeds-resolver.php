@@ -118,7 +118,11 @@ class WCBC_HappyBeds_Resolver {
 			'cornell-lined'    => 'cornell_lined',
 			'cornell-buttoned' => 'cornell_buttoned',
 			'dudley-plain'     => 'dudley_plain',
+			'dudley-lined'     => 'dudley_plain',
+			'dudley-buttoned'  => 'dudley_plain',
 			'victor-plain'     => 'victor_plain',
+			'victor-lined'     => 'victor_plain',
+			'victor-buttoned'  => 'victor_plain',
 		);
 
 		return isset( $map[ $headboard_id ] ) ? $map[ $headboard_id ] : 'cornell_plain';
