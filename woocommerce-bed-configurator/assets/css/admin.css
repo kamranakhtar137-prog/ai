@@ -1,7 +1,16 @@
+/* Override WooCommerce .woocommerce_options_panel label { float: right } inside layer UI */
+#wcbc_product_data .wcbc-variation-layers-section label,
+#wcbc_product_data .wcbc-layer-media-item label {
+	float: none;
+	width: auto;
+	margin: 0 0 8px;
+	text-align: left;
+}
+
 .wcbc-layer-media-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-	gap: 16px;
+	grid-template-columns: 1fr;
+	gap: 12px;
 	margin: 12px 0 20px;
 }
 
@@ -14,8 +23,11 @@
 
 .wcbc-layer-media-item label {
 	display: block;
+	float: none;
+	width: auto;
 	font-weight: 600;
 	margin-bottom: 8px;
+	text-align: left;
 }
 
 .wcbc-layer-media-preview {
