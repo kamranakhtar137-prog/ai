@@ -1,0 +1,1459 @@
+<?php
+/**
+ * Default configurator schema and helpers.
+ *
+ * @package WCBedConfigurator
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+class WCBC_Config {
+
+	/**
+	 * Meta key for product config.
+	 */
+	const META_KEY = '_wcbc_config';
+
+	/**
+	 * Meta key to enable configurator on product.
+	 */
+	const ENABLED_KEY = '_wcbc_enabled';
+
+	/**
+	 * Product layer attachment IDs keyed by layer slug.
+	 */
+	const LAYER_MEDIA_KEY = '_wcbc_layer_media';
+
+	/**
+	 * Per-size and per-colour layer attachment IDs.
+	 *
+	 * Shape:
+	 * [ 'colour' => [ size_id => [ colour_id => [ layer => attachment_id ] ] ],
+	 *   'headboard' => [ size_id => [ style_id => [ colour_id => attachment_id ] ] ] ].
+	 */
+	const VARIATION_LAYER_MEDIA_KEY = '_wcbc_variation_layer_media';
+
+	/**
+	 * Image source: auto, happybeds, media, hybrid.
+	 */
+	const IMAGE_SOURCE_KEY = '_wcbc_image_source';
+
+	/**
+	 * Option swatch attachment IDs: [ group_id => [ option_id => attachment_id ] ].
+	 */
+	const OPTION_SWATCH_MEDIA_KEY = '_wcbc_option_swatch_media';
+
+	/**
+	 * Human labels for preview layers.
+	 *
+	 * @return array<string,string>
+	 */
+	public static function get_layer_labels() {
+		return array(
+			'shadow'       => __( 'Shadow', 'wc-bed-configurator' ),
+			'legs'         => __( 'Bed Legs', 'wc-bed-configurator' ),
+			'headboard'    => __( 'Bed Headboard', 'wc-bed-configurator' ),
+			'storage_back' => __( 'Bed Storage Back', 'wc-bed-configurator' ),
+			'base'         => __( 'Bed Base', 'wc-bed-configurator' ),
+			'storage_1'    => __( 'Bed Storage 1', 'wc-bed-configurator' ),
+			'storage_2'    => __( 'Bed Storage 2', 'wc-bed-configurator' ),
+			'storage_3'    => __( 'Bed Storage 3', 'wc-bed-configurator' ),
+			'storage_4'    => __( 'Bed Storage 4', 'wc-bed-configurator' ),
+		);
+	}
+
+	/**
+	 * Get saved layer attachment IDs for a product.
+	 *
+	 * @param int $product_id Product ID.
+	 * @return array<string,int>
+	 */
+	public static function get_layer_media( $product_id ) {
+		$raw = get_post_meta( $product_id, self::LAYER_MEDIA_KEY, true );
+		if ( ! is_array( $raw ) ) {
+			return array();
+		}
+		$out = array();
+		foreach ( self::get_layers() as $layer ) {
+			if ( ! empty( $raw[ $layer ] ) ) {
+				$out[ $layer ] = absint( $raw[ $layer ] );
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Resolve layer attachment IDs to public URLs.
+	 *
+	 * @param array<string,int> $attachment_ids Attachment IDs keyed by layer.
+	 * @return array<string,string>
+	 */
+	public static function layer_urls_from_media( $attachment_ids ) {
+		$layers = array();
+		foreach ( self::get_layers() as $layer ) {
+			$layers[ $layer ] = '';
+			if ( empty( $attachment_ids[ $layer ] ) ) {
+				continue;
+			}
+			$url = wp_get_attachment_image_url( (int) $attachment_ids[ $layer ], 'full' );
+			if ( $url ) {
+				$layers[ $layer ] = $url;
+			}
+		}
+		return $layers;
+	}
+
+	/**
+	 * Transparent fallback layer URL.
+	 *
+	 * @return string
+	 */
+	public static function transparent_layer_url() {
+		return WCBC_PLUGIN_URL . 'demo-images/layers/transparent.png';
+	}
+
+	/**
+	 * Get per-size base layers and per-size+colour fabric layers.
+	 *
+	 * Colour shape: colour[size_id][colour_id][layer] = attachment_id.
+	 *
+	 * @param int $product_id Product ID.
+	 * @return array{size:array<string,array<string,mixed>>,colour:array<string,array<string,array<string,int>>>,headboard:array<string,array<string,array<string,int>>>}
+	 */
+	public static function get_variation_layer_media( $product_id ) {
+		$raw = get_post_meta( $product_id, self::VARIATION_LAYER_MEDIA_KEY, true );
+		$out = array(
+			'size'      => array(),
+			'colour'    => array(),
+			'headboard' => array(),
+		);
+
+		if ( ! is_array( $raw ) ) {
+			return $out;
+		}
+
+		// Legacy size-level headboard images (style only, no colour).
+		if ( ! empty( $raw['size'] ) && is_array( $raw['size'] ) ) {
+			foreach ( $raw['size'] as $size_id => $layers ) {
+				$size_id = sanitize_title( (string) $size_id );
+				if ( ! is_array( $layers ) || empty( $layers['headboard'] ) ) {
+					continue;
+				}
+				if ( is_array( $layers['headboard'] ) ) {
+					foreach ( $layers['headboard'] as $headboard_id => $attachment_id ) {
+						$headboard_id = sanitize_title( (string) $headboard_id );
+						if ( $headboard_id && $attachment_id ) {
+							$out['size'][ $size_id ]['headboard'][ $headboard_id ] = absint( $attachment_id );
+						}
+					}
+				}
+			}
+		}
+
+		if ( ! empty( $raw['headboard'] ) && is_array( $raw['headboard'] ) ) {
+			foreach ( $raw['headboard'] as $size_id => $styles ) {
+				$size_id = sanitize_title( (string) $size_id );
+				if ( ! is_array( $styles ) ) {
+					continue;
+				}
+				foreach ( $styles as $style_id => $colours ) {
+					$style_id = sanitize_title( (string) $style_id );
+					if ( ! is_array( $colours ) ) {
+						continue;
+					}
+					$clean = self::sanitize_headboard_colour_map( $colours );
+					if ( $clean ) {
+						$out['headboard'][ $size_id ][ $style_id ] = $clean;
+					}
+				}
+			}
+		}
+
+		if ( empty( $raw['colour'] ) || ! is_array( $raw['colour'] ) ) {
+			return $out;
+		}
+
+		foreach ( $raw['colour'] as $size_id => $colours ) {
+			$size_id = sanitize_title( (string) $size_id );
+			if ( ! is_array( $colours ) ) {
+				continue;
+			}
+
+			// Legacy flat format: colour[colour_id][layer] (no size grouping).
+			if ( self::is_flat_colour_layer_map( $colours ) ) {
+				foreach ( array( 'small-single', 'single', 'small-double', 'double', 'king', 'super-king' ) as $legacy_size ) {
+					if ( ! isset( $out['colour'][ $legacy_size ] ) ) {
+						$out['colour'][ $legacy_size ] = array();
+					}
+					$out['colour'][ $legacy_size ][ $size_id ] = self::sanitize_colour_layer_map( $colours );
+				}
+				continue;
+			}
+
+			foreach ( $colours as $colour_id => $layers ) {
+				$colour_id = sanitize_title( (string) $colour_id );
+				if ( ! is_array( $layers ) ) {
+					continue;
+				}
+				$clean = self::sanitize_colour_layer_map( $layers );
+				if ( $clean ) {
+					$out['colour'][ $size_id ][ $colour_id ] = $clean;
+				}
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Whether a stored colour branch is the legacy flat colour map.
+	 *
+	 * @param array<string,mixed> $map Stored map.
+	 * @return bool
+	 */
+	private static function is_flat_colour_layer_map( $map ) {
+		foreach ( array_keys( $map ) as $key ) {
+			if ( in_array( $key, self::get_layers(), true ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Keep only colour-scoped layer attachment IDs.
+	 *
+	 * @param array<string,mixed> $layers Layer map.
+	 * @return array<string,int>
+	 */
+	private static function sanitize_colour_layer_map( $layers, $keep_empty = false ) {
+		$out = array();
+		foreach ( self::colour_layer_slots() as $layer ) {
+			if ( ! array_key_exists( $layer, $layers ) ) {
+				continue;
+			}
+			$id = absint( $layers[ $layer ] );
+			if ( $id ) {
+				$out[ $layer ] = $id;
+			} elseif ( $keep_empty ) {
+				$out[ $layer ] = 0;
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Sanitize headboard style images keyed by colour id.
+	 *
+	 * @param array<string,mixed> $map Colour id => attachment id.
+	 * @param bool                $keep_empty Keep zero values so merge can clear attachments.
+	 * @return array<string,int>
+	 */
+	private static function sanitize_headboard_colour_map( $map, $keep_empty = false ) {
+		$out = array();
+		if ( ! is_array( $map ) ) {
+			return $out;
+		}
+		foreach ( $map as $colour_id => $attachment_id ) {
+			$colour_id = sanitize_title( (string) $colour_id );
+			if ( ! $colour_id ) {
+				continue;
+			}
+			$id = absint( $attachment_id );
+			if ( $id ) {
+				$out[ $colour_id ] = $id;
+			} elseif ( $keep_empty ) {
+				$out[ $colour_id ] = 0;
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Resolve headboard preview URL for size + style + colour.
+	 *
+	 * @param array<string,mixed> $media Full variation media map.
+	 * @param string              $size_id Selected size id.
+	 * @param string              $colour_id Selected colour id.
+	 * @param string              $headboard_id Selected headboard option id.
+	 * @return string Attachment URL or empty.
+	 */
+	private static function resolve_headboard_layer_url( $media, $size_id, $colour_id, $headboard_id ) {
+		if ( ! $headboard_id || false !== strpos( $headboard_id, 'no-headboard' ) ) {
+			return '';
+		}
+
+		$headboard_id = sanitize_title( $headboard_id );
+		$size_id      = sanitize_title( $size_id );
+		$colour_id    = sanitize_title( $colour_id );
+
+		if ( ! empty( $media['headboard'][ $size_id ][ $headboard_id ][ $colour_id ] ) ) {
+			$url = wp_get_attachment_image_url( (int) $media['headboard'][ $size_id ][ $headboard_id ][ $colour_id ], 'full' );
+			if ( $url ) {
+				return $url;
+			}
+		}
+
+		// Legacy: one image per style at size level (no colour).
+		if ( ! empty( $media['size'][ $size_id ]['headboard'][ $headboard_id ] ) ) {
+			$url = wp_get_attachment_image_url( (int) $media['size'][ $size_id ]['headboard'][ $headboard_id ], 'full' );
+			if ( $url ) {
+				return $url;
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Sanitize posted variation layer media.
+	 *
+	 * @param array<string,mixed> $posted Posted form data.
+	 * @return array{size:array<string,array<string,int>>,colour:array<string,array<string,array<string,int>>>}
+	 */
+	public static function sanitize_variation_layer_media_post( $posted ) {
+		$out = array(
+			'colour'    => array(),
+			'headboard' => array(),
+		);
+
+		if ( ! is_array( $posted ) ) {
+			return $out;
+		}
+
+		if ( ! empty( $posted['headboard'] ) && is_array( $posted['headboard'] ) ) {
+			foreach ( $posted['headboard'] as $size_id => $styles ) {
+				$size_id = sanitize_title( (string) $size_id );
+				if ( ! is_array( $styles ) ) {
+					continue;
+				}
+				foreach ( $styles as $style_id => $colours ) {
+					$style_id = sanitize_title( (string) $style_id );
+					if ( ! is_array( $colours ) ) {
+						continue;
+					}
+					$clean = self::sanitize_headboard_colour_map( $colours, true );
+					if ( $clean ) {
+						$out['headboard'][ $size_id ][ $style_id ] = $clean;
+					}
+				}
+			}
+		}
+
+		if ( ! empty( $posted['colour'] ) && is_array( $posted['colour'] ) ) {
+			foreach ( $posted['colour'] as $size_id => $colours ) {
+				$size_id = sanitize_title( (string) $size_id );
+				if ( ! is_array( $colours ) ) {
+					continue;
+				}
+				foreach ( $colours as $colour_id => $layers ) {
+					$colour_id = sanitize_title( (string) $colour_id );
+					if ( ! is_array( $layers ) ) {
+						continue;
+					}
+					$clean = self::sanitize_colour_layer_map( $layers, true );
+					if ( $clean ) {
+						$out['colour'][ $size_id ][ $colour_id ] = $clean;
+					}
+				}
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Merge incoming variation layer media into existing saved data.
+	 *
+	 * @param array<string,mixed> $existing Existing media map.
+	 * @param array<string,mixed> $incoming Sanitized posted media map.
+	 * @return array<string,mixed>
+	 */
+	public static function merge_variation_layer_media( $existing, $incoming ) {
+		$merged = array(
+			'size'      => ( ! empty( $existing['size'] ) && is_array( $existing['size'] ) ) ? $existing['size'] : array(),
+			'colour'    => ( ! empty( $existing['colour'] ) && is_array( $existing['colour'] ) ) ? $existing['colour'] : array(),
+			'headboard' => ( ! empty( $existing['headboard'] ) && is_array( $existing['headboard'] ) ) ? $existing['headboard'] : array(),
+		);
+
+		if ( empty( $incoming['colour'] ) || ! is_array( $incoming['colour'] ) ) {
+			$incoming['colour'] = array();
+		}
+		if ( empty( $incoming['headboard'] ) || ! is_array( $incoming['headboard'] ) ) {
+			$incoming['headboard'] = array();
+		}
+
+		foreach ( $incoming['colour'] as $size_id => $colours ) {
+			if ( ! is_array( $colours ) ) {
+				continue;
+			}
+			if ( ! isset( $merged['colour'][ $size_id ] ) ) {
+				$merged['colour'][ $size_id ] = array();
+			}
+			foreach ( $colours as $colour_id => $layers ) {
+				if ( ! is_array( $layers ) ) {
+					continue;
+				}
+				if ( ! isset( $merged['colour'][ $size_id ][ $colour_id ] ) ) {
+					$merged['colour'][ $size_id ][ $colour_id ] = array();
+				}
+				foreach ( $layers as $layer => $attachment_id ) {
+					$attachment_id = absint( $attachment_id );
+					if ( $attachment_id ) {
+						$merged['colour'][ $size_id ][ $colour_id ][ $layer ] = $attachment_id;
+					} else {
+						unset( $merged['colour'][ $size_id ][ $colour_id ][ $layer ] );
+					}
+				}
+			}
+		}
+
+		foreach ( $incoming['headboard'] as $size_id => $styles ) {
+			if ( ! is_array( $styles ) ) {
+				continue;
+			}
+			if ( ! isset( $merged['headboard'][ $size_id ] ) ) {
+				$merged['headboard'][ $size_id ] = array();
+			}
+			foreach ( $styles as $style_id => $colours ) {
+				if ( ! is_array( $colours ) ) {
+					continue;
+				}
+				if ( ! isset( $merged['headboard'][ $size_id ][ $style_id ] ) ) {
+					$merged['headboard'][ $size_id ][ $style_id ] = array();
+				}
+				foreach ( $colours as $colour_id => $attachment_id ) {
+					$attachment_id = absint( $attachment_id );
+					if ( $attachment_id ) {
+						$merged['headboard'][ $size_id ][ $style_id ][ $colour_id ] = $attachment_id;
+					} else {
+						unset( $merged['headboard'][ $size_id ][ $style_id ][ $colour_id ] );
+					}
+				}
+			}
+		}
+
+		return $merged;
+	}
+
+	/**
+	 * Resolve variation layer attachment IDs to URLs for frontend JS.
+	 *
+	 * @param int $product_id Product ID.
+	 * @return array{size:array<string,array<string,string>>,colour:array<string,array<string,array<string,string>>>}
+	 */
+	public static function variation_layer_urls_for_js( $product_id ) {
+		$raw = self::get_variation_layer_media( $product_id );
+		$out = array(
+			'headboardStyles' => array(),
+			'sizeHeadboards'  => array(),
+			'colour'          => array(),
+		);
+
+		foreach ( $raw['headboard'] as $size_id => $styles ) {
+			foreach ( $styles as $style_id => $colours ) {
+				foreach ( $colours as $colour_id => $attachment_id ) {
+					$url = wp_get_attachment_image_url( (int) $attachment_id, 'full' );
+					if ( $url ) {
+						$out['headboardStyles'][ $size_id ][ $style_id ][ $colour_id ] = $url;
+					}
+				}
+			}
+		}
+
+		foreach ( $raw['size'] as $size_id => $layers ) {
+			if ( empty( $layers['headboard'] ) || ! is_array( $layers['headboard'] ) ) {
+				continue;
+			}
+			foreach ( $layers['headboard'] as $headboard_id => $attachment_id ) {
+				$url = wp_get_attachment_image_url( (int) $attachment_id, 'full' );
+				if ( $url ) {
+					$out['sizeHeadboards'][ $size_id ][ $headboard_id ] = $url;
+				}
+			}
+		}
+
+		foreach ( $raw['colour'] as $size_id => $colours ) {
+			foreach ( $colours as $colour_id => $layers ) {
+				foreach ( $layers as $layer => $attachment_id ) {
+					$url = wp_get_attachment_image_url( (int) $attachment_id, 'full' );
+					if ( $url ) {
+						$out['colour'][ $size_id ][ $colour_id ][ $layer ] = $url;
+					}
+				}
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Resolve preview layer URLs from size base set + size/colour fabric swaps.
+	 *
+	 * @param int                  $product_id Product ID.
+	 * @param array<string,string> $selections Current selections.
+	 * @param array<string,string> $defaults Default selections.
+	 * @return array<string,string>
+	 */
+	public static function resolve_variation_layer_urls( $product_id, $selections, $defaults = array() ) {
+		$media       = self::get_variation_layer_media( $product_id );
+		$transparent = self::transparent_layer_url();
+		$size_id     = ! empty( $selections['size'] ) ? sanitize_title( $selections['size'] ) : ( ! empty( $defaults['size'] ) ? sanitize_title( $defaults['size'] ) : '' );
+		$colour_id   = ! empty( $selections['colour'] ) ? sanitize_title( $selections['colour'] ) : ( ! empty( $defaults['colour'] ) ? sanitize_title( $defaults['colour'] ) : '' );
+
+		if ( class_exists( 'WCBC_Colour_Registry' ) ) {
+			$colour_id = WCBC_Colour_Registry::resolve_slug( $colour_id );
+		}
+
+		$size_set = ( $size_id && ! empty( $media['colour'][ $size_id ][ $colour_id ] ) ) ? $media['colour'][ $size_id ][ $colour_id ] : array();
+
+		$headboard_id = ! empty( $selections['headboard'] ) ? sanitize_title( $selections['headboard'] ) : ( ! empty( $defaults['headboard'] ) ? sanitize_title( $defaults['headboard'] ) : '' );
+
+		$layers = array();
+		foreach ( self::get_layers() as $layer ) {
+			$layers[ $layer ] = $transparent;
+		}
+
+		foreach ( self::colour_layer_slots() as $layer ) {
+			if ( ! empty( $size_set[ $layer ] ) ) {
+				$url = wp_get_attachment_image_url( (int) $size_set[ $layer ], 'full' );
+				if ( $url ) {
+					$layers[ $layer ] = $url;
+				}
+			}
+		}
+
+		$headboard_url = self::resolve_headboard_layer_url( $media, $size_id, $colour_id, $headboard_id );
+		if ( $headboard_url ) {
+			$layers['headboard'] = $headboard_url;
+		}
+
+		if ( $headboard_id && false !== strpos( $headboard_id, 'no-headboard' ) ) {
+			$layers['headboard'] = $transparent;
+		}
+
+		return $layers;
+	}
+
+	/**
+	 * Size options from config for admin layer assignment.
+	 *
+	 * @param array<string,mixed> $config Config.
+	 * @return array<int,array<string,string>>
+	 */
+	public static function size_options_for_admin( $config ) {
+		$options = array();
+		if ( empty( $config['groups'] ) ) {
+			return $options;
+		}
+		foreach ( $config['groups'] as $group ) {
+			if ( 'size' !== $group['id'] || empty( $group['options'] ) ) {
+				continue;
+			}
+			foreach ( $group['options'] as $option ) {
+				$options[] = array(
+					'id'       => $option['id'],
+					'label'    => $option['label'],
+					'sublabel' => isset( $option['sublabel'] ) ? $option['sublabel'] : '',
+				);
+			}
+		}
+		return self::filter_catalog_options( $options, self::catalog_size_ids() );
+	}
+
+	/**
+	 * Colour options from config for admin layer assignment.
+	 *
+	 * @param array<string,mixed> $config Config.
+	 * @return array<int,array<string,string>>
+	 */
+	public static function colour_options_for_admin( $config ) {
+		$options = array();
+		if ( empty( $config['groups'] ) ) {
+			return $options;
+		}
+		foreach ( $config['groups'] as $group ) {
+			if ( 'colour' !== $group['id'] || empty( $group['options'] ) ) {
+				continue;
+			}
+			foreach ( $group['options'] as $option ) {
+				$options[] = array(
+					'id'       => $option['id'],
+					'label'    => $option['label'],
+					'sublabel' => isset( $option['sublabel'] ) ? $option['sublabel'] : '',
+				);
+			}
+		}
+		return self::filter_catalog_options( $options, self::catalog_colour_ids() );
+	}
+
+	/**
+	 * Headboard style options from config for per-size layer assignment.
+	 *
+	 * @param array<string,mixed> $config Config.
+	 * @return array<int,array<string,string>>
+	 */
+	public static function headboard_options_for_admin( $config ) {
+		$options = array();
+		if ( empty( $config['groups'] ) ) {
+			return $options;
+		}
+		foreach ( $config['groups'] as $group ) {
+			if ( 'headboard' !== $group['id'] || empty( $group['options'] ) ) {
+				continue;
+			}
+			foreach ( $group['options'] as $option ) {
+				if ( empty( $option['id'] ) || false !== strpos( $option['id'], 'no-headboard' ) ) {
+					continue;
+				}
+				$options[] = array(
+					'id'       => $option['id'],
+					'label'    => $option['label'],
+					'sublabel' => isset( $option['sublabel'] ) ? $option['sublabel'] : '',
+				);
+			}
+		}
+		return $options;
+	}
+
+	/**
+	 * Storefront + admin catalog sizes.
+	 *
+	 * @return string[]
+	 */
+	public static function catalog_size_ids() {
+		return array( 'small-single', 'single' );
+	}
+
+	/**
+	 * Storefront + admin catalog colours (first 4 Velvet + first 4 Linen).
+	 *
+	 * @return string[]
+	 */
+	public static function catalog_colour_ids() {
+		return array(
+			'light-silver-velvet',
+			'asphalt-velvet',
+			'graphite-velvet',
+			'black-velvet',
+			'black-cotton',
+			'charcoal-cotton',
+			'chocolate-cotton',
+			'cream-cotton',
+		);
+	}
+
+	/**
+	 * Filter option rows to catalog ids while preserving order.
+	 *
+	 * @param array<int,array<string,string>> $options Options.
+	 * @param string[]                          $allowed_ids Allowed ids.
+	 * @return array<int,array<string,string>>
+	 */
+	private static function filter_catalog_options( $options, $allowed_ids ) {
+		$allowed = array_flip( $allowed_ids );
+		$out     = array();
+		foreach ( $options as $option ) {
+			$option_id = ! empty( $option['id'] ) ? sanitize_title( $option['id'] ) : '';
+			if ( $option_id && isset( $allowed[ $option_id ] ) ) {
+				$out[] = $option;
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Limit a configurator group to catalog option ids.
+	 *
+	 * @param array<string,mixed> $group Option group.
+	 * @return array<string,mixed>
+	 */
+	private static function filter_group_options_for_catalog( $group ) {
+		if ( empty( $group['id'] ) || empty( $group['options'] ) ) {
+			return $group;
+		}
+
+		if ( 'size' === $group['id'] ) {
+			$group['options'] = self::filter_catalog_options( $group['options'], self::catalog_size_ids() );
+		} elseif ( 'colour' === $group['id'] ) {
+			$group['options'] = self::filter_catalog_options( $group['options'], self::catalog_colour_ids() );
+		}
+
+		return $group;
+	}
+
+	/**
+	 * Customer-facing accordion groups (simplified for now).
+	 *
+	 * @return string[]
+	 */
+	public static function customer_visible_group_ids() {
+		return array( 'size', 'colour', 'headboard' );
+	}
+
+	/**
+	 * Headboard shape/style option ids used on the storefront.
+	 *
+	 * @return string[]
+	 */
+	public static function customer_headboard_option_ids() {
+		return array(
+			'no-headboard',
+			'cornell-plain',
+			'cornell-lined',
+			'cornell-buttoned',
+			'dudley-plain',
+			'dudley-lined',
+			'dudley-buttoned',
+			'victor-plain',
+			'victor-lined',
+			'victor-buttoned',
+		);
+	}
+
+	/**
+	 * Ensure headboard group has shape filters and all style options.
+	 *
+	 * @param array<string,mixed> $group Headboard option group.
+	 * @return array<string,mixed>
+	 */
+	private static function filter_headboard_group_for_storefront( $group ) {
+		$allowed = array_flip( self::customer_headboard_option_ids() );
+		$options = array();
+
+		if ( ! empty( $group['options'] ) ) {
+			foreach ( $group['options'] as $option ) {
+				$option_id = ! empty( $option['id'] ) ? sanitize_title( $option['id'] ) : '';
+				if ( $option_id && isset( $allowed[ $option_id ] ) ) {
+					$options[] = $option;
+				}
+			}
+		}
+
+		$group['options']     = $options;
+		$group['filter_type'] = 'shape';
+		$group['filters']     = array(
+			array( 'id' => 'cornell', 'label' => 'Cornell', 'filter' => 'cornell' ),
+			array( 'id' => 'dudley', 'label' => 'Dudley', 'filter' => 'dudley' ),
+			array( 'id' => 'victor', 'label' => 'Victor', 'filter' => 'victor' ),
+			array( 'id' => 'none', 'label' => 'No Headboard', 'filter' => 'none' ),
+		);
+
+		return $group;
+	}
+
+	/**
+	 * Filter config groups shown in the storefront accordion.
+	 *
+	 * @param array<string,mixed> $config Config.
+	 * @return array<int,array<string,mixed>>
+	 */
+	public static function visible_groups( $config ) {
+		$allowed = array_flip( self::customer_visible_group_ids() );
+		$groups  = array();
+		if ( empty( $config['groups'] ) ) {
+			return $groups;
+		}
+		foreach ( $config['groups'] as $group ) {
+			if ( empty( $group['id'] ) || ! isset( $allowed[ $group['id'] ] ) ) {
+				continue;
+			}
+			$group = self::filter_group_options_for_catalog( $group );
+			if ( 'headboard' === $group['id'] ) {
+				$group = self::filter_headboard_group_for_storefront( $group );
+			}
+			$groups[] = $group;
+		}
+		return $groups;
+	}
+
+	/**
+	 * Product image source mode.
+	 *
+	 * @param int $product_id Product ID.
+	 * @return string
+	 */
+	public static function get_image_source( $product_id ) {
+		$source = get_post_meta( $product_id, self::IMAGE_SOURCE_KEY, true );
+		if ( in_array( $source, array( 'media', 'demo', 'auto', 'happybeds', 'hybrid' ), true ) ) {
+			return $source;
+		}
+		return 'media';
+	}
+
+	/**
+	 * Get saved option swatch attachment IDs for a product.
+	 *
+	 * @param int $product_id Product ID.
+	 * @return array<string,array<string,int>>
+	 */
+	public static function get_option_swatch_media( $product_id ) {
+		$raw = get_post_meta( $product_id, self::OPTION_SWATCH_MEDIA_KEY, true );
+		if ( ! is_array( $raw ) ) {
+			return array();
+		}
+		$out = array();
+		foreach ( $raw as $group_id => $options ) {
+			$group_id = sanitize_title( (string) $group_id );
+			if ( ! $group_id || ! is_array( $options ) ) {
+				continue;
+			}
+			foreach ( $options as $option_id => $attachment_id ) {
+				$option_id = sanitize_title( (string) $option_id );
+				if ( $option_id && $attachment_id ) {
+					$out[ $group_id ][ $option_id ] = absint( $attachment_id );
+				}
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Sanitize posted option swatch attachment IDs.
+	 *
+	 * @param array<string,mixed> $posted Posted wcbc_option_images.
+	 * @return array<string,array<string,int>>
+	 */
+	public static function sanitize_option_swatch_media_post( $posted ) {
+		$out = array();
+		if ( ! is_array( $posted ) ) {
+			return $out;
+		}
+		foreach ( $posted as $group_id => $options ) {
+			$group_id = sanitize_title( (string) $group_id );
+			if ( ! $group_id || ! is_array( $options ) ) {
+				continue;
+			}
+			foreach ( $options as $option_id => $attachment_id ) {
+				$option_id = sanitize_title( (string) $option_id );
+				if ( ! $option_id ) {
+					continue;
+				}
+				$id = absint( $attachment_id );
+				if ( $id ) {
+					$out[ $group_id ][ $option_id ] = $id;
+				}
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Merge saved swatch attachment IDs into config option images.
+	 *
+	 * @param array<string,mixed> $config Config.
+	 * @param int                 $product_id Product ID.
+	 * @return array<string,mixed>
+	 */
+	public static function apply_option_swatch_media( $config, $product_id ) {
+		$media = self::get_option_swatch_media( $product_id );
+		if ( empty( $media ) || empty( $config['groups'] ) ) {
+			return $config;
+		}
+
+		foreach ( $config['groups'] as $gi => $group ) {
+			$gid = ! empty( $group['id'] ) ? $group['id'] : '';
+			if ( ! $gid || empty( $media[ $gid ] ) || empty( $group['options'] ) ) {
+				continue;
+			}
+			foreach ( $group['options'] as $oi => $option ) {
+				$oid = ! empty( $option['id'] ) ? sanitize_title( $option['id'] ) : '';
+				if ( ! $oid || empty( $media[ $gid ][ $oid ] ) ) {
+					continue;
+				}
+				$url = wp_get_attachment_image_url( (int) $media[ $gid ][ $oid ], 'full' );
+				if ( $url ) {
+					$config['groups'][ $gi ]['options'][ $oi ]['image'] = $url;
+				}
+			}
+		}
+
+		return $config;
+	}
+
+	/**
+	 * Merge posted swatch media with existing (supports clearing removed entries).
+	 *
+	 * @param array<string,array<string,int>> $existing Existing map.
+	 * @param array<string,mixed>             $posted Raw posted map.
+	 * @return array<string,array<string,int>>
+	 */
+	public static function merge_option_swatch_media( $existing, $posted ) {
+		$merged = is_array( $existing ) ? $existing : array();
+
+		if ( ! is_array( $posted ) ) {
+			return $merged;
+		}
+
+		foreach ( $posted as $group_id => $options ) {
+			$group_id = sanitize_title( (string) $group_id );
+			if ( ! $group_id || ! is_array( $options ) ) {
+				continue;
+			}
+			if ( ! isset( $merged[ $group_id ] ) ) {
+				$merged[ $group_id ] = array();
+			}
+			foreach ( $options as $option_id => $attachment_id ) {
+				$option_id = sanitize_title( (string) $option_id );
+				if ( ! $option_id ) {
+					continue;
+				}
+				$id = absint( $attachment_id );
+				if ( $id ) {
+					$merged[ $group_id ][ $option_id ] = $id;
+				} else {
+					unset( $merged[ $group_id ][ $option_id ] );
+				}
+			}
+		}
+
+		return $merged;
+	}
+
+	/**
+	 * Save or remove one option swatch attachment immediately.
+	 *
+	 * @param int    $product_id Product ID.
+	 * @param string $group_id Group id.
+	 * @param string $option_id Option id.
+	 * @param int    $attachment_id Attachment ID (0 removes).
+	 * @return bool
+	 */
+	public static function set_option_swatch_attachment( $product_id, $group_id, $option_id, $attachment_id ) {
+		$product_id = absint( $product_id );
+		$group_id   = sanitize_title( (string) $group_id );
+		$option_id  = sanitize_title( (string) $option_id );
+		$attachment_id = absint( $attachment_id );
+
+		if ( ! $product_id || ! $group_id || ! $option_id ) {
+			return false;
+		}
+
+		$media = self::get_option_swatch_media( $product_id );
+		if ( ! isset( $media[ $group_id ] ) ) {
+			$media[ $group_id ] = array();
+		}
+
+		if ( $attachment_id ) {
+			$media[ $group_id ][ $option_id ] = $attachment_id;
+		} else {
+			unset( $media[ $group_id ][ $option_id ] );
+		}
+
+		return (bool) update_post_meta( $product_id, self::OPTION_SWATCH_MEDIA_KEY, $media );
+	}
+
+	/**
+	 * Save or remove one variation preview layer attachment immediately.
+	 *
+	 * @param int    $product_id Product ID.
+	 * @param string $layer_type colour|headboard.
+	 * @param string $size_id Size id.
+	 * @param string $key_a Colour id (colour) or style id (headboard).
+	 * @param string $key_b Layer slug (colour) or colour id (headboard).
+	 * @param int    $attachment_id Attachment ID (0 removes).
+	 * @return bool
+	 */
+	public static function set_variation_layer_attachment( $product_id, $layer_type, $size_id, $key_a, $key_b, $attachment_id ) {
+		$product_id    = absint( $product_id );
+		$layer_type    = sanitize_title( (string) $layer_type );
+		$size_id       = sanitize_title( (string) $size_id );
+		$key_a         = sanitize_title( (string) $key_a );
+		$key_b         = sanitize_title( (string) $key_b );
+		$attachment_id = absint( $attachment_id );
+
+		if ( ! $product_id || ! $size_id || ! $key_a || ! $key_b ) {
+			return false;
+		}
+
+		$media = self::get_variation_layer_media( $product_id );
+
+		if ( 'headboard' === $layer_type ) {
+			if ( ! isset( $media['headboard'][ $size_id ] ) ) {
+				$media['headboard'][ $size_id ] = array();
+			}
+			if ( ! isset( $media['headboard'][ $size_id ][ $key_a ] ) ) {
+				$media['headboard'][ $size_id ][ $key_a ] = array();
+			}
+			if ( $attachment_id ) {
+				$media['headboard'][ $size_id ][ $key_a ][ $key_b ] = $attachment_id;
+			} else {
+				unset( $media['headboard'][ $size_id ][ $key_a ][ $key_b ] );
+			}
+		} elseif ( 'colour' === $layer_type ) {
+			if ( ! in_array( $key_b, self::colour_layer_slots(), true ) ) {
+				return false;
+			}
+			if ( ! isset( $media['colour'][ $size_id ] ) ) {
+				$media['colour'][ $size_id ] = array();
+			}
+			if ( ! isset( $media['colour'][ $size_id ][ $key_a ] ) ) {
+				$media['colour'][ $size_id ][ $key_a ] = array();
+			}
+			if ( $attachment_id ) {
+				$media['colour'][ $size_id ][ $key_a ][ $key_b ] = $attachment_id;
+			} else {
+				unset( $media['colour'][ $size_id ][ $key_a ][ $key_b ] );
+			}
+		} else {
+			return false;
+		}
+
+		return (bool) update_post_meta( $product_id, self::VARIATION_LAYER_MEDIA_KEY, $media );
+	}
+
+	/**
+	 * All layer slugs in stacking order.
+	 *
+	 * @return string[]
+	 */
+	public static function get_layers() {
+		// Match Happy Beds DOM stacking order.
+		return array( 'shadow', 'legs', 'headboard', 'storage_back', 'base', 'storage_1', 'storage_2', 'storage_3', 'storage_4' );
+	}
+
+	/**
+	 * Primary preview layers (Happy Beds alt labels).
+	 *
+	 * @return string[]
+	 */
+	public static function core_preview_layers() {
+		return array( 'legs', 'headboard', 'storage_back', 'base' );
+	}
+
+	/**
+	 * Option groups that drive core layer image variations.
+	 *
+	 * @return string[]
+	 */
+	public static function core_variation_groups() {
+		return array( 'size', 'colour', 'base_depth' );
+	}
+
+	/**
+	 * Layers assigned per size (non-fabric structure).
+	 *
+	 * @return string[]
+	 */
+	public static function size_base_layer_slots() {
+		return array();
+	}
+
+	/**
+	 * Layers assigned per size (legacy alias).
+	 *
+	 * @return string[]
+	 */
+	public static function size_layer_slots() {
+		return self::size_base_layer_slots();
+	}
+
+	/**
+	 * Fabric layers that swap when colour changes (scoped to the selected size).
+	 *
+	 * @return string[]
+	 */
+	public static function colour_fabric_layer_slots() {
+		return self::colour_layer_slots();
+	}
+
+	/**
+	 * Layers assigned per size + colour in the Media Library admin.
+	 *
+	 * @return string[]
+	 */
+	public static function colour_layer_slots() {
+		return array( 'legs', 'headboard', 'storage_back', 'base', 'storage_1', 'storage_2', 'storage_3', 'storage_4' );
+	}
+
+	/**
+	 * Layers whose image file changes with customer selections (not one fixed upload).
+	 *
+	 * @return string[]
+	 */
+	public static function variation_driven_layers() {
+		return self::colour_layer_slots();
+	}
+
+	/**
+	 * Layers that may use a single manual Media Library override in hybrid mode.
+	 *
+	 * @return string[]
+	 */
+	public static function static_override_layers() {
+		return array( 'shadow', 'legs' );
+	}
+
+	/**
+	 * Build default demo configuration.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public static function get_default_config() {
+		$base = WCBC_PLUGIN_URL . 'demo-images/';
+
+		$selection_defaults = array(
+			'size'       => 'small-single',
+			'colour'     => 'light-silver-velvet',
+			'headboard'  => 'cornell-lined',
+			'base_depth' => '14-inch',
+			'storage'    => '2-drawers-same-side',
+		);
+
+		return array(
+			'base_price' => 299.99,
+			'layers'     => array(),
+			'groups'     => array(
+				array(
+					'id'       => 'size',
+					'label'    => 'Size',
+					'icon'     => 'size',
+					'required' => true,
+					'options'  => array(
+						self::opt( 'small-single', 'Small Single', '2ft 6', 0, $base . 'swatches/size/small-single.png', array( 'size' => '2ft6' ) ),
+						self::opt( 'single', 'Single', '3ft', 20, $base . 'swatches/size/single.png', array( 'size' => '3ft' ) ),
+					),
+				),
+				WCBC_Colour_Registry::colour_group(),
+				array(
+					'id'          => 'headboard',
+					'label'       => 'Headboard',
+					'icon'        => 'headboard',
+					'required'    => true,
+					'filter_type' => 'shape',
+					'filters'     => array(
+						array( 'id' => 'cornell', 'label' => 'Cornell', 'filter' => 'cornell' ),
+						array( 'id' => 'dudley', 'label' => 'Dudley', 'filter' => 'dudley' ),
+						array( 'id' => 'victor', 'label' => 'Victor', 'filter' => 'victor' ),
+						array( 'id' => 'none', 'label' => 'No Headboard', 'filter' => 'none' ),
+					),
+					'options'     => array(
+						self::opt( 'cornell-plain', 'Cornell Plain', '', 0, $base . 'swatches/headboard/cornell-plain.png', array( 'shape' => 'cornell' ) ),
+						self::opt( 'cornell-lined', 'Cornell Lined', '', 25, $base . 'swatches/headboard/cornell-lined.png', array( 'shape' => 'cornell' ) ),
+						self::opt( 'cornell-buttoned', 'Cornell Buttoned', '', 35, $base . 'swatches/headboard/cornell-buttoned.png', array( 'shape' => 'cornell' ) ),
+						self::opt( 'dudley-plain', 'Dudley Plain', '', 20, $base . 'swatches/headboard/dudley-plain.png', array( 'shape' => 'dudley' ) ),
+						self::opt( 'dudley-lined', 'Dudley Lined', '', 25, $base . 'swatches/headboard/cornell-lined.png', array( 'shape' => 'dudley' ) ),
+						self::opt( 'dudley-buttoned', 'Dudley Buttoned', '', 30, $base . 'swatches/headboard/cornell-buttoned.png', array( 'shape' => 'dudley' ) ),
+						self::opt( 'victor-plain', 'Victor Plain', '', 30, $base . 'swatches/headboard/victor-plain.png', array( 'shape' => 'victor' ) ),
+						self::opt( 'victor-lined', 'Victor Lined', '', 35, $base . 'swatches/headboard/cornell-lined.png', array( 'shape' => 'victor' ) ),
+						self::opt( 'victor-buttoned', 'Victor Buttoned', '', 40, $base . 'swatches/headboard/cornell-buttoned.png', array( 'shape' => 'victor' ) ),
+						self::opt( 'no-headboard', 'No Headboard', '', -50, $base . 'swatches/headboard/no-headboard.png', array( 'shape' => 'none' ) ),
+					),
+				),
+				array(
+					'id'       => 'base_depth',
+					'label'    => 'Base Depth',
+					'icon'     => 'depth',
+					'required' => true,
+					'options'  => array(
+						self::opt( '6-inch', '6 Inch', '', -30, $base . 'swatches/depth/6-inch.png' ),
+						self::opt( '10-inch', '10 Inch', '', 0, $base . 'swatches/depth/10-inch.png' ),
+						self::opt( '14-inch', '14 Inch', 'Standard', 20, $base . 'swatches/depth/14-inch.png', array(), true ),
+					),
+				),
+				array(
+					'id'       => 'storage',
+					'label'    => 'Storage Options',
+					'icon'     => 'storage',
+					'required' => true,
+					'options'  => array(
+						self::opt( 'ottoman', 'Ottoman', '', 80, $base . 'swatches/storage/ottoman.png' ),
+						self::opt( 'no-drawers', 'No Drawers', '', 0, $base . 'swatches/storage/no-drawers.png' ),
+						self::opt( 'end-drawer', 'End Drawer', '', 40, $base . 'swatches/storage/end-drawer.png' ),
+						self::opt( '2-drawers', '2 Drawers', '', 50, $base . 'swatches/storage/2-drawers.png' ),
+						self::opt( '2-drawers-same-side', '2 Drawers Same Side', '', 50, $base . 'swatches/storage/2-drawers.png' ),
+						self::opt( '4-drawers', '4 Drawers', '', 90, $base . 'swatches/storage/4-drawers.png' ),
+					),
+				),
+			),
+			'defaults'   => $selection_defaults,
+		);
+	}
+
+	/**
+	 * Helper to build option array.
+	 *
+	 * @param string               $id Option id.
+	 * @param string               $label Label.
+	 * @param string               $sublabel Sublabel.
+	 * @param float                $price Price modifier.
+	 * @param string               $image Swatch image.
+	 * @param array<string,string> $layers Layer overrides.
+	 * @param bool                 $badge Show badge.
+	 * @return array<string,mixed>
+	 */
+	private static function opt( $id, $label, $sublabel, $price, $image, $layers = array(), $badge = false ) {
+		return array(
+			'id'       => $id,
+			'label'    => $label,
+			'sublabel' => $sublabel,
+			'price'    => (float) $price,
+			'image'    => $image,
+			'layers'   => $layers,
+			'badge'    => $badge ? 'Standard Size' : '',
+		);
+	}
+
+	/**
+	 * Get product config merged with defaults.
+	 *
+	 * @param int $product_id Product ID.
+	 * @return array<string,mixed>
+	 */
+	public static function get_product_config( $product_id ) {
+		$config = get_post_meta( $product_id, self::META_KEY, true );
+		if ( ! is_array( $config ) || empty( $config['groups'] ) ) {
+			$config = self::get_default_config();
+		}
+		$config = self::merge_colour_group( $config );
+		$config = self::sanitize_option_layers( $config );
+		$config = self::apply_option_swatch_media( $config, $product_id );
+		$defaults = self::get_default_config();
+		$config['defaults']     = self::normalize_defaults( $config );
+		$config['product_id']   = (int) $product_id;
+		$config['image_source'] = self::get_image_source( $product_id );
+		$config['layers']       = WCBC_Layer_Builder::build( $config, $config['defaults'] );
+		unset( $config['layer_media'] );
+		$config['base_price']   = isset( $config['base_price'] ) ? (float) $config['base_price'] : $defaults['base_price'];
+		return $config;
+	}
+
+	/**
+	 * Ensure each group default matches a real option id (single selection).
+	 *
+	 * @param array<string,mixed> $config Config.
+	 * @return array<string,string>
+	 */
+	public static function normalize_defaults( $config ) {
+		$plugin_defaults = self::get_default_config();
+		$out             = ! empty( $config['defaults'] ) && is_array( $config['defaults'] )
+			? $config['defaults']
+			: $plugin_defaults['defaults'];
+
+		if ( empty( $config['groups'] ) ) {
+			return $out;
+		}
+
+		foreach ( $config['groups'] as $group ) {
+			if ( empty( $group['id'] ) || empty( $group['options'] ) ) {
+				continue;
+			}
+
+			$gid        = $group['id'];
+			$valid_ids  = array();
+			foreach ( $group['options'] as $option ) {
+				if ( ! empty( $option['id'] ) ) {
+					$valid_ids[] = sanitize_title( $option['id'] );
+				}
+			}
+
+			if ( empty( $valid_ids ) ) {
+				continue;
+			}
+
+			// Size and colour always default to the first listed option.
+			if ( in_array( $gid, array( 'size', 'colour' ), true ) ) {
+				$out[ $gid ] = $valid_ids[0];
+				continue;
+			}
+
+			$current = isset( $out[ $gid ] ) ? sanitize_title( $out[ $gid ] ) : '';
+			if ( ! in_array( $current, $valid_ids, true ) ) {
+				$out[ $gid ] = $valid_ids[0];
+			} else {
+				$out[ $gid ] = $current;
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Resolve the selected option id for a group.
+	 *
+	 * @param array<string,mixed> $group Option group.
+	 * @param string              $selected Requested selection.
+	 * @return string
+	 */
+	public static function resolve_group_selection( $group, $selected ) {
+		if ( empty( $group['options'] ) ) {
+			return sanitize_title( $selected );
+		}
+
+		$selected = sanitize_title( $selected );
+		foreach ( $group['options'] as $option ) {
+			if ( ! empty( $option['id'] ) && sanitize_title( $option['id'] ) === $selected ) {
+				return sanitize_title( $option['id'] );
+			}
+		}
+
+		return sanitize_title( $group['options'][0]['id'] );
+	}
+
+	/**
+	 * Strip static demo layer URLs from options so Happy Beds paths stay dynamic.
+	 *
+	 * @param array<string,mixed> $config Config.
+	 * @return array<string,mixed>
+	 */
+	private static function sanitize_option_layers( $config ) {
+		if ( empty( $config['groups'] ) ) {
+			return $config;
+		}
+
+		$meta_keys   = array( 'shape', 'fabric', 'hb_fabric', 'hb_code', 'hb_drawer', 'size' );
+		$layer_keys  = array_flip( self::get_layers() );
+		$clean_groups = array( 'colour', 'headboard', 'storage', 'size', 'base_depth' );
+
+		foreach ( $config['groups'] as $gi => $group ) {
+			if ( empty( $group['options'] ) || ! in_array( $group['id'], $clean_groups, true ) ) {
+				continue;
+			}
+			foreach ( $group['options'] as $oi => $option ) {
+				if ( empty( $option['layers'] ) || ! is_array( $option['layers'] ) ) {
+					continue;
+				}
+				$clean = array();
+				foreach ( $option['layers'] as $key => $value ) {
+					if ( in_array( $key, $meta_keys, true ) ) {
+						$clean[ $key ] = $value;
+						continue;
+					}
+					if ( isset( $layer_keys[ $key ] ) && is_string( $value ) && false !== strpos( $value, 'demo-images/layers' ) ) {
+						continue;
+					}
+					if ( isset( $layer_keys[ $key ] ) ) {
+						$clean[ $key ] = $value;
+					}
+				}
+				$config['groups'][ $gi ]['options'][ $oi ]['layers'] = $clean;
+			}
+		}
+
+		return $config;
+	}
+
+	/**
+	 * Always use the plugin colour registry (10 Velvet + 13 Linen).
+	 *
+	 * @param array<string,mixed> $config Config.
+	 * @return array<string,mixed>
+	 */
+	private static function merge_colour_group( $config ) {
+		if ( ! class_exists( 'WCBC_Colour_Registry' ) ) {
+			return $config;
+		}
+
+		$colour_group = WCBC_Colour_Registry::colour_group();
+		$saved_images = array();
+
+		if ( ! empty( $config['groups'] ) ) {
+			foreach ( $config['groups'] as $group ) {
+				if ( 'colour' !== $group['id'] || empty( $group['options'] ) ) {
+					continue;
+				}
+				foreach ( $group['options'] as $option ) {
+					if ( ! empty( $option['id'] ) && ! empty( $option['image'] ) ) {
+						$saved_images[ sanitize_title( $option['id'] ) ] = $option['image'];
+					}
+				}
+				break;
+			}
+		}
+
+		if ( $saved_images ) {
+			foreach ( $colour_group['options'] as $oi => $option ) {
+				$oid = sanitize_title( $option['id'] );
+				if ( ! empty( $saved_images[ $oid ] ) ) {
+					$colour_group['options'][ $oi ]['image'] = $saved_images[ $oid ];
+				}
+			}
+		}
+
+		$merged = false;
+
+		if ( ! empty( $config['groups'] ) ) {
+			foreach ( $config['groups'] as $index => $group ) {
+				if ( 'colour' === $group['id'] ) {
+					$config['groups'][ $index ] = $colour_group;
+					$merged                     = true;
+					break;
+				}
+			}
+		}
+
+		if ( ! $merged ) {
+			if ( empty( $config['groups'] ) ) {
+				$config['groups'] = array();
+			}
+			array_splice( $config['groups'], 1, 0, array( $colour_group ) );
+		}
+
+		return $config;
+	}
+
+	/**
+	 * Find option by group and id.
+	 *
+	 * @param array<string,mixed> $config Config.
+	 * @param string              $group_id Group id.
+	 * @param string              $option_id Option id.
+	 * @return array<string,mixed>|null
+	 */
+	public static function find_option( $config, $group_id, $option_id ) {
+		foreach ( $config['groups'] as $group ) {
+			if ( $group['id'] !== $group_id ) {
+				continue;
+			}
+			foreach ( $group['options'] as $option ) {
+				if ( $option['id'] === $option_id ) {
+					return $option;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Calculate price and layers from selections.
+	 *
+	 * @param array<string,mixed> $config Config.
+	 * @param array<string,string> $selections Selections keyed by group id.
+	 * @return array{price:float,layers:array<string,string>,labels:array<string,string>}
+	 */
+	public static function calculate( $config, $selections ) {
+		$price  = (float) $config['base_price'];
+		$labels = array();
+
+		foreach ( $config['groups'] as $group ) {
+			$gid    = $group['id'];
+			$sel_id = isset( $selections[ $gid ] ) ? $selections[ $gid ] : ( isset( $config['defaults'][ $gid ] ) ? $config['defaults'][ $gid ] : '' );
+			$sel_id = self::resolve_group_selection( $group, $sel_id );
+			$option = self::find_option( $config, $gid, $sel_id );
+			if ( ! $option ) {
+				continue;
+			}
+			$price += (float) $option['price'];
+			$labels[ $gid ] = trim( $option['label'] . ( $option['sublabel'] ? ' ' . $option['sublabel'] : '' ) );
+		}
+
+		$normalized = array();
+		foreach ( $config['groups'] as $group ) {
+			$gid = $group['id'];
+			$normalized[ $gid ] = isset( $selections[ $gid ] )
+				? self::resolve_group_selection( $group, $selections[ $gid ] )
+				: ( isset( $config['defaults'][ $gid ] ) ? $config['defaults'][ $gid ] : '' );
+		}
+
+		$layers = WCBC_Layer_Builder::build( $config, $normalized );
+
+		return array(
+			'price'       => max( 0, $price ),
+			'layers'      => $layers,
+			'labels'      => $labels,
+			'selections'  => $normalized,
+		);
+	}
+}
