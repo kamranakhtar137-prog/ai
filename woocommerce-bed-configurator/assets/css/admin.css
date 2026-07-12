@@ -81,11 +81,13 @@
 }
 
 .wcbc-size-base-layers,
+.wcbc-size-headboard-layers,
 .wcbc-size-colour-layers {
 	padding: 0 12px 12px;
 }
 
 .wcbc-size-base-layers h4,
+.wcbc-size-headboard-layers h4,
 .wcbc-size-colour-layers h4 {
 	margin: 12px 0 6px;
 }

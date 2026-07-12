@@ -131,10 +131,20 @@ class WCBC_Config {
 				if ( ! is_array( $layers ) ) {
 					continue;
 				}
-				foreach ( self::get_layers() as $layer ) {
+				foreach ( self::size_base_layer_slots() as $layer ) {
 					if ( ! empty( $layers[ $layer ] ) ) {
 						$out['size'][ $size_id ][ $layer ] = absint( $layers[ $layer ] );
 					}
+				}
+				if ( ! empty( $layers['headboard'] ) && is_array( $layers['headboard'] ) ) {
+					foreach ( $layers['headboard'] as $headboard_id => $attachment_id ) {
+						$headboard_id = sanitize_title( (string) $headboard_id );
+						if ( $headboard_id && $attachment_id ) {
+							$out['size'][ $size_id ]['headboard'][ $headboard_id ] = absint( $attachment_id );
+						}
+					}
+				} elseif ( ! empty( $layers['headboard'] ) ) {
+					$out['size'][ $size_id ]['headboard']['_legacy'] = absint( $layers['headboard'] );
 				}
 			}
 		}
@@ -151,7 +161,7 @@ class WCBC_Config {
 
 			// Legacy flat format: colour[colour_id][layer] (no size grouping).
 			if ( self::is_flat_colour_layer_map( $colours ) ) {
-				foreach ( self::size_layer_slots() as $legacy_size ) {
+				foreach ( array( 'small-single', 'single', 'small-double', 'double', 'king', 'super-king' ) as $legacy_size ) {
 					if ( ! isset( $out['colour'][ $legacy_size ] ) ) {
 						$out['colour'][ $legacy_size ] = array();
 					}
@@ -228,9 +238,17 @@ class WCBC_Config {
 				if ( ! is_array( $layers ) ) {
 					continue;
 				}
-				foreach ( self::get_layers() as $layer ) {
+				foreach ( self::size_base_layer_slots() as $layer ) {
 					if ( ! empty( $layers[ $layer ] ) ) {
 						$out['size'][ $size_id ][ $layer ] = absint( $layers[ $layer ] );
+					}
+				}
+				if ( ! empty( $layers['headboard'] ) && is_array( $layers['headboard'] ) ) {
+					foreach ( $layers['headboard'] as $headboard_id => $attachment_id ) {
+						$headboard_id = sanitize_title( (string) $headboard_id );
+						if ( $headboard_id && $attachment_id ) {
+							$out['size'][ $size_id ]['headboard'][ $headboard_id ] = absint( $attachment_id );
+						}
 					}
 				}
 			}
@@ -267,15 +285,27 @@ class WCBC_Config {
 	public static function variation_layer_urls_for_js( $product_id ) {
 		$raw = self::get_variation_layer_media( $product_id );
 		$out = array(
-			'size'   => array(),
-			'colour' => array(),
+			'size'           => array(),
+			'sizeHeadboards' => array(),
+			'colour'         => array(),
 		);
 
 		foreach ( $raw['size'] as $size_id => $layers ) {
-			foreach ( $layers as $layer => $attachment_id ) {
-				$url = wp_get_attachment_image_url( (int) $attachment_id, 'full' );
+			foreach ( self::size_base_layer_slots() as $layer ) {
+				if ( empty( $layers[ $layer ] ) ) {
+					continue;
+				}
+				$url = wp_get_attachment_image_url( (int) $layers[ $layer ], 'full' );
 				if ( $url ) {
 					$out['size'][ $size_id ][ $layer ] = $url;
+				}
+			}
+			if ( ! empty( $layers['headboard'] ) && is_array( $layers['headboard'] ) ) {
+				foreach ( $layers['headboard'] as $headboard_id => $attachment_id ) {
+					$url = wp_get_attachment_image_url( (int) $attachment_id, 'full' );
+					if ( $url ) {
+						$out['sizeHeadboards'][ $size_id ][ $headboard_id ] = $url;
+					}
 				}
 			}
 		}
@@ -318,22 +348,47 @@ class WCBC_Config {
 			$colour_set = $media['colour'][ $size_id ][ $colour_id ];
 		}
 
+		$headboard_id = ! empty( $selections['headboard'] ) ? sanitize_title( $selections['headboard'] ) : ( ! empty( $defaults['headboard'] ) ? sanitize_title( $defaults['headboard'] ) : '' );
+
 		$layers = array();
 		foreach ( self::get_layers() as $layer ) {
-			$attachment_id = 0;
-			if ( ! empty( $size_set[ $layer ] ) ) {
-				$attachment_id = (int) $size_set[ $layer ];
-			}
-			if ( in_array( $layer, self::colour_layer_slots(), true ) && ! empty( $colour_set[ $layer ] ) ) {
-				$attachment_id = (int) $colour_set[ $layer ];
-			}
-
-			$url = $attachment_id ? wp_get_attachment_image_url( $attachment_id, 'full' ) : '';
-			$layers[ $layer ] = $url ? $url : $transparent;
+			$layers[ $layer ] = $transparent;
 		}
 
-		$headboard = ! empty( $selections['headboard'] ) ? sanitize_title( $selections['headboard'] ) : ( ! empty( $defaults['headboard'] ) ? sanitize_title( $defaults['headboard'] ) : '' );
-		if ( $headboard && false !== strpos( $headboard, 'no-headboard' ) ) {
+		foreach ( self::size_base_layer_slots() as $layer ) {
+			if ( ! empty( $size_set[ $layer ] ) ) {
+				$url = wp_get_attachment_image_url( (int) $size_set[ $layer ], 'full' );
+				if ( $url ) {
+					$layers[ $layer ] = $url;
+				}
+			}
+		}
+
+		if ( $headboard_id && false === strpos( $headboard_id, 'no-headboard' ) && ! empty( $size_set['headboard'] ) && is_array( $size_set['headboard'] ) ) {
+			$hb_attachment = 0;
+			if ( ! empty( $size_set['headboard'][ $headboard_id ] ) ) {
+				$hb_attachment = (int) $size_set['headboard'][ $headboard_id ];
+			} elseif ( ! empty( $size_set['headboard']['_legacy'] ) ) {
+				$hb_attachment = (int) $size_set['headboard']['_legacy'];
+			}
+			if ( $hb_attachment ) {
+				$url = wp_get_attachment_image_url( $hb_attachment, 'full' );
+				if ( $url ) {
+					$layers['headboard'] = $url;
+				}
+			}
+		}
+
+		foreach ( self::colour_layer_slots() as $layer ) {
+			if ( ! empty( $colour_set[ $layer ] ) ) {
+				$url = wp_get_attachment_image_url( (int) $colour_set[ $layer ], 'full' );
+				if ( $url ) {
+					$layers[ $layer ] = $url;
+				}
+			}
+		}
+
+		if ( $headboard_id && false !== strpos( $headboard_id, 'no-headboard' ) ) {
 			$layers['headboard'] = $transparent;
 		}
 
@@ -393,6 +448,35 @@ class WCBC_Config {
 	}
 
 	/**
+	 * Headboard style options from config for per-size layer assignment.
+	 *
+	 * @param array<string,mixed> $config Config.
+	 * @return array<int,array<string,string>>
+	 */
+	public static function headboard_options_for_admin( $config ) {
+		$options = array();
+		if ( empty( $config['groups'] ) ) {
+			return $options;
+		}
+		foreach ( $config['groups'] as $group ) {
+			if ( 'headboard' !== $group['id'] || empty( $group['options'] ) ) {
+				continue;
+			}
+			foreach ( $group['options'] as $option ) {
+				if ( empty( $option['id'] ) || false !== strpos( $option['id'], 'no-headboard' ) ) {
+					continue;
+				}
+				$options[] = array(
+					'id'       => $option['id'],
+					'label'    => $option['label'],
+					'sublabel' => isset( $option['sublabel'] ) ? $option['sublabel'] : '',
+				);
+			}
+		}
+		return $options;
+	}
+
+	/**
 	 * Product image source mode.
 	 *
 	 * @param int $product_id Product ID.
@@ -435,12 +519,21 @@ class WCBC_Config {
 	}
 
 	/**
-	 * Layers assigned per size (base set for that size).
+	 * Layers assigned per size (non-fabric structure).
+	 *
+	 * @return string[]
+	 */
+	public static function size_base_layer_slots() {
+		return array( 'shadow', 'legs' );
+	}
+
+	/**
+	 * Layers assigned per size (legacy alias).
 	 *
 	 * @return string[]
 	 */
 	public static function size_layer_slots() {
-		return self::get_layers();
+		return self::size_base_layer_slots();
 	}
 
 	/**
@@ -449,7 +542,7 @@ class WCBC_Config {
 	 * @return string[]
 	 */
 	public static function colour_layer_slots() {
-		return self::variation_driven_layers();
+		return array( 'storage_back', 'base', 'storage_2', 'storage_3', 'headboard' );
 	}
 
 	/**
@@ -458,7 +551,7 @@ class WCBC_Config {
 	 * @return string[]
 	 */
 	public static function variation_driven_layers() {
-		return array( 'headboard', 'storage_back', 'base', 'storage_1', 'storage_2', 'storage_3' );
+		return self::colour_layer_slots();
 	}
 
 	/**

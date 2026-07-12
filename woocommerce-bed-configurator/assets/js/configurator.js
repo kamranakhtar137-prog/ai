@@ -289,18 +289,33 @@
 
 	function buildVariationMediaLayers(selections) {
 		var transparent = wcbcData.transparentLayer || (wcbcData.layerBase || '') + 'transparent.png';
-		var maps = wcbcData.variationLayerMedia || { size: {}, colour: {} };
-		var colourSlots = wcbcData.colourLayerSlots || ['headboard', 'storage_back', 'base', 'storage_1', 'storage_2', 'storage_3'];
+		var maps = wcbcData.variationLayerMedia || { size: {}, sizeHeadboards: {}, colour: {} };
+		var colourSlots = wcbcData.colourLayerSlots || ['storage_back', 'base', 'storage_2', 'storage_3', 'headboard'];
 		var size = pick(selections, 'size') || 'small-single';
 		var colour = resolveColourSlug(pick(selections, 'colour') || 'beige-velvet');
 		var headboard = pick(selections, 'headboard');
 		var sizeSet = maps.size[size] || {};
 		var colourSet = (maps.colour[size] && maps.colour[size][colour]) ? maps.colour[size][colour] : {};
+		var sizeHeadboards = maps.sizeHeadboards[size] || {};
 		var layers = {};
 
 		wcbcData.layers.forEach(function (layer) {
-			layers[layer] = sizeSet[layer] || transparent;
+			layers[layer] = transparent;
 		});
+
+		['shadow', 'legs'].forEach(function (layer) {
+			if (sizeSet[layer]) {
+				layers[layer] = sizeSet[layer];
+			}
+		});
+
+		if (headboard && headboardShape(headboard) !== 'none') {
+			if (sizeHeadboards[headboard]) {
+				layers.headboard = sizeHeadboards[headboard];
+			} else if (sizeHeadboards._legacy) {
+				layers.headboard = sizeHeadboards._legacy;
+			}
+		}
 
 		colourSlots.forEach(function (layer) {
 			if (colourSet[layer]) {

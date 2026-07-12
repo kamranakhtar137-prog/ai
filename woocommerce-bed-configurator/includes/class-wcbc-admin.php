@@ -154,7 +154,7 @@ class WCBC_Admin {
 							<?php esc_html_e( 'Each size has a base layer set (shadow, legs, etc.). Under each size, assign colour-specific images (base, headboard, storage) for that size only — e.g. Super King Blue Marine and Super King Black are separate.', 'wc-bed-configurator' ); ?>
 						</span>
 					</p>
-					<?php self::render_size_colour_layer_sets( $size_options, $colour_options, $variation_media, $layer_labels ); ?>
+					<?php self::render_size_colour_layer_sets( $size_options, $colour_options, WCBC_Config::headboard_options_for_admin( $config ), $variation_media, $layer_labels ); ?>
 				</div>
 				<div class="options_group">
 					<p class="form-field">
@@ -252,34 +252,63 @@ class WCBC_Admin {
 	 *
 	 * @param array<int,array<string,string>>                    $size_options Size options.
 	 * @param array<int,array<string,string>>                    $colour_options Colour options.
-	 * @param array{size:array<string,array<string,int>>,colour:array<string,array<string,array<string,int>>>} $saved Saved media.
+	 * @param array<int,array<string,string>>                    $headboard_options Headboard options.
+	 * @param array{size:array<string,array<string,mixed>>,colour:array<string,array<string,array<string,int>>>} $saved Saved media.
 	 * @param array<string,string>                               $layer_labels Layer labels.
 	 */
-	private static function render_size_colour_layer_sets( $size_options, $colour_options, $saved, $layer_labels ) {
+	private static function render_size_colour_layer_sets( $size_options, $colour_options, $headboard_options, $saved, $layer_labels ) {
 		$colour_slots = WCBC_Config::colour_layer_slots();
 
 		foreach ( $size_options as $size ) {
 			$size_id    = $size['id'];
 			$size_title = trim( $size['label'] . ( ! empty( $size['sublabel'] ) ? ' (' . $size['sublabel'] . ')' : '' ) );
 			$size_layers = isset( $saved['size'][ $size_id ] ) ? $saved['size'][ $size_id ] : array();
+			$size_headboards = ( ! empty( $size_layers['headboard'] ) && is_array( $size_layers['headboard'] ) ) ? $size_layers['headboard'] : array();
 			$size_colours = isset( $saved['colour'][ $size_id ] ) ? $saved['colour'][ $size_id ] : array();
 			?>
 			<details class="wcbc-variation-layer-set wcbc-size-layer-set">
 				<summary><?php echo esc_html( $size_title ); ?></summary>
 
 				<div class="wcbc-size-base-layers">
-					<h4><?php esc_html_e( 'Base layers for this size', 'wc-bed-configurator' ); ?></h4>
-					<p class="description"><?php esc_html_e( 'Loaded whenever this size is selected. Colour changes do not replace shadow or legs.', 'wc-bed-configurator' ); ?></p>
+					<h4><?php esc_html_e( 'Size layers', 'wc-bed-configurator' ); ?></h4>
+					<p class="description"><?php esc_html_e( 'Shadow and legs for this size. These stay the same when colour changes.', 'wc-bed-configurator' ); ?></p>
 					<div class="wcbc-layer-media-grid">
-						<?php foreach ( WCBC_Config::get_layers() as $layer ) : ?>
+						<?php foreach ( WCBC_Config::size_base_layer_slots() as $layer ) : ?>
 							<?php self::render_layer_picker( 'size', $size_id, '', $layer, $size_layers, $layer_labels, $size_title ); ?>
+						<?php endforeach; ?>
+					</div>
+				</div>
+
+				<div class="wcbc-size-headboard-layers">
+					<h4><?php esc_html_e( 'Headboard styles for this size', 'wc-bed-configurator' ); ?></h4>
+					<p class="description"><?php esc_html_e( 'One preview image per headboard style (Victor Plain, Cornell Lined, etc.) for this size.', 'wc-bed-configurator' ); ?></p>
+					<div class="wcbc-layer-media-grid">
+						<?php foreach ( $headboard_options as $headboard ) : ?>
+							<?php
+							$headboard_id    = $headboard['id'];
+							$headboard_title = trim( $headboard['label'] . ( ! empty( $headboard['sublabel'] ) ? ' ' . $headboard['sublabel'] : '' ) );
+							$attachment_id   = isset( $size_headboards[ $headboard_id ] ) ? (int) $size_headboards[ $headboard_id ] : 0;
+							$preview_url     = $attachment_id ? wp_get_attachment_image_url( $attachment_id, 'medium' ) : '';
+							$input_name      = 'wcbc_variation_layers[size][' . esc_attr( $size_id ) . '][headboard][' . esc_attr( $headboard_id ) . ']';
+							?>
+							<div class="wcbc-layer-media-item">
+								<label><?php echo esc_html( $headboard_title ); ?></label>
+								<img class="wcbc-layer-media-preview <?php echo $preview_url ? '' : 'is-empty'; ?>" src="<?php echo esc_url( $preview_url ); ?>" alt="" />
+								<input type="hidden" name="<?php echo esc_attr( $input_name ); ?>" value="<?php echo esc_attr( $attachment_id ); ?>" />
+								<button type="button" class="button wcbc-upload-variation-layer" data-title="<?php echo esc_attr( $size_title . ' — ' . $headboard_title ); ?>">
+									<?php esc_html_e( 'Select image', 'wc-bed-configurator' ); ?>
+								</button>
+								<button type="button" class="button wcbc-remove-variation-layer" <?php echo $attachment_id ? '' : 'style="display:none"'; ?>>
+									<?php esc_html_e( 'Remove', 'wc-bed-configurator' ); ?>
+								</button>
+							</div>
 						<?php endforeach; ?>
 					</div>
 				</div>
 
 				<div class="wcbc-size-colour-layers">
 					<h4><?php esc_html_e( 'Colour layers for this size', 'wc-bed-configurator' ); ?></h4>
-					<p class="description"><?php esc_html_e( 'Only these fabric layers swap when the customer changes colour. Each colour is specific to this size.', 'wc-bed-configurator' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Fabric layers for each colour at this size: Storage back, Base, Storage drawer back, Storage drawer front, and Headboard.', 'wc-bed-configurator' ); ?></p>
 					<?php foreach ( $colour_options as $colour ) : ?>
 						<?php
 						$colour_id    = $colour['id'];
