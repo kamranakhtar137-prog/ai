@@ -290,7 +290,7 @@
 	function buildVariationMediaLayers(selections) {
 		var transparent = wcbcData.transparentLayer || (wcbcData.layerBase || '') + 'transparent.png';
 		var maps = wcbcData.variationLayerMedia || { colour: {}, headboardStyles: {}, sizeHeadboards: {} };
-		var colourSlots = wcbcData.colourLayerSlots || ['legs', 'storage_back', 'base', 'storage_1', 'storage_2', 'storage_3', 'storage_4'];
+		var colourSlots = wcbcData.colourLayerSlots || ['legs', 'headboard', 'storage_back', 'base', 'storage_1', 'storage_2', 'storage_3', 'storage_4'];
 		var size = pick(selections, 'size') || 'small-single';
 		var colour = resolveColourSlug(pick(selections, 'colour') || 'light-silver-velvet');
 		var headboard = pick(selections, 'headboard');
@@ -310,6 +310,7 @@
 		});
 
 		var styleColours = (headboardStyles[size] && headboardStyles[size][headboard]) ? headboardStyles[size][headboard] : {};
+		// Style headboard replaces the default Bed Headboard from the colour layer set.
 		if (headboard && styleColours[colour]) {
 			layers.headboard = styleColours[colour];
 		} else if (headboard && legacyHeadboards[size] && legacyHeadboards[size][headboard]) {

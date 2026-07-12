@@ -670,7 +670,7 @@ class WCBC_Config {
 	 * @return string[]
 	 */
 	public static function colour_layer_slots() {
-		return array( 'legs', 'storage_back', 'base', 'storage_1', 'storage_2', 'storage_3', 'storage_4' );
+		return array( 'legs', 'headboard', 'storage_back', 'base', 'storage_1', 'storage_2', 'storage_3', 'storage_4' );
 	}
 
 	/**
@@ -679,7 +679,7 @@ class WCBC_Config {
 	 * @return string[]
 	 */
 	public static function variation_driven_layers() {
-		return array_merge( self::colour_layer_slots(), array( 'headboard' ) );
+		return self::colour_layer_slots();
 	}
 
 	/**

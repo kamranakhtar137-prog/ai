@@ -271,7 +271,7 @@ class WCBC_Admin {
 
 				<div class="wcbc-size-colour-layers">
 					<h4><?php esc_html_e( 'Layers by colour', 'wc-bed-configurator' ); ?></h4>
-					<p class="description"><?php esc_html_e( 'Assign Bed Legs, Bed Storage Back, Bed Base, and Bed Storage 1–4 for each colour at this size.', 'wc-bed-configurator' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Assign Bed Legs, Bed Headboard, Bed Storage Back, Bed Base, and Bed Storage 1–4 for each colour at this size.', 'wc-bed-configurator' ); ?></p>
 					<?php foreach ( $colour_options as $colour ) : ?>
 						<?php
 						$colour_id    = $colour['id'];
