@@ -177,6 +177,7 @@ class WCBC_Frontend {
 				'imageSource'  => WCBC_Config::get_image_source( $product_id ),
 				'layerMedia'   => $layer_media,
 				'variationLayerMedia' => WCBC_Config::variation_layer_urls_for_js( $product_id ),
+				'colourLayerSlots'    => WCBC_Config::colour_layer_slots(),
 				'transparentLayer'    => WCBC_Config::transparent_layer_url(),
 				'variationDrivenLayers' => WCBC_Config::variation_driven_layers(),
 				'staticOverrideLayers'  => WCBC_Config::static_override_layers(),

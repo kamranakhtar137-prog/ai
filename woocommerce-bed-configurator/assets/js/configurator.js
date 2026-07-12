@@ -290,17 +290,19 @@
 	function buildVariationMediaLayers(selections) {
 		var transparent = wcbcData.transparentLayer || (wcbcData.layerBase || '') + 'transparent.png';
 		var maps = wcbcData.variationLayerMedia || { size: {}, colour: {} };
+		var colourSlots = wcbcData.colourLayerSlots || ['headboard', 'storage_back', 'base', 'storage_1', 'storage_2', 'storage_3'];
 		var size = pick(selections, 'size') || 'small-single';
 		var colour = resolveColourSlug(pick(selections, 'colour') || 'beige-velvet');
 		var headboard = pick(selections, 'headboard');
 		var sizeSet = maps.size[size] || {};
-		var colourSet = maps.colour[colour] || {};
+		var colourSet = (maps.colour[size] && maps.colour[size][colour]) ? maps.colour[size][colour] : {};
 		var layers = {};
 
 		wcbcData.layers.forEach(function (layer) {
 			layers[layer] = sizeSet[layer] || transparent;
 		});
-		wcbcData.layers.forEach(function (layer) {
+
+		colourSlots.forEach(function (layer) {
 			if (colourSet[layer]) {
 				layers[layer] = colourSet[layer];
 			}

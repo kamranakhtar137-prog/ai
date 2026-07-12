@@ -80,6 +80,20 @@
 	padding: 0 12px 12px;
 }
 
+.wcbc-size-base-layers,
+.wcbc-size-colour-layers {
+	padding: 0 12px 12px;
+}
+
+.wcbc-size-base-layers h4,
+.wcbc-size-colour-layers h4 {
+	margin: 12px 0 6px;
+}
+
+.wcbc-colour-layer-set {
+	margin: 8px 0 0 12px;
+}
+
 .wcbc-advanced-panel {
 	border: 1px solid #dcdcde;
 	border-radius: 4px;

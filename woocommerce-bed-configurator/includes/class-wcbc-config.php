@@ -107,10 +107,12 @@ class WCBC_Config {
 	}
 
 	/**
-	 * Get per-size / per-colour layer attachment IDs.
+	 * Get per-size base layers and per-size+colour fabric layers.
+	 *
+	 * Colour shape: colour[size_id][colour_id][layer] = attachment_id.
 	 *
 	 * @param int $product_id Product ID.
-	 * @return array{size:array<string,array<string,int>>,colour:array<string,array<string,int>>}
+	 * @return array{size:array<string,array<string,int>>,colour:array<string,array<string,array<string,int>>>}
 	 */
 	public static function get_variation_layer_media( $product_id ) {
 		$raw = get_post_meta( $product_id, self::VARIATION_LAYER_MEDIA_KEY, true );
@@ -123,19 +125,49 @@ class WCBC_Config {
 			return $out;
 		}
 
-		foreach ( array( 'size', 'colour' ) as $dimension ) {
-			if ( empty( $raw[ $dimension ] ) || ! is_array( $raw[ $dimension ] ) ) {
-				continue;
-			}
-			foreach ( $raw[ $dimension ] as $variant_id => $layers ) {
-				$variant_id = sanitize_title( (string) $variant_id );
+		if ( ! empty( $raw['size'] ) && is_array( $raw['size'] ) ) {
+			foreach ( $raw['size'] as $size_id => $layers ) {
+				$size_id = sanitize_title( (string) $size_id );
 				if ( ! is_array( $layers ) ) {
 					continue;
 				}
 				foreach ( self::get_layers() as $layer ) {
 					if ( ! empty( $layers[ $layer ] ) ) {
-						$out[ $dimension ][ $variant_id ][ $layer ] = absint( $layers[ $layer ] );
+						$out['size'][ $size_id ][ $layer ] = absint( $layers[ $layer ] );
 					}
+				}
+			}
+		}
+
+		if ( empty( $raw['colour'] ) || ! is_array( $raw['colour'] ) ) {
+			return $out;
+		}
+
+		foreach ( $raw['colour'] as $size_id => $colours ) {
+			$size_id = sanitize_title( (string) $size_id );
+			if ( ! is_array( $colours ) ) {
+				continue;
+			}
+
+			// Legacy flat format: colour[colour_id][layer] (no size grouping).
+			if ( self::is_flat_colour_layer_map( $colours ) ) {
+				foreach ( self::size_layer_slots() as $legacy_size ) {
+					if ( ! isset( $out['colour'][ $legacy_size ] ) ) {
+						$out['colour'][ $legacy_size ] = array();
+					}
+					$out['colour'][ $legacy_size ][ $size_id ] = self::sanitize_colour_layer_map( $colours );
+				}
+				continue;
+			}
+
+			foreach ( $colours as $colour_id => $layers ) {
+				$colour_id = sanitize_title( (string) $colour_id );
+				if ( ! is_array( $layers ) ) {
+					continue;
+				}
+				$clean = self::sanitize_colour_layer_map( $layers );
+				if ( $clean ) {
+					$out['colour'][ $size_id ][ $colour_id ] = $clean;
 				}
 			}
 		}
@@ -144,10 +176,41 @@ class WCBC_Config {
 	}
 
 	/**
+	 * Whether a stored colour branch is the legacy flat colour map.
+	 *
+	 * @param array<string,mixed> $map Stored map.
+	 * @return bool
+	 */
+	private static function is_flat_colour_layer_map( $map ) {
+		foreach ( array_keys( $map ) as $key ) {
+			if ( in_array( $key, self::get_layers(), true ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Keep only colour-scoped layer attachment IDs.
+	 *
+	 * @param array<string,mixed> $layers Layer map.
+	 * @return array<string,int>
+	 */
+	private static function sanitize_colour_layer_map( $layers ) {
+		$out = array();
+		foreach ( self::colour_layer_slots() as $layer ) {
+			if ( ! empty( $layers[ $layer ] ) ) {
+				$out[ $layer ] = absint( $layers[ $layer ] );
+			}
+		}
+		return $out;
+	}
+
+	/**
 	 * Sanitize posted variation layer media.
 	 *
 	 * @param array<string,mixed> $posted Posted form data.
-	 * @return array{size:array<string,array<string,int>>,colour:array<string,array<string,int>>}
+	 * @return array{size:array<string,array<string,int>>,colour:array<string,array<string,array<string,int>>>}
 	 */
 	public static function sanitize_variation_layer_media_post( $posted ) {
 		$out = array(
@@ -159,18 +222,34 @@ class WCBC_Config {
 			return $out;
 		}
 
-		foreach ( array( 'size', 'colour' ) as $dimension ) {
-			if ( empty( $posted[ $dimension ] ) || ! is_array( $posted[ $dimension ] ) ) {
-				continue;
-			}
-			foreach ( $posted[ $dimension ] as $variant_id => $layers ) {
-				$variant_id = sanitize_title( (string) $variant_id );
+		if ( ! empty( $posted['size'] ) && is_array( $posted['size'] ) ) {
+			foreach ( $posted['size'] as $size_id => $layers ) {
+				$size_id = sanitize_title( (string) $size_id );
 				if ( ! is_array( $layers ) ) {
 					continue;
 				}
 				foreach ( self::get_layers() as $layer ) {
 					if ( ! empty( $layers[ $layer ] ) ) {
-						$out[ $dimension ][ $variant_id ][ $layer ] = absint( $layers[ $layer ] );
+						$out['size'][ $size_id ][ $layer ] = absint( $layers[ $layer ] );
+					}
+				}
+			}
+		}
+
+		if ( ! empty( $posted['colour'] ) && is_array( $posted['colour'] ) ) {
+			foreach ( $posted['colour'] as $size_id => $colours ) {
+				$size_id = sanitize_title( (string) $size_id );
+				if ( ! is_array( $colours ) ) {
+					continue;
+				}
+				foreach ( $colours as $colour_id => $layers ) {
+					$colour_id = sanitize_title( (string) $colour_id );
+					if ( ! is_array( $layers ) ) {
+						continue;
+					}
+					$clean = self::sanitize_colour_layer_map( $layers );
+					if ( $clean ) {
+						$out['colour'][ $size_id ][ $colour_id ] = $clean;
 					}
 				}
 			}
@@ -183,7 +262,7 @@ class WCBC_Config {
 	 * Resolve variation layer attachment IDs to URLs for frontend JS.
 	 *
 	 * @param int $product_id Product ID.
-	 * @return array{size:array<string,array<string,string>>,colour:array<string,array<string,string>>}
+	 * @return array{size:array<string,array<string,string>>,colour:array<string,array<string,array<string,string>>>}
 	 */
 	public static function variation_layer_urls_for_js( $product_id ) {
 		$raw = self::get_variation_layer_media( $product_id );
@@ -192,12 +271,21 @@ class WCBC_Config {
 			'colour' => array(),
 		);
 
-		foreach ( array( 'size', 'colour' ) as $dimension ) {
-			foreach ( $raw[ $dimension ] as $variant_id => $layers ) {
+		foreach ( $raw['size'] as $size_id => $layers ) {
+			foreach ( $layers as $layer => $attachment_id ) {
+				$url = wp_get_attachment_image_url( (int) $attachment_id, 'full' );
+				if ( $url ) {
+					$out['size'][ $size_id ][ $layer ] = $url;
+				}
+			}
+		}
+
+		foreach ( $raw['colour'] as $size_id => $colours ) {
+			foreach ( $colours as $colour_id => $layers ) {
 				foreach ( $layers as $layer => $attachment_id ) {
 					$url = wp_get_attachment_image_url( (int) $attachment_id, 'full' );
 					if ( $url ) {
-						$out[ $dimension ][ $variant_id ][ $layer ] = $url;
+						$out['colour'][ $size_id ][ $colour_id ][ $layer ] = $url;
 					}
 				}
 			}
@@ -207,7 +295,7 @@ class WCBC_Config {
 	}
 
 	/**
-	 * Resolve preview layer URLs from per-size and per-colour Media Library assignments.
+	 * Resolve preview layer URLs from size base set + size/colour fabric swaps.
 	 *
 	 * @param int                  $product_id Product ID.
 	 * @param array<string,string> $selections Current selections.
@@ -224,8 +312,11 @@ class WCBC_Config {
 			$colour_id = WCBC_Colour_Registry::resolve_slug( $colour_id );
 		}
 
-		$size_set   = ( $size_id && ! empty( $media['size'][ $size_id ] ) ) ? $media['size'][ $size_id ] : array();
-		$colour_set = ( $colour_id && ! empty( $media['colour'][ $colour_id ] ) ) ? $media['colour'][ $colour_id ] : array();
+		$size_set = ( $size_id && ! empty( $media['size'][ $size_id ] ) ) ? $media['size'][ $size_id ] : array();
+		$colour_set = array();
+		if ( $size_id && $colour_id && ! empty( $media['colour'][ $size_id ][ $colour_id ] ) ) {
+			$colour_set = $media['colour'][ $size_id ][ $colour_id ];
+		}
 
 		$layers = array();
 		foreach ( self::get_layers() as $layer ) {
@@ -233,7 +324,7 @@ class WCBC_Config {
 			if ( ! empty( $size_set[ $layer ] ) ) {
 				$attachment_id = (int) $size_set[ $layer ];
 			}
-			if ( ! empty( $colour_set[ $layer ] ) ) {
+			if ( in_array( $layer, self::colour_layer_slots(), true ) && ! empty( $colour_set[ $layer ] ) ) {
 				$attachment_id = (int) $colour_set[ $layer ];
 			}
 
@@ -341,6 +432,24 @@ class WCBC_Config {
 	 */
 	public static function core_variation_groups() {
 		return array( 'size', 'colour', 'base_depth' );
+	}
+
+	/**
+	 * Layers assigned per size (base set for that size).
+	 *
+	 * @return string[]
+	 */
+	public static function size_layer_slots() {
+		return self::get_layers();
+	}
+
+	/**
+	 * Layers that swap when colour changes (scoped to the selected size).
+	 *
+	 * @return string[]
+	 */
+	public static function colour_layer_slots() {
+		return self::variation_driven_layers();
 	}
 
 	/**
