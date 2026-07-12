@@ -477,6 +477,35 @@ class WCBC_Config {
 	}
 
 	/**
+	 * Customer-facing accordion groups (simplified for now).
+	 *
+	 * @return string[]
+	 */
+	public static function customer_visible_group_ids() {
+		return array( 'size', 'colour', 'headboard' );
+	}
+
+	/**
+	 * Filter config groups shown in the storefront accordion.
+	 *
+	 * @param array<string,mixed> $config Config.
+	 * @return array<int,array<string,mixed>>
+	 */
+	public static function visible_groups( $config ) {
+		$allowed = array_flip( self::customer_visible_group_ids() );
+		$groups  = array();
+		if ( empty( $config['groups'] ) ) {
+			return $groups;
+		}
+		foreach ( $config['groups'] as $group ) {
+			if ( ! empty( $group['id'] ) && isset( $allowed[ $group['id'] ] ) ) {
+				$groups[] = $group;
+			}
+		}
+		return $groups;
+	}
+
+	/**
 	 * Product image source mode.
 	 *
 	 * @param int $product_id Product ID.

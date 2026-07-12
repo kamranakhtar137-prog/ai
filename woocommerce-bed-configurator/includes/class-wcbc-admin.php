@@ -161,7 +161,7 @@ class WCBC_Admin {
 						<strong><?php esc_html_e( 'Option swatch images', 'wc-bed-configurator' ); ?></strong><br />
 						<span class="description"><?php esc_html_e( 'Thumbnails shown in the configurator accordion for each size, colour, headboard, etc.', 'wc-bed-configurator' ); ?></span>
 					</p>
-					<?php foreach ( $config['groups'] as $group ) : ?>
+					<?php foreach ( WCBC_Config::visible_groups( $config ) as $group ) : ?>
 						<h4 style="margin:16px 0 8px;padding:0 12px;"><?php echo esc_html( $group['label'] ); ?> <?php esc_html_e( 'swatches', 'wc-bed-configurator' ); ?></h4>
 						<table class="wcbc-option-media-table">
 							<thead>

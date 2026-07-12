@@ -158,6 +158,7 @@ class WCBC_Frontend {
 		$layer_media = WCBC_Config::layer_urls_from_media( WCBC_Config::get_layer_media( $product_id ) );
 		$config_js   = $config;
 		unset( $config_js['layers'] );
+		$config_js['groups'] = WCBC_Config::visible_groups( $config );
 
 		wp_enqueue_style( 'wcbc-configurator' );
 		wp_enqueue_script( 'wcbc-accordion' );

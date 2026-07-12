@@ -109,7 +109,7 @@ if ( 'options' === $part ) : ?>
 			<div id="tabs-container">
 				<div class="tab">
 					<dl class="tab-content byob-accordian wcbc-accordian">
-						<?php foreach ( $config['groups'] as $index => $group ) : ?>
+						<?php foreach ( WCBC_Config::visible_groups( $config ) as $index => $group ) : ?>
 							<?php
 							$gid       = $group['id'];
 							$is_open   = ( 'size' === $gid );

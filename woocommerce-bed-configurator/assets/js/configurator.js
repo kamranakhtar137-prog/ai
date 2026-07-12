@@ -438,6 +438,12 @@
 	}
 
 	function initSelections() {
+		var defaults = wcbcData.config.defaults || {};
+
+		Object.keys(defaults).forEach(function (groupId) {
+			state.selections[groupId] = defaults[groupId];
+		});
+
 		wcbcData.config.groups.forEach(function (group) {
 			var selected = resolveDefaultSelection(group);
 			state.selections[group.id] = selected;
