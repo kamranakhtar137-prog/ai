@@ -18,8 +18,11 @@ class WCBC_Admin {
 		add_filter( 'woocommerce_product_data_tabs', array( __CLASS__, 'add_tab' ) );
 		add_action( 'woocommerce_product_data_panels', array( __CLASS__, 'render_panel' ) );
 		add_action( 'woocommerce_process_product_meta', array( __CLASS__, 'save' ) );
+		add_action( 'save_post_product', array( __CLASS__, 'save_post' ), 20, 2 );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
 		add_action( 'admin_init', array( __CLASS__, 'maybe_regenerate_import_token' ) );
+		add_action( 'wp_ajax_wcbc_save_option_swatch', array( __CLASS__, 'ajax_save_option_swatch' ) );
+		add_action( 'wp_ajax_wcbc_save_variation_layer', array( __CLASS__, 'ajax_save_variation_layer' ) );
 	}
 
 	/**
@@ -76,6 +79,25 @@ class WCBC_Admin {
 		wp_enqueue_media();
 		wp_enqueue_style( 'wcbc-admin', WCBC_PLUGIN_URL . 'assets/css/admin.css', array(), WCBC_VERSION );
 		wp_enqueue_script( 'wcbc-admin-media', WCBC_PLUGIN_URL . 'assets/js/admin-media.js', array( 'jquery' ), WCBC_VERSION, true );
+
+		global $post;
+		$product_id = ( $post && ! empty( $post->ID ) ) ? (int) $post->ID : 0;
+
+		wp_localize_script(
+			'wcbc-admin-media',
+			'wcbcAdmin',
+			array(
+				'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
+				'nonce'     => wp_create_nonce( 'wcbc_admin_media' ),
+				'productId' => $product_id,
+				'i18n'      => array(
+					'saved'       => __( 'Image saved.', 'wc-bed-configurator' ),
+					'removed'     => __( 'Image removed.', 'wc-bed-configurator' ),
+					'error'       => __( 'Could not save image. Save the product first, then try again.', 'wc-bed-configurator' ),
+					'noProduct'   => __( 'Save the product as a draft first, then upload images.', 'wc-bed-configurator' ),
+				),
+			)
+		);
 	}
 
 	/**
@@ -111,6 +133,8 @@ class WCBC_Admin {
 		$colour_options     = WCBC_Config::colour_options_for_admin( $config );
 		?>
 		<div id="wcbc_product_data" class="panel woocommerce_options_panel hidden">
+			<input type="hidden" name="wcbc_admin_panel" value="1" />
+			<input type="hidden" name="wcbc_variation_layers_save" value="1" />
 			<div class="options_group">
 				<?php
 				woocommerce_wp_checkbox(
@@ -149,7 +173,6 @@ class WCBC_Admin {
 				);
 				?>
 				<div class="wcbc-variation-layers-section options_group" <?php echo 'media' === $image_source ? '' : 'style="display:none"'; ?>>
-					<input type="hidden" name="wcbc_variation_layers_save" value="1" />
 					<p class="form-field">
 						<strong><?php esc_html_e( 'Preview layers by size & colour', 'wc-bed-configurator' ); ?></strong><br />
 						<span class="description">
@@ -191,7 +214,14 @@ class WCBC_Admin {
 											<img class="wcbc-option-thumb <?php echo $img_url ? '' : 'is-empty'; ?>" src="<?php echo esc_url( $img_url ); ?>" alt="" />
 										</td>
 										<td>
-											<input type="hidden" class="wcbc-option-image-id" name="wcbc_option_images[<?php echo esc_attr( $group['id'] ); ?>][<?php echo esc_attr( $option['id'] ); ?>]" value="<?php echo esc_attr( $img_id ); ?>" />
+											<input
+												type="hidden"
+												class="wcbc-option-image-id"
+												name="wcbc_option_images[<?php echo esc_attr( $group['id'] ); ?>][<?php echo esc_attr( $option['id'] ); ?>]"
+												value="<?php echo esc_attr( $img_id ); ?>"
+												data-group-id="<?php echo esc_attr( $group['id'] ); ?>"
+												data-option-id="<?php echo esc_attr( $option_id ); ?>"
+											/>
 											<button type="button" class="button wcbc-upload-option-image" data-group="<?php echo esc_attr( $group['id'] ); ?>" data-option="<?php echo esc_attr( $option['id'] ); ?>">
 												<?php esc_html_e( 'Select', 'wc-bed-configurator' ); ?>
 											</button>
@@ -325,7 +355,16 @@ class WCBC_Admin {
 									<div class="wcbc-layer-media-item">
 										<label><?php echo esc_html( $label ); ?></label>
 										<img class="wcbc-layer-media-preview <?php echo $preview_url ? '' : 'is-empty'; ?>" src="<?php echo esc_url( $preview_url ); ?>" alt="" />
-										<input type="hidden" name="<?php echo esc_attr( $input_name ); ?>" value="<?php echo esc_attr( $attachment_id ); ?>" />
+										<input
+											type="hidden"
+											class="wcbc-variation-layer-input"
+											name="<?php echo esc_attr( $input_name ); ?>"
+											value="<?php echo esc_attr( $attachment_id ); ?>"
+											data-layer-type="headboard"
+											data-size-id="<?php echo esc_attr( $size_id ); ?>"
+											data-style-id="<?php echo esc_attr( $headboard_id ); ?>"
+											data-colour-id="<?php echo esc_attr( $colour_id ); ?>"
+										/>
 										<button type="button" class="button wcbc-upload-variation-layer" data-title="<?php echo esc_attr( $size_title . ' — ' . $headboard_title . ' — ' . $colour_title ); ?>">
 											<?php esc_html_e( 'Select image', 'wc-bed-configurator' ); ?>
 										</button>
@@ -368,7 +407,16 @@ class WCBC_Admin {
 		<div class="wcbc-layer-media-item">
 			<label><?php echo esc_html( $label ); ?></label>
 			<img class="wcbc-layer-media-preview <?php echo $preview_url ? '' : 'is-empty'; ?>" src="<?php echo esc_url( $preview_url ); ?>" alt="" />
-			<input type="hidden" name="<?php echo esc_attr( $input_name ); ?>" value="<?php echo esc_attr( $attachment_id ); ?>" />
+			<input
+				type="hidden"
+				class="wcbc-variation-layer-input"
+				name="<?php echo esc_attr( $input_name ); ?>"
+				value="<?php echo esc_attr( $attachment_id ); ?>"
+				data-layer-type="<?php echo esc_attr( $dimension ); ?>"
+				data-size-id="<?php echo esc_attr( $size_id ); ?>"
+				data-colour-id="<?php echo esc_attr( $colour_id ); ?>"
+				data-layer="<?php echo esc_attr( $layer ); ?>"
+			/>
 			<button type="button" class="button wcbc-upload-variation-layer" data-title="<?php echo esc_attr( $context_title . ' — ' . $label ); ?>">
 				<?php esc_html_e( 'Select image', 'wc-bed-configurator' ); ?>
 			</button>
@@ -377,6 +425,103 @@ class WCBC_Admin {
 			</button>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Backup save on product post save (classic + block editor).
+	 *
+	 * @param int     $post_id Post ID.
+	 * @param WP_Post $post Post object.
+	 */
+	public static function save_post( $post_id, $post ) {
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return;
+		}
+		if ( wp_is_post_revision( $post_id ) ) {
+			return;
+		}
+		if ( ! $post instanceof WP_Post || 'product' !== $post->post_type ) {
+			return;
+		}
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return;
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification
+		if ( empty( $_POST['wcbc_admin_panel'] ) && empty( $_POST['wcbc_option_images'] ) && empty( $_POST['wcbc_variation_layers'] ) ) {
+			return;
+		}
+		self::save( $post_id );
+	}
+
+	/**
+	 * AJAX: save one option swatch image immediately.
+	 */
+	public static function ajax_save_option_swatch() {
+		check_ajax_referer( 'wcbc_admin_media', 'nonce' );
+
+		$product_id    = isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification
+		$group_id      = isset( $_POST['group_id'] ) ? sanitize_text_field( wp_unslash( $_POST['group_id'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+		$option_id     = isset( $_POST['option_id'] ) ? sanitize_text_field( wp_unslash( $_POST['option_id'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+		$attachment_id = isset( $_POST['attachment_id'] ) ? absint( $_POST['attachment_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification
+
+		if ( ! $product_id || ! current_user_can( 'edit_post', $product_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'wc-bed-configurator' ) ), 403 );
+		}
+
+		$saved = WCBC_Config::set_option_swatch_attachment( $product_id, $group_id, $option_id, $attachment_id );
+		if ( ! $saved ) {
+			wp_send_json_error( array( 'message' => __( 'Could not save swatch.', 'wc-bed-configurator' ) ), 500 );
+		}
+
+		$url = $attachment_id ? wp_get_attachment_image_url( $attachment_id, 'full' ) : '';
+
+		wp_send_json_success(
+			array(
+				'attachment_id' => $attachment_id,
+				'url'           => $url ? $url : '',
+			)
+		);
+	}
+
+	/**
+	 * AJAX: save one variation layer image immediately.
+	 */
+	public static function ajax_save_variation_layer() {
+		check_ajax_referer( 'wcbc_admin_media', 'nonce' );
+
+		$product_id    = isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification
+		$layer_type    = isset( $_POST['layer_type'] ) ? sanitize_text_field( wp_unslash( $_POST['layer_type'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+		$size_id       = isset( $_POST['size_id'] ) ? sanitize_text_field( wp_unslash( $_POST['size_id'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+		$attachment_id = isset( $_POST['attachment_id'] ) ? absint( $_POST['attachment_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification
+
+		if ( 'headboard' === $layer_type ) {
+			$key_a = isset( $_POST['style_id'] ) ? sanitize_text_field( wp_unslash( $_POST['style_id'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+			$key_b = isset( $_POST['colour_id'] ) ? sanitize_text_field( wp_unslash( $_POST['colour_id'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+		} else {
+			$key_a = isset( $_POST['colour_id'] ) ? sanitize_text_field( wp_unslash( $_POST['colour_id'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+			$key_b = isset( $_POST['layer_key'] ) ? sanitize_text_field( wp_unslash( $_POST['layer_key'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+			if ( ! $key_b && isset( $_POST['layer'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+				$key_b = sanitize_text_field( wp_unslash( $_POST['layer'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
+			}
+		}
+
+		if ( ! $product_id || ! current_user_can( 'edit_post', $product_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'wc-bed-configurator' ) ), 403 );
+		}
+
+		$saved = WCBC_Config::set_variation_layer_attachment( $product_id, $layer_type, $size_id, $key_a, $key_b, $attachment_id );
+		if ( ! $saved ) {
+			wp_send_json_error( array( 'message' => __( 'Could not save layer image.', 'wc-bed-configurator' ) ), 500 );
+		}
+
+		$url = $attachment_id ? wp_get_attachment_image_url( $attachment_id, 'full' ) : '';
+
+		wp_send_json_success(
+			array(
+				'attachment_id' => $attachment_id,
+				'url'           => $url ? $url : '',
+			)
+		);
 	}
 
 	/**
@@ -395,7 +540,7 @@ class WCBC_Admin {
 			}
 		}
 
-		if ( isset( $_POST['wcbc_variation_layers_save'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+		if ( isset( $_POST['wcbc_variation_layers_save'] ) || isset( $_POST['wcbc_variation_layers'] ) || isset( $_POST['wcbc_admin_panel'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 			$posted = ( isset( $_POST['wcbc_variation_layers'] ) && is_array( $_POST['wcbc_variation_layers'] ) ) // phpcs:ignore WordPress.Security.NonceVerification
 				? wp_unslash( $_POST['wcbc_variation_layers'] ) // phpcs:ignore WordPress.Security.NonceVerification
 				: array();
@@ -417,12 +562,13 @@ class WCBC_Admin {
 		if ( isset( $_POST['wcbc_option_images'] ) && is_array( $_POST['wcbc_option_images'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 			$posted_swatches = wp_unslash( $_POST['wcbc_option_images'] ); // phpcs:ignore WordPress.Security.NonceVerification
 			$existing        = WCBC_Config::get_option_swatch_media( $post_id );
-			$merged_swatches = WCBC_Config::merge_option_swatch_media( $existing, WCBC_Config::sanitize_option_swatch_media_post( $posted_swatches ), $posted_swatches );
+			$merged_swatches = WCBC_Config::merge_option_swatch_media( $existing, $posted_swatches );
 			update_post_meta( $post_id, WCBC_Config::OPTION_SWATCH_MEDIA_KEY, $merged_swatches );
-
 			$config = WCBC_Config::merge_colour_group( $config );
 			$config = self::apply_option_images_from_post( $config, $posted_swatches );
 		}
+
+		$config = WCBC_Config::merge_colour_group( $config );
 
 		if ( isset( $base ) ) {
 			$config['base_price'] = $base;

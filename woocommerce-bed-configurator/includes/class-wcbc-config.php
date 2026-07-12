@@ -914,7 +914,99 @@ class WCBC_Config {
 	}
 
 	/**
-	 * Image layers rendered in preview stack.
+	 * Save or remove one option swatch attachment immediately.
+	 *
+	 * @param int    $product_id Product ID.
+	 * @param string $group_id Group id.
+	 * @param string $option_id Option id.
+	 * @param int    $attachment_id Attachment ID (0 removes).
+	 * @return bool
+	 */
+	public static function set_option_swatch_attachment( $product_id, $group_id, $option_id, $attachment_id ) {
+		$product_id = absint( $product_id );
+		$group_id   = sanitize_title( (string) $group_id );
+		$option_id  = sanitize_title( (string) $option_id );
+		$attachment_id = absint( $attachment_id );
+
+		if ( ! $product_id || ! $group_id || ! $option_id ) {
+			return false;
+		}
+
+		$media = self::get_option_swatch_media( $product_id );
+		if ( ! isset( $media[ $group_id ] ) ) {
+			$media[ $group_id ] = array();
+		}
+
+		if ( $attachment_id ) {
+			$media[ $group_id ][ $option_id ] = $attachment_id;
+		} else {
+			unset( $media[ $group_id ][ $option_id ] );
+		}
+
+		return (bool) update_post_meta( $product_id, self::OPTION_SWATCH_MEDIA_KEY, $media );
+	}
+
+	/**
+	 * Save or remove one variation preview layer attachment immediately.
+	 *
+	 * @param int    $product_id Product ID.
+	 * @param string $layer_type colour|headboard.
+	 * @param string $size_id Size id.
+	 * @param string $key_a Colour id (colour) or style id (headboard).
+	 * @param string $key_b Layer slug (colour) or colour id (headboard).
+	 * @param int    $attachment_id Attachment ID (0 removes).
+	 * @return bool
+	 */
+	public static function set_variation_layer_attachment( $product_id, $layer_type, $size_id, $key_a, $key_b, $attachment_id ) {
+		$product_id    = absint( $product_id );
+		$layer_type    = sanitize_title( (string) $layer_type );
+		$size_id       = sanitize_title( (string) $size_id );
+		$key_a         = sanitize_title( (string) $key_a );
+		$key_b         = sanitize_title( (string) $key_b );
+		$attachment_id = absint( $attachment_id );
+
+		if ( ! $product_id || ! $size_id || ! $key_a || ! $key_b ) {
+			return false;
+		}
+
+		$media = self::get_variation_layer_media( $product_id );
+
+		if ( 'headboard' === $layer_type ) {
+			if ( ! isset( $media['headboard'][ $size_id ] ) ) {
+				$media['headboard'][ $size_id ] = array();
+			}
+			if ( ! isset( $media['headboard'][ $size_id ][ $key_a ] ) ) {
+				$media['headboard'][ $size_id ][ $key_a ] = array();
+			}
+			if ( $attachment_id ) {
+				$media['headboard'][ $size_id ][ $key_a ][ $key_b ] = $attachment_id;
+			} else {
+				unset( $media['headboard'][ $size_id ][ $key_a ][ $key_b ] );
+			}
+		} elseif ( 'colour' === $layer_type ) {
+			if ( ! in_array( $key_b, self::colour_layer_slots(), true ) ) {
+				return false;
+			}
+			if ( ! isset( $media['colour'][ $size_id ] ) ) {
+				$media['colour'][ $size_id ] = array();
+			}
+			if ( ! isset( $media['colour'][ $size_id ][ $key_a ] ) ) {
+				$media['colour'][ $size_id ][ $key_a ] = array();
+			}
+			if ( $attachment_id ) {
+				$media['colour'][ $size_id ][ $key_a ][ $key_b ] = $attachment_id;
+			} else {
+				unset( $media['colour'][ $size_id ][ $key_a ][ $key_b ] );
+			}
+		} else {
+			return false;
+		}
+
+		return (bool) update_post_meta( $product_id, self::VARIATION_LAYER_MEDIA_KEY, $media );
+	}
+
+	/**
+	 * All layer slugs in stacking order.
 	 *
 	 * @return string[]
 	 */
