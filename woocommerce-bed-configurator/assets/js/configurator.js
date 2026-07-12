@@ -292,7 +292,7 @@
 		var maps = wcbcData.variationLayerMedia || { size: {}, sizeHeadboards: {}, colour: {} };
 		var colourSlots = wcbcData.colourLayerSlots || ['storage_back', 'base', 'storage_2', 'storage_3', 'headboard'];
 		var size = pick(selections, 'size') || 'small-single';
-		var colour = resolveColourSlug(pick(selections, 'colour') || 'beige-velvet');
+		var colour = resolveColourSlug(pick(selections, 'colour') || 'light-silver-velvet');
 		var headboard = pick(selections, 'headboard');
 		var sizeSet = maps.size[size] || {};
 		var colourSet = (maps.colour[size] && maps.colour[size][colour]) ? maps.colour[size][colour] : {};
@@ -376,7 +376,7 @@
 	function demoLayers(selections) {
 		var base = wcbcData.layerBase || '';
 		var size = pick(selections, 'size') || 'small-double';
-		var colour = resolveColourSlug(pick(selections, 'colour') || 'beige-velvet');
+		var colour = resolveColourSlug(pick(selections, 'colour') || 'light-silver-velvet');
 		var headboard = pick(selections, 'headboard');
 		var baseDepth = pick(selections, 'base_depth') || '14-inch';
 		var storage = normalizeStorage(pick(selections, 'storage') || 'no-drawers');
@@ -407,11 +407,14 @@
 	}
 
 	function resolveDefaultSelection(group) {
+		if (!group.options || !group.options.length) {
+			return '';
+		}
+		if (group.id === 'size' || group.id === 'colour') {
+			return group.options[0].id;
+		}
 		var defaults = wcbcData.config.defaults || {};
 		var selected = defaults[group.id] || '';
-		if (!group.options || !group.options.length) {
-			return selected;
-		}
 		var found = group.options.some(function (opt) {
 			return opt.id === selected;
 		});

@@ -573,7 +573,7 @@ class WCBC_Config {
 
 		$selection_defaults = array(
 			'size'       => 'small-single',
-			'colour'     => 'beige-velvet',
+			'colour'     => 'light-silver-velvet',
 			'headboard'  => 'cornell-lined',
 			'base_depth' => '14-inch',
 			'storage'    => '2-drawers-same-side',
@@ -726,6 +726,12 @@ class WCBC_Config {
 			}
 
 			if ( empty( $valid_ids ) ) {
+				continue;
+			}
+
+			// Size and colour always default to the first listed option.
+			if ( in_array( $gid, array( 'size', 'colour' ), true ) ) {
+				$out[ $gid ] = $valid_ids[0];
 				continue;
 			}
 

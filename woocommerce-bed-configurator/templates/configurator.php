@@ -112,7 +112,7 @@ if ( 'options' === $part ) : ?>
 						<?php foreach ( $config['groups'] as $index => $group ) : ?>
 							<?php
 							$gid       = $group['id'];
-							$is_open   = ( 2 === $index );
+							$is_open   = ( 'size' === $gid );
 							$selected  = WCBC_Config::resolve_group_selection( $group, isset( $selections[ $gid ] ) ? $selections[ $gid ] : '' );
 							$sel_label = '';
 							foreach ( $group['options'] as $opt ) {
