@@ -1,0 +1,87 @@
+{% comment %}
+  Replace the {% when 'popup' %} block in product.liquid / product-template.
+  Removes data-fancybox dependency for PageSpeed.
+{% endcomment %}
+{% when 'popup' %}
+  {% if block.settings.page != blank %}
+    <div class="product-popup product-popup--{{ block.settings.text_alignment }}">
+      <button
+        type="button"
+        class="product-popup__link"
+        aria-haspopup="dialog"
+        aria-controls="product-popup__lightbox-{{ product.id }}"
+      >
+        <span class="product-popup__text">{{ block.settings.text | escape }}</span>
+      </button>
+    </div>
+
+    <dialog
+      class="product-popup__lightbox"
+      id="product-popup__lightbox-{{ product.id }}"
+    >
+      <div class="product-popup__lightbox-wrapper">
+        <button type="button" class="product-popup__close" aria-label="Close">&times;</button>
+        <h5 class="center">{{ pages[block.settings.page].title }}</h5>
+        <div class="feature-divider"></div>
+        <div class="rte">{{ pages[block.settings.page].content }}</div>
+      </div>
+    </dialog>
+
+    <script>
+      (function() {
+        var root = document.getElementById('product-popup__lightbox-{{ product.id }}');
+        if (!root) return;
+        var opener = root.previousElementSibling && root.previousElementSibling.querySelector('.product-popup__link');
+        var closer = root.querySelector('.product-popup__close');
+        function openDialog() {
+          if (typeof root.showModal === 'function') root.showModal();
+          else root.setAttribute('open', 'open');
+        }
+        function closeDialog() {
+          if (typeof root.close === 'function') root.close();
+          else root.removeAttribute('open');
+        }
+        if (opener) opener.addEventListener('click', openDialog);
+        if (closer) closer.addEventListener('click', closeDialog);
+        root.addEventListener('click', function(e) {
+          if (e.target === root) closeDialog();
+        });
+      })();
+    </script>
+
+    {% style %}
+      .product-popup__lightbox {
+        border: 0;
+        padding: 0;
+        max-width: min(720px, calc(100vw - 32px));
+        width: 100%;
+      }
+      .product-popup__lightbox::backdrop {
+        background: rgba(0, 0, 0, 0.65);
+      }
+      .product-popup__lightbox-wrapper {
+        position: relative;
+        padding: 24px;
+        background: #fff;
+      }
+      .product-popup__close {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        border: 0;
+        background: transparent;
+        font-size: 28px;
+        line-height: 1;
+        cursor: pointer;
+      }
+      .product-popup__link {
+        border: 0;
+        background: transparent;
+        padding: 0;
+        cursor: pointer;
+        font: inherit;
+        color: inherit;
+        text-decoration: underline;
+      }
+    {% endstyle %}
+  {% endif %}
