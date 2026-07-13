@@ -58,8 +58,8 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 200px;
-  height: 200px;
+  width: 100px;
+  height: 100px;
   margin: 0;
   pointer-events: none;
   border-radius: 50%;
@@ -145,8 +145,8 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 200px;
-  height: 200px;
+  width: 100px;
+  height: 100px;
   pointer-events: none;
   border-radius: 50%;
   border: none;
@@ -308,7 +308,7 @@
     var scale = 1;
     var translateX = 0;
     var translateY = 0;
-    var lensSize = isTouch ? 160 : 200;
+    var lensSize = isTouch ? 160 : 100;
     var lensRadius = lensSize / 2;
     var lensRatio = isTouch ? 3 : 2.5;
     var tapLevels = isTouch ? [1, 5, 10, 20, 35, 50] : [1, 2, 4, 8, 10];
@@ -637,7 +637,7 @@
       if (isTouch) {
         showHint('Slide finger to magnify · Tap to zoom · Pinch to zoom', true);
       } else {
-        showHint('Move mouse to magnify · Click to zoom · Scroll to zoom', false);
+        showHint('Move mouse to magnify · Click to zoom · Scroll to zoom · Drag when zoomed', false);
       }
     }
 
@@ -887,7 +887,7 @@
       return;
     }
 
-    var lensSize = 200;
+    var lensSize = 100;
     var lensRadius = lensSize / 2;
     var zoomRatio = 2.5;
     var gallery = document.querySelector('.product-{{ product.id }}-gallery');
