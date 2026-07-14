@@ -288,10 +288,10 @@ class WCBC_HappyBeds_Resolver {
 		if ( 'ottoman' !== self::normalize_storage( $storage ) ) {
 			return false;
 		}
-		if ( isset( $selections['drawers_open'] ) && in_array( (string) $selections['drawers_open'], array( '1', 'true', 'yes' ), true ) ) {
-			return true;
+		if ( isset( $selections['drawers_open'] ) ) {
+			return in_array( (string) $selections['drawers_open'], array( '1', 'true', 'yes' ), true );
 		}
-		return false;
+		return true;
 	}
 
 	/**

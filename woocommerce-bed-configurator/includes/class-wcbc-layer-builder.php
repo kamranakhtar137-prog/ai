@@ -76,10 +76,10 @@ class WCBC_Layer_Builder {
 		if ( 'ottoman' !== $storage ) {
 			return 1;
 		}
-		if ( isset( $selections['drawers_open'] ) && '1' === (string) $selections['drawers_open'] ) {
-			return 0;
+		if ( isset( $selections['drawers_open'] ) ) {
+			return '1' === (string) $selections['drawers_open'] ? 0 : 1;
 		}
-		return 1;
+		return 0;
 	}
 
 	/**

@@ -58,9 +58,11 @@ class WCBC_Config {
 			'storage_back' => __( 'Bed Storage Back', 'wc-bed-configurator' ),
 			'base'         => __( 'Bed Base', 'wc-bed-configurator' ),
 			'storage_1'    => __( 'Bed Storage 1', 'wc-bed-configurator' ),
-			'storage_2'    => __( 'Bed Storage 2', 'wc-bed-configurator' ),
-			'storage_3'    => __( 'Bed Storage 3', 'wc-bed-configurator' ),
-			'storage_4'    => __( 'Bed Storage 4', 'wc-bed-configurator' ),
+			'storage_2'        => __( 'Bed Storage 2 (open)', 'wc-bed-configurator' ),
+			'storage_3'        => __( 'Bed Storage 3 (open)', 'wc-bed-configurator' ),
+			'storage_4'        => __( 'Bed Storage 4', 'wc-bed-configurator' ),
+			'storage_2_closed' => __( 'Bed Storage 2 (closed)', 'wc-bed-configurator' ),
+			'storage_3_closed' => __( 'Bed Storage 3 (closed)', 'wc-bed-configurator' ),
 		);
 	}
 
@@ -659,10 +661,11 @@ class WCBC_Config {
 			$layers['headboard'] = $transparent;
 		}
 
-		$storage_id = ! empty( $selections['storage'] ) ? sanitize_title( $selections['storage'] ) : ( ! empty( $defaults['storage'] ) ? sanitize_title( $defaults['storage'] ) : '' );
+		$storage_id  = ! empty( $selections['storage'] ) ? sanitize_title( $selections['storage'] ) : ( ! empty( $defaults['storage'] ) ? sanitize_title( $defaults['storage'] ) : '' );
+		$storage_set = array();
 		if ( $size_id && $storage_id && $colour_id && ! empty( $media['storage'][ $size_id ][ $storage_id ][ $colour_id ] ) ) {
 			$storage_set = $media['storage'][ $size_id ][ $storage_id ][ $colour_id ];
-			foreach ( self::storage_layer_slots() as $layer ) {
+			foreach ( self::storage_preview_layer_slots() as $layer ) {
 				if ( empty( $storage_set[ $layer ] ) ) {
 					continue;
 				}
@@ -673,7 +676,7 @@ class WCBC_Config {
 			}
 		}
 
-		return $layers;
+		return self::apply_drawer_toggle_layers( $layers, $storage_id, $storage_set, $selections );
 	}
 
 	/**
@@ -1302,7 +1305,76 @@ class WCBC_Config {
 	 * @return string[]
 	 */
 	public static function storage_layer_slots() {
+		return array( 'base', 'storage_back', 'storage_1', 'storage_2', 'storage_3', 'storage_4', 'storage_2_closed', 'storage_3_closed' );
+	}
+
+	/**
+	 * Storage slots that map directly to preview layer elements.
+	 *
+	 * @return string[]
+	 */
+	public static function storage_preview_layer_slots() {
 		return array( 'base', 'storage_back', 'storage_1', 'storage_2', 'storage_3', 'storage_4' );
+	}
+
+	/**
+	 * Whether ottoman drawer toggle is in the open position.
+	 *
+	 * @param string              $storage_id Storage option id.
+	 * @param array<string,mixed> $selections Selections (may include drawers_open).
+	 * @return bool
+	 */
+	public static function drawers_open( $storage_id, $selections = array() ) {
+		if ( 'ottoman' !== sanitize_title( (string) $storage_id ) ) {
+			return false;
+		}
+		if ( isset( $selections['drawers_open'] ) ) {
+			return in_array( (string) $selections['drawers_open'], array( '1', 'true', 'yes' ), true );
+		}
+		return true;
+	}
+
+	/**
+	 * Swap storage drawer layers for ottoman open/closed toggle.
+	 *
+	 * @param array<string,string> $layers Layer URLs.
+	 * @param string               $storage_id Storage option id.
+	 * @param array<string,mixed>  $storage_set Saved storage layer map for size/storage/colour.
+	 * @param array<string,mixed>  $selections Selections.
+	 * @return array<string,string>
+	 */
+	public static function apply_drawer_toggle_layers( $layers, $storage_id, $storage_set, $selections = array() ) {
+		if ( 'ottoman' !== sanitize_title( (string) $storage_id ) || ! is_array( $storage_set ) ) {
+			return $layers;
+		}
+
+		$transparent = self::transparent_layer_url();
+		$open        = self::drawers_open( $storage_id, $selections );
+
+		if ( $open ) {
+			foreach ( array( 'storage_2', 'storage_3' ) as $layer ) {
+				if ( ! empty( $storage_set[ $layer ] ) ) {
+					$url = wp_get_attachment_image_url( (int) $storage_set[ $layer ], 'full' );
+					if ( $url ) {
+						$layers[ $layer ] = $url;
+					}
+				}
+			}
+			return $layers;
+		}
+
+		foreach ( array( 'storage_2' => 'storage_2_closed', 'storage_3' => 'storage_3_closed' ) as $layer => $closed_key ) {
+			if ( ! empty( $storage_set[ $closed_key ] ) ) {
+				$url = wp_get_attachment_image_url( (int) $storage_set[ $closed_key ], 'full' );
+				if ( $url ) {
+					$layers[ $layer ] = $url;
+					continue;
+				}
+			}
+			$layers[ $layer ] = $transparent;
+		}
+
+		return $layers;
 	}
 
 	/**
@@ -1565,7 +1637,7 @@ class WCBC_Config {
 	 * @param array<string,mixed> $config Config.
 	 * @return array<string,mixed>
 	 */
-	private static function merge_colour_group( $config ) {
+	public static function merge_colour_group( $config ) {
 		if ( ! class_exists( 'WCBC_Colour_Registry' ) ) {
 			return $config;
 		}
@@ -1669,6 +1741,12 @@ class WCBC_Config {
 			$normalized[ $gid ] = isset( $selections[ $gid ] )
 				? self::resolve_group_selection( $group, $selections[ $gid ] )
 				: ( isset( $config['defaults'][ $gid ] ) ? $config['defaults'][ $gid ] : '' );
+		}
+
+		$normalized = self::normalize_defaults( array_merge( $config, array( 'defaults' => $normalized ) ) );
+
+		if ( isset( $selections['drawers_open'] ) ) {
+			$normalized['drawers_open'] = sanitize_text_field( $selections['drawers_open'] );
 		}
 
 		$layers = WCBC_Layer_Builder::build( $config, $normalized );

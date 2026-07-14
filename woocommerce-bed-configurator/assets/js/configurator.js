@@ -12,8 +12,65 @@
 
 	var state = {
 		selections: {},
-		drawersOpen: false,
+		drawersOpen: true,
 	};
+
+	function isOttomanStorage(selections) {
+		var storage = pick(selections, 'storage') || (wcbcData.config.defaults || {}).storage || '';
+		return storage === 'ottoman';
+	}
+
+	function isDrawersOpen(selections) {
+		if (!isOttomanStorage(selections)) {
+			return false;
+		}
+		return !!state.drawersOpen;
+	}
+
+	function applyDrawerToggle(layers, selections) {
+		if (!isOttomanStorage(selections)) {
+			return layers;
+		}
+
+		var transparent = wcbcData.transparentLayer || (wcbcData.layerBase || '') + 'transparent.png';
+		var maps = wcbcData.variationLayerMedia || { storage: {} };
+		var defaults = (wcbcData.config && wcbcData.config.defaults) ? wcbcData.config.defaults : {};
+		var size = pick(selections, 'size') || defaults.size || 'small-single';
+		var colour = resolveColourSlug(pick(selections, 'colour') || defaults.colour || 'light-silver-velvet');
+		var storage = pick(selections, 'storage') || defaults.storage || 'ottoman';
+		var storageSet = (maps.storage[size] && maps.storage[size][storage] && maps.storage[size][storage][colour]) ? maps.storage[size][storage][colour] : {};
+		var open = isDrawersOpen(selections);
+
+		if (open) {
+			['storage_2', 'storage_3'].forEach(function (layer) {
+				if (storageSet[layer]) {
+					layers[layer] = storageSet[layer];
+				}
+			});
+			return layers;
+		}
+
+		[
+			{ layer: 'storage_2', closed: 'storage_2_closed' },
+			{ layer: 'storage_3', closed: 'storage_3_closed' },
+		].forEach(function (item) {
+			if (storageSet[item.closed]) {
+				layers[item.layer] = storageSet[item.closed];
+			} else {
+				layers[item.layer] = transparent;
+			}
+		});
+
+		return layers;
+	}
+
+	function syncDrawerToggleVisibility(selections) {
+		var $toggler = $('#draw_toggler');
+		if (!$toggler.length) {
+			return;
+		}
+		$toggler.toggle(isOttomanStorage(selections));
+	}
 
 	function pick(selections, key) {
 		var defaults = wcbcData.config.defaults || {};
@@ -291,7 +348,7 @@
 		var transparent = wcbcData.transparentLayer || (wcbcData.layerBase || '') + 'transparent.png';
 		var maps = wcbcData.variationLayerMedia || { colour: {}, headboardStyles: {}, sizeHeadboards: {}, storage: {} };
 		var colourSlots = wcbcData.colourLayerSlots || ['legs', 'headboard', 'storage_back', 'base', 'storage_1', 'storage_2', 'storage_3', 'storage_4'];
-		var storageSlots = wcbcData.storageLayerSlots || ['base', 'storage_back', 'storage_1', 'storage_2', 'storage_3', 'storage_4'];
+		var storageSlots = wcbcData.storagePreviewLayerSlots || wcbcData.storageLayerSlots || ['base', 'storage_back', 'storage_1', 'storage_2', 'storage_3', 'storage_4'];
 		var defaults = (wcbcData.config && wcbcData.config.defaults) ? wcbcData.config.defaults : {};
 		var size = pick(selections, 'size') || defaults.size || 'small-single';
 		var colour = resolveColourSlug(pick(selections, 'colour') || defaults.colour || 'light-silver-velvet');
@@ -348,30 +405,27 @@
 
 	function buildLayers(selections) {
 		var source = wcbcData.imageSource || 'media';
-		if (source === 'media') {
-			return buildVariationMediaLayers(selections);
-		}
-		if (source === 'demo') {
-			return demoLayers(selections);
-		}
-
-		var mode = wcbcData.imageMode || 'demo';
 		var layers;
-		if (mode === 'demo') {
+		if (source === 'media') {
+			layers = buildVariationMediaLayers(selections);
+		} else if (source === 'demo') {
 			layers = demoLayers(selections);
 		} else {
-			layers = happyBedsLayers(selections, mode);
+			var mode = wcbcData.imageMode || 'demo';
+			if (mode === 'demo') {
+				layers = demoLayers(selections);
+			} else {
+				layers = happyBedsLayers(selections, mode);
+			}
+
+			if (source === 'hybrid') {
+				layers = mergeHybridMedia(layers, selections);
+			} else if (shouldApplyOptionOverrides()) {
+				layers = applyOptionLayerOverrides(layers, selections);
+			}
 		}
 
-		if (source === 'hybrid') {
-			return mergeHybridMedia(layers, selections);
-		}
-
-		if (shouldApplyOptionOverrides()) {
-			return applyOptionLayerOverrides(layers, selections);
-		}
-
-		return layers;
+		return applyDrawerToggle(layers, selections);
 	}
 
 	function demoLayers(selections) {
@@ -481,6 +535,7 @@
 			syncGroupSelectionUI(group.id, selected);
 		});
 		syncHiddenFields();
+		syncDrawerToggleVisibility(state.selections);
 		refreshPreview();
 	}
 
@@ -589,6 +644,8 @@
 		syncGroupSelectionUI(groupId, optionId);
 
 		var previewOpts = (groupId === 'headboard' || groupId === 'size' || groupId === 'colour' || groupId === 'storage') ? { forceHeadboard: true } : {};
+
+		syncDrawerToggleVisibility(state.selections);
 
 		// Update bed preview immediately from local layer map.
 		refreshPreview(previewOpts);
