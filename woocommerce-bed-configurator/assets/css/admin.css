@@ -1,0 +1,116 @@
+/* Override WooCommerce .woocommerce_options_panel label { float: right } inside layer UI */
+#wcbc_product_data .wcbc-variation-layers-section label,
+#wcbc_product_data .wcbc-layer-media-item label {
+	float: none;
+	width: auto;
+	margin: 0 0 8px;
+	text-align: left;
+}
+
+.wcbc-layer-media-grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 12px;
+	margin: 12px 0 20px;
+}
+
+.wcbc-layer-media-item {
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	padding: 12px;
+	background: #fff;
+}
+
+.wcbc-layer-media-item label {
+	display: block;
+	float: none;
+	width: auto;
+	font-weight: 600;
+	margin-bottom: 8px;
+	text-align: left;
+}
+
+.wcbc-layer-media-preview {
+	display: block;
+	width: 100%;
+	max-height: 100px;
+	object-fit: contain;
+	margin-bottom: 8px;
+	background: #f6f7f7;
+	border: 1px dashed #c3c4c7;
+	min-height: 60px;
+}
+
+.wcbc-layer-media-preview.is-empty {
+	display: none;
+}
+
+.wcbc-option-media-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin: 12px 0 20px;
+}
+
+.wcbc-option-media-table th,
+.wcbc-option-media-table td {
+	border: 1px solid #dcdcde;
+	padding: 8px 10px;
+	text-align: left;
+	vertical-align: middle;
+}
+
+.wcbc-option-media-table th {
+	background: #f6f7f7;
+}
+
+.wcbc-option-thumb {
+	width: 48px;
+	height: 48px;
+	object-fit: contain;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+}
+
+.wcbc-option-thumb.is-empty {
+	display: none;
+}
+
+.wcbc-variation-layer-set {
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	margin: 0 12px 12px;
+	background: #fff;
+}
+
+.wcbc-variation-layer-set summary {
+	padding: 12px 14px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.wcbc-variation-layer-set .wcbc-layer-media-grid {
+	padding: 0 12px 12px;
+}
+
+.wcbc-size-base-layers,
+.wcbc-size-headboard-layers,
+.wcbc-size-colour-layers {
+	padding: 0 12px 12px;
+}
+
+.wcbc-size-base-layers h4,
+.wcbc-size-headboard-layers h4,
+.wcbc-size-colour-layers h4 {
+	margin: 12px 0 6px;
+}
+
+.wcbc-colour-layer-set {
+	margin: 8px 0 0 12px;
+}
+
+.wcbc-advanced-panel {
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	padding: 12px;
+	background: #f6f7f7;
+}
