@@ -772,7 +772,12 @@ class WCBC_Config {
 			if ( 'storage' !== $group['id'] || empty( $group['options'] ) ) {
 				continue;
 			}
+			$allowed = array_flip( self::customer_storage_option_ids() );
 			foreach ( $group['options'] as $option ) {
+				$option_id = ! empty( $option['id'] ) ? sanitize_title( $option['id'] ) : '';
+				if ( ! $option_id || ! isset( $allowed[ $option_id ] ) ) {
+					continue;
+				}
 				$options[] = array(
 					'id'       => $option['id'],
 					'label'    => $option['label'],
@@ -855,7 +860,19 @@ class WCBC_Config {
 	 * @return string[]
 	 */
 	public static function customer_visible_group_ids() {
-		return array( 'size', 'colour', 'headboard', 'base_depth', 'storage' );
+		return array( 'size', 'colour', 'headboard', 'storage' );
+	}
+
+	/**
+	 * Storage option ids shown on the storefront.
+	 *
+	 * @return string[]
+	 */
+	public static function customer_storage_option_ids() {
+		return array(
+			'no-drawers',
+			'ottoman',
+		);
 	}
 
 	/**
@@ -910,6 +927,29 @@ class WCBC_Config {
 	}
 
 	/**
+	 * Limit storage group to customer-facing options only.
+	 *
+	 * @param array<string,mixed> $group Storage option group.
+	 * @return array<string,mixed>
+	 */
+	private static function filter_storage_group_for_storefront( $group ) {
+		$allowed = array_flip( self::customer_storage_option_ids() );
+		$options = array();
+
+		if ( ! empty( $group['options'] ) ) {
+			foreach ( $group['options'] as $option ) {
+				$option_id = ! empty( $option['id'] ) ? sanitize_title( $option['id'] ) : '';
+				if ( $option_id && isset( $allowed[ $option_id ] ) ) {
+					$options[] = $option;
+				}
+			}
+		}
+
+		$group['options'] = $options;
+		return $group;
+	}
+
+	/**
 	 * Filter config groups shown in the storefront accordion.
 	 *
 	 * @param array<string,mixed> $config Config.
@@ -928,6 +968,9 @@ class WCBC_Config {
 			$group = self::filter_group_options_for_catalog( $group );
 			if ( 'headboard' === $group['id'] ) {
 				$group = self::filter_headboard_group_for_storefront( $group );
+			}
+			if ( 'storage' === $group['id'] ) {
+				$group = self::filter_storage_group_for_storefront( $group );
 			}
 			$groups[] = $group;
 		}
@@ -1293,7 +1336,7 @@ class WCBC_Config {
 			'colour'     => 'light-silver-velvet',
 			'headboard'  => 'cornell-lined',
 			'base_depth' => '14-inch',
-			'storage'    => '2-drawers-same-side',
+			'storage'    => 'no-drawers',
 		);
 
 		return array(
@@ -1337,31 +1380,13 @@ class WCBC_Config {
 					),
 				),
 				array(
-					'id'       => 'base_depth',
-					'label'    => 'Base Depth',
-					'icon'     => 'depth',
-					'required' => true,
-					'options'  => array(
-						self::opt( '6-inch', '6 Inch', '', -30, $base . 'swatches/depth/6-inch.png' ),
-						self::opt( '10-inch', '10 Inch', '', 0, $base . 'swatches/depth/10-inch.png' ),
-						self::opt( '14-inch', '14 Inch', 'Standard', 20, $base . 'swatches/depth/14-inch.png', array(), true ),
-					),
-				),
-				array(
 					'id'       => 'storage',
 					'label'    => 'Storage Options',
 					'icon'     => 'storage',
 					'required' => true,
 					'options'  => array(
-						self::opt( 'ottoman', 'Ottoman', '', 80, $base . 'swatches/storage/ottoman.png' ),
 						self::opt( 'no-drawers', 'No Drawers', '', 0, $base . 'swatches/storage/no-drawers.png' ),
-						self::opt( 'end-drawer', 'End Drawer', '', 40, $base . 'swatches/storage/end-drawer.png' ),
-						self::opt( 'end-drawer-with-2-mini-drawers', 'End Drawer with 2 Mini Drawers', '', 55, $base . 'swatches/storage/end-drawer.png' ),
-						self::opt( '2-drawers', '2 Drawers', '', 50, $base . 'swatches/storage/2-drawers.png' ),
-						self::opt( '2-drawers-same-side', '2 Drawers Same Side', '', 50, $base . 'swatches/storage/2-drawers.png' ),
-						self::opt( '2-drawers-with-end-drawer', '2 Drawers with End Drawer', '', 60, $base . 'swatches/storage/2-drawers.png' ),
-						self::opt( '2-drawers-with-2-mini-drawers', '2 Drawers with 2 Mini Drawers', '', 65, $base . 'swatches/storage/2-drawers.png' ),
-						self::opt( '4-drawers', '4 Drawers', '', 90, $base . 'swatches/storage/4-drawers.png' ),
+						self::opt( 'ottoman', 'Ottoman', '', 80, $base . 'swatches/storage/ottoman.png' ),
 					),
 				),
 			),
@@ -1502,7 +1527,7 @@ class WCBC_Config {
 
 		$meta_keys   = array( 'shape', 'fabric', 'hb_fabric', 'hb_code', 'hb_drawer', 'size' );
 		$layer_keys  = array_flip( self::get_layers() );
-		$clean_groups = array( 'colour', 'headboard', 'storage', 'size', 'base_depth' );
+		$clean_groups = array( 'colour', 'headboard', 'storage', 'size' );
 
 		foreach ( $config['groups'] as $gi => $group ) {
 			if ( empty( $group['options'] ) || ! in_array( $group['id'], $clean_groups, true ) ) {

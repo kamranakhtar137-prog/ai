@@ -588,7 +588,7 @@
 		syncHiddenFields();
 		syncGroupSelectionUI(groupId, optionId);
 
-		var previewOpts = (groupId === 'headboard' || groupId === 'size' || groupId === 'colour' || groupId === 'storage' || groupId === 'base_depth') ? { forceHeadboard: true } : {};
+		var previewOpts = (groupId === 'headboard' || groupId === 'size' || groupId === 'colour' || groupId === 'storage') ? { forceHeadboard: true } : {};
 
 		// Update bed preview immediately from local layer map.
 		refreshPreview(previewOpts);
