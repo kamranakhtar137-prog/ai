@@ -1489,6 +1489,8 @@ class WCBC_Config {
 			}
 		}
 
+		$out['base_depth'] = '14-inch';
+
 		return $out;
 	}
 
