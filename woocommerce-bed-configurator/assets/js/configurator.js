@@ -652,9 +652,12 @@
 				updateLayers(response.data.layers, previewOpts);
 			}
 			if (response.data.selections) {
-				Object.keys(response.data.selections).forEach(function (groupId) {
-					state.selections[groupId] = response.data.selections[groupId];
-					syncGroupSelectionUI(groupId, response.data.selections[groupId]);
+				Object.keys(response.data.selections).forEach(function (gid) {
+					if (gid === 'base_depth' || gid === 'drawers_open') {
+						return;
+					}
+					state.selections[gid] = response.data.selections[gid];
+					syncGroupSelectionUI(gid, response.data.selections[gid]);
 				});
 				syncHiddenFields();
 			}

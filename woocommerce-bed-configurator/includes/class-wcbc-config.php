@@ -1567,12 +1567,6 @@ class WCBC_Config {
 				continue;
 			}
 
-			// Size and colour always default to the first listed option.
-			if ( in_array( $gid, array( 'size', 'colour' ), true ) ) {
-				$out[ $gid ] = $valid_ids[0];
-				continue;
-			}
-
 			$current = isset( $out[ $gid ] ) ? sanitize_title( $out[ $gid ] ) : '';
 			if ( ! in_array( $current, $valid_ids, true ) ) {
 				$out[ $gid ] = $valid_ids[0];
