@@ -10,66 +10,47 @@
 
 	var FORM_ID = 'wcbc-product-form';
 
+	var DRAWER_OPEN_STORAGE = '2-drawers-same-side';
+	var DRAWER_CLOSED_STORAGE = 'no-drawers';
+
 	var state = {
 		selections: {},
 		drawersOpen: true,
 	};
 
-	function isOttomanStorage(selections) {
-		var storage = pick(selections, 'storage') || (wcbcData.config.defaults || {}).storage || '';
-		return storage === 'ottoman';
+	function storageFromDrawerToggle() {
+		return state.drawersOpen ? DRAWER_OPEN_STORAGE : DRAWER_CLOSED_STORAGE;
 	}
 
-	function isDrawersOpen(selections) {
-		if (!isOttomanStorage(selections)) {
-			return false;
-		}
-		return !!state.drawersOpen;
-	}
-
-	function applyDrawerToggle(layers, selections) {
-		if (!isOttomanStorage(selections)) {
-			return layers;
-		}
-
-		var transparent = wcbcData.transparentLayer || (wcbcData.layerBase || '') + 'transparent.png';
-		var maps = wcbcData.variationLayerMedia || { storage: {} };
-		var defaults = (wcbcData.config && wcbcData.config.defaults) ? wcbcData.config.defaults : {};
-		var size = pick(selections, 'size') || defaults.size || 'small-single';
-		var colour = resolveColourSlug(pick(selections, 'colour') || defaults.colour || 'light-silver-velvet');
-		var storage = pick(selections, 'storage') || defaults.storage || 'ottoman';
-		var storageSet = (maps.storage[size] && maps.storage[size][storage] && maps.storage[size][storage][colour]) ? maps.storage[size][storage][colour] : {};
-		var open = isDrawersOpen(selections);
-
-		if (open) {
-			['storage_2', 'storage_3'].forEach(function (layer) {
-				if (storageSet[layer]) {
-					layers[layer] = storageSet[layer];
-				}
-			});
-			return layers;
-		}
-
-		[
-			{ layer: 'storage_2', closed: 'storage_2_closed' },
-			{ layer: 'storage_3', closed: 'storage_3_closed' },
-		].forEach(function (item) {
-			if (storageSet[item.closed]) {
-				layers[item.layer] = storageSet[item.closed];
-			} else {
-				layers[item.layer] = transparent;
-			}
-		});
-
-		return layers;
-	}
-
-	function syncDrawerToggleVisibility(selections) {
-		var $toggler = $('#draw_toggler');
-		if (!$toggler.length) {
+	function syncStorageFromDrawerToggle() {
+		var storageId = storageFromDrawerToggle();
+		if (state.selections.storage === storageId) {
+			refreshPreview({ forceHeadboard: true });
 			return;
 		}
-		$toggler.toggle(isOttomanStorage(selections));
+		onSelectionChange('storage', storageId, { fromToggle: true });
+	}
+
+	function syncDrawerToggleFromStorage(storageId) {
+		var $checkbox = $('#drawer_checkbox');
+		if (!$checkbox.length) {
+			return;
+		}
+		if (storageId === DRAWER_OPEN_STORAGE) {
+			state.drawersOpen = true;
+			$checkbox.prop('checked', true);
+		} else if (storageId === DRAWER_CLOSED_STORAGE) {
+			state.drawersOpen = false;
+			$checkbox.prop('checked', false);
+		}
+		$('.wcbc-preview').toggleClass('wcbc-drawers-open', state.drawersOpen);
+	}
+
+	function syncDrawerToggleVisibility() {
+		var $toggler = $('#draw_toggler');
+		if ($toggler.length) {
+			$toggler.show();
+		}
 	}
 
 	function pick(selections, key) {
@@ -113,7 +94,7 @@
 
 	function hasDrawers(storageId) {
 		storageId = normalizeStorage(storageId);
-		return storageId === '2-drawers' || storageId === '4-drawers' || storageId === 'end-drawer';
+		return storageId === '2-drawers' || storageId === '4-drawers' || storageId === 'end-drawer' || storageId === '2-drawers-same-side';
 	}
 
 	function normalizeStorage(storage) {
@@ -425,7 +406,7 @@
 			}
 		}
 
-		return applyDrawerToggle(layers, selections);
+		return layers;
 	}
 
 	function demoLayers(selections) {
@@ -534,9 +515,16 @@
 			state.selections[group.id] = selected;
 			syncGroupSelectionUI(group.id, selected);
 		});
+
+		state.drawersOpen = true;
+		$('#drawer_checkbox').prop('checked', true);
+		state.selections.storage = DRAWER_OPEN_STORAGE;
+		syncGroupSelectionUI('storage', DRAWER_OPEN_STORAGE);
+
 		syncHiddenFields();
-		syncDrawerToggleVisibility(state.selections);
-		refreshPreview();
+		syncDrawerToggleVisibility();
+		$('.wcbc-preview').toggleClass('wcbc-drawers-open', true);
+		refreshPreview({ forceHeadboard: true });
 	}
 
 	function syncHiddenFields() {
@@ -638,14 +626,19 @@
 		});
 	}
 
-	function onSelectionChange(groupId, optionId) {
+	function onSelectionChange(groupId, optionId, opts) {
+		opts = opts || {};
 		state.selections[groupId] = optionId;
 		syncHiddenFields();
 		syncGroupSelectionUI(groupId, optionId);
 
+		if (groupId === 'storage' && !opts.fromToggle) {
+			syncDrawerToggleFromStorage(optionId);
+		}
+
 		var previewOpts = (groupId === 'headboard' || groupId === 'size' || groupId === 'colour' || groupId === 'storage') ? { forceHeadboard: true } : {};
 
-		syncDrawerToggleVisibility(state.selections);
+		syncDrawerToggleVisibility();
 
 		// Update bed preview immediately from local layer map.
 		refreshPreview(previewOpts);
@@ -741,18 +734,14 @@
 			return;
 		}
 
-		state.drawersOpen = $checkbox.is(':checked');
-		$('.wcbc-preview').toggleClass('wcbc-drawers-open', state.drawersOpen);
+		$checkbox.prop('checked', true);
+		state.drawersOpen = true;
+		$('.wcbc-preview').toggleClass('wcbc-drawers-open', true);
 
 		$checkbox.on('change', function () {
 			state.drawersOpen = $(this).is(':checked');
 			$('.wcbc-preview').toggleClass('wcbc-drawers-open', state.drawersOpen);
-			refreshPreview();
-			calculate().done(function (response) {
-				if (response && response.success && response.data.layers) {
-					updateLayers(response.data.layers);
-				}
-			});
+			syncStorageFromDrawerToggle();
 		});
 	}
 

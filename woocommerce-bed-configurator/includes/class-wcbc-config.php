@@ -676,7 +676,7 @@ class WCBC_Config {
 			}
 		}
 
-		return self::apply_drawer_toggle_layers( $layers, $storage_id, $storage_set, $selections );
+		return $layers;
 	}
 
 	/**
@@ -873,9 +873,28 @@ class WCBC_Config {
 	 */
 	public static function customer_storage_option_ids() {
 		return array(
+			'2-drawers-same-side',
 			'no-drawers',
 			'ottoman',
 		);
+	}
+
+	/**
+	 * Storage id used when the drawer toggle is open.
+	 *
+	 * @return string
+	 */
+	public static function drawer_open_storage_id() {
+		return '2-drawers-same-side';
+	}
+
+	/**
+	 * Storage id used when the drawer toggle is closed.
+	 *
+	 * @return string
+	 */
+	public static function drawer_closed_storage_id() {
+		return 'no-drawers';
 	}
 
 	/**
@@ -1408,7 +1427,7 @@ class WCBC_Config {
 			'colour'     => 'light-silver-velvet',
 			'headboard'  => 'cornell-lined',
 			'base_depth' => '14-inch',
-			'storage'    => 'no-drawers',
+			'storage'    => '2-drawers-same-side',
 		);
 
 		return array(
@@ -1457,6 +1476,7 @@ class WCBC_Config {
 					'icon'     => 'storage',
 					'required' => true,
 					'options'  => array(
+						self::opt( '2-drawers-same-side', '2 Drawers Same Side', '', 50, $base . 'swatches/storage/2-drawers.png' ),
 						self::opt( 'no-drawers', 'No Drawers', '', 0, $base . 'swatches/storage/no-drawers.png' ),
 						self::opt( 'ottoman', 'Ottoman', '', 80, $base . 'swatches/storage/ottoman.png' ),
 					),
@@ -1747,6 +1767,11 @@ class WCBC_Config {
 
 		if ( isset( $selections['drawers_open'] ) ) {
 			$normalized['drawers_open'] = sanitize_text_field( $selections['drawers_open'] );
+			$open                     = in_array( $normalized['drawers_open'], array( '1', 'true', 'yes' ), true );
+			$current_storage          = isset( $normalized['storage'] ) ? sanitize_title( $normalized['storage'] ) : '';
+			if ( in_array( $current_storage, array( self::drawer_open_storage_id(), self::drawer_closed_storage_id() ), true ) || '' === $current_storage ) {
+				$normalized['storage'] = $open ? self::drawer_open_storage_id() : self::drawer_closed_storage_id();
+			}
 		}
 
 		$layers = WCBC_Layer_Builder::build( $config, $normalized );

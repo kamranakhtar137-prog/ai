@@ -225,7 +225,7 @@ class WCBC_Layer_Builder {
 	 */
 	private static function has_drawers( $storage_id ) {
 		$storage_id = class_exists( 'WCBC_HappyBeds_Resolver' ) ? WCBC_HappyBeds_Resolver::normalize_storage( $storage_id ) : $storage_id;
-		return in_array( $storage_id, array( '2-drawers', '4-drawers', 'end-drawer' ), true );
+		return in_array( $storage_id, array( '2-drawers', '4-drawers', 'end-drawer', '2-drawers-same-side' ), true );
 	}
 
 	/**
