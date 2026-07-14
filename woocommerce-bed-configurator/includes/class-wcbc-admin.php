@@ -176,10 +176,10 @@ class WCBC_Admin {
 					<p class="form-field">
 						<strong><?php esc_html_e( 'Preview layers by size & colour', 'wc-bed-configurator' ); ?></strong><br />
 						<span class="description">
-							<?php esc_html_e( 'Under each size, assign all bed layers for every colour. Headboard styles (Cornell Plain, Lined, Buttoned) each have their own image per colour — selecting a headboard on the storefront replaces the bed headboard layer.', 'wc-bed-configurator' ); ?>
+							<?php esc_html_e( 'Under each size, assign bed layers per colour. Headboard styles and storage options each have their own images per colour — selecting them on the storefront replaces the matching preview layers (including bed base).', 'wc-bed-configurator' ); ?>
 						</span>
 					</p>
-					<?php self::render_size_colour_layer_sets( $size_options, $colour_options, WCBC_Config::headboard_options_for_admin( $config ), $variation_media, $layer_labels ); ?>
+					<?php self::render_size_colour_layer_sets( $size_options, $colour_options, WCBC_Config::headboard_options_for_admin( $config ), WCBC_Config::storage_options_for_admin( $config ), $variation_media, $layer_labels ); ?>
 				</div>
 				<div class="options_group">
 					<p class="form-field">
@@ -291,12 +291,15 @@ class WCBC_Admin {
 	 * @param array<int,array<string,string>>                    $size_options Size options.
 	 * @param array<int,array<string,string>>                    $colour_options Colour options.
 	 * @param array<int,array<string,string>>                    $headboard_options Headboard options.
-	 * @param array{size:array<string,array<string,mixed>>,colour:array<string,array<string,array<string,int>>>,headboard:array<string,array<string,array<string,int>>>} $saved Saved media.
+	 * @param array<int,array<string,string>>                    $storage_options Storage options.
+	 * @param array{size:array<string,array<string,mixed>>,colour:array<string,array<string,array<string,int>>>,headboard:array<string,array<string,array<string,int>>>,storage:array<string,array<string,array<string,array<string,int>>>>>} $saved Saved media.
 	 * @param array<string,string>                               $layer_labels Layer labels.
 	 */
-	private static function render_size_colour_layer_sets( $size_options, $colour_options, $headboard_options, $saved, $layer_labels ) {
-		$colour_slots = WCBC_Config::colour_layer_slots();
+	private static function render_size_colour_layer_sets( $size_options, $colour_options, $headboard_options, $storage_options, $saved, $layer_labels ) {
+		$colour_slots   = WCBC_Config::colour_layer_slots();
+		$storage_slots  = WCBC_Config::storage_layer_slots();
 		$saved_headboards = isset( $saved['headboard'] ) ? $saved['headboard'] : array();
+		$saved_storage    = isset( $saved['storage'] ) ? $saved['storage'] : array();
 
 		foreach ( $size_options as $size ) {
 			$size_id    = $size['id'];
@@ -377,6 +380,37 @@ class WCBC_Admin {
 						</details>
 					<?php endforeach; ?>
 				</div>
+
+				<div class="wcbc-size-storage-layers">
+					<h4><?php esc_html_e( 'Base & storage by option & colour', 'wc-bed-configurator' ); ?></h4>
+					<p class="description"><?php esc_html_e( 'For each storage option (No Drawers, Ottoman, 2 Drawers, etc.), assign the bed base and drawer layers per colour. Selecting a storage option on the storefront replaces these layers for that size.', 'wc-bed-configurator' ); ?></p>
+					<?php foreach ( $storage_options as $storage ) : ?>
+						<?php
+						$storage_id    = $storage['id'];
+						$storage_title = trim( $storage['label'] . ( ! empty( $storage['sublabel'] ) ? ' ' . $storage['sublabel'] : '' ) );
+						$size_storage  = isset( $saved_storage[ $size_id ] ) ? $saved_storage[ $size_id ] : array();
+						$option_colours = isset( $size_storage[ $storage_id ] ) ? $size_storage[ $storage_id ] : array();
+						?>
+						<details class="wcbc-variation-layer-set wcbc-storage-option-set">
+							<summary><?php echo esc_html( $storage_title ); ?></summary>
+							<?php foreach ( $colour_options as $colour ) : ?>
+								<?php
+								$colour_id      = $colour['id'];
+								$colour_title   = trim( $colour['label'] . ( ! empty( $colour['sublabel'] ) ? ' — ' . $colour['sublabel'] : '' ) );
+								$storage_layers = isset( $option_colours[ $colour_id ] ) ? $option_colours[ $colour_id ] : array();
+								?>
+								<details class="wcbc-variation-layer-set wcbc-storage-colour-set">
+									<summary><?php echo esc_html( $colour_title ); ?></summary>
+									<div class="wcbc-layer-media-grid">
+										<?php foreach ( $storage_slots as $layer ) : ?>
+											<?php self::render_layer_picker( 'storage', $size_id, $colour_id, $layer, $storage_layers, $layer_labels, $size_title . ' / ' . $storage_title . ' / ' . $colour_title, $storage_id ); ?>
+										<?php endforeach; ?>
+									</div>
+								</details>
+							<?php endforeach; ?>
+						</details>
+					<?php endforeach; ?>
+				</div>
 			</details>
 			<?php
 		}
@@ -392,14 +426,17 @@ class WCBC_Admin {
 	 * @param array<string,int>    $layers Saved layer map.
 	 * @param array<string,string> $layer_labels Labels.
 	 * @param string               $context_title Context for media frame title.
+	 * @param string               $storage_id Storage id (storage dimension only).
 	 */
-	private static function render_layer_picker( $dimension, $size_id, $colour_id, $layer, $layers, $layer_labels, $context_title ) {
+	private static function render_layer_picker( $dimension, $size_id, $colour_id, $layer, $layers, $layer_labels, $context_title, $storage_id = '' ) {
 		$attachment_id = isset( $layers[ $layer ] ) ? (int) $layers[ $layer ] : 0;
 		$preview_url   = $attachment_id ? wp_get_attachment_image_url( $attachment_id, 'medium' ) : '';
 		$label         = isset( $layer_labels[ $layer ] ) ? $layer_labels[ $layer ] : $layer;
 
 		if ( 'colour' === $dimension ) {
 			$input_name = 'wcbc_variation_layers[colour][' . esc_attr( $size_id ) . '][' . esc_attr( $colour_id ) . '][' . esc_attr( $layer ) . ']';
+		} elseif ( 'storage' === $dimension ) {
+			$input_name = 'wcbc_variation_layers[storage][' . esc_attr( $size_id ) . '][' . esc_attr( $storage_id ) . '][' . esc_attr( $colour_id ) . '][' . esc_attr( $layer ) . ']';
 		} else {
 			$input_name = 'wcbc_variation_layers[size][' . esc_attr( $size_id ) . '][' . esc_attr( $layer ) . ']';
 		}
@@ -416,6 +453,9 @@ class WCBC_Admin {
 				data-size-id="<?php echo esc_attr( $size_id ); ?>"
 				data-colour-id="<?php echo esc_attr( $colour_id ); ?>"
 				data-layer="<?php echo esc_attr( $layer ); ?>"
+				<?php if ( $storage_id ) : ?>
+					data-storage-id="<?php echo esc_attr( $storage_id ); ?>"
+				<?php endif; ?>
 			/>
 			<button type="button" class="button wcbc-upload-variation-layer" data-title="<?php echo esc_attr( $context_title . ' — ' . $label ); ?>">
 				<?php esc_html_e( 'Select image', 'wc-bed-configurator' ); ?>
@@ -497,9 +537,18 @@ class WCBC_Admin {
 		if ( 'headboard' === $layer_type ) {
 			$key_a = isset( $_POST['style_id'] ) ? sanitize_text_field( wp_unslash( $_POST['style_id'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 			$key_b = isset( $_POST['colour_id'] ) ? sanitize_text_field( wp_unslash( $_POST['colour_id'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+			$key_c = '';
+		} elseif ( 'storage' === $layer_type ) {
+			$key_a = isset( $_POST['storage_id'] ) ? sanitize_text_field( wp_unslash( $_POST['storage_id'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+			$key_b = isset( $_POST['colour_id'] ) ? sanitize_text_field( wp_unslash( $_POST['colour_id'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+			$key_c = isset( $_POST['layer'] ) ? sanitize_text_field( wp_unslash( $_POST['layer'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+			if ( ! $key_c && isset( $_POST['layer_key'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+				$key_c = sanitize_text_field( wp_unslash( $_POST['layer_key'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
+			}
 		} else {
 			$key_a = isset( $_POST['colour_id'] ) ? sanitize_text_field( wp_unslash( $_POST['colour_id'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 			$key_b = isset( $_POST['layer_key'] ) ? sanitize_text_field( wp_unslash( $_POST['layer_key'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+			$key_c = '';
 			if ( ! $key_b && isset( $_POST['layer'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 				$key_b = sanitize_text_field( wp_unslash( $_POST['layer'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
 			}
@@ -509,7 +558,7 @@ class WCBC_Admin {
 			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'wc-bed-configurator' ) ), 403 );
 		}
 
-		$saved = WCBC_Config::set_variation_layer_attachment( $product_id, $layer_type, $size_id, $key_a, $key_b, $attachment_id );
+		$saved = WCBC_Config::set_variation_layer_attachment( $product_id, $layer_type, $size_id, $key_a, $key_b, $attachment_id, $key_c );
 		if ( ! $saved ) {
 			wp_send_json_error( array( 'message' => __( 'Could not save layer image.', 'wc-bed-configurator' ) ), 500 );
 		}

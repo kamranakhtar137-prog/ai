@@ -128,6 +128,7 @@ class WCBC_Config {
 			'size'      => array(),
 			'colour'    => array(),
 			'headboard' => array(),
+			'storage'   => array(),
 		);
 
 		if ( ! is_array( $raw ) ) {
@@ -172,8 +173,8 @@ class WCBC_Config {
 		}
 
 		if ( empty( $raw['colour'] ) || ! is_array( $raw['colour'] ) ) {
-			return $out;
-		}
+			// Continue so storage/headboard maps still load when colour is empty.
+		} else {
 
 		foreach ( $raw['colour'] as $size_id => $colours ) {
 			$size_id = sanitize_title( (string) $size_id );
@@ -200,6 +201,33 @@ class WCBC_Config {
 				$clean = self::sanitize_colour_layer_map( $layers );
 				if ( $clean ) {
 					$out['colour'][ $size_id ][ $colour_id ] = $clean;
+				}
+			}
+		}
+
+		}
+
+		if ( ! empty( $raw['storage'] ) && is_array( $raw['storage'] ) ) {
+			foreach ( $raw['storage'] as $size_id => $storage_options ) {
+				$size_id = sanitize_title( (string) $size_id );
+				if ( ! is_array( $storage_options ) ) {
+					continue;
+				}
+				foreach ( $storage_options as $storage_id => $colours ) {
+					$storage_id = sanitize_title( (string) $storage_id );
+					if ( ! is_array( $colours ) ) {
+						continue;
+					}
+					foreach ( $colours as $colour_id => $layers ) {
+						$colour_id = sanitize_title( (string) $colour_id );
+						if ( ! is_array( $layers ) ) {
+							continue;
+						}
+						$clean = self::sanitize_storage_layer_map( $layers );
+						if ( $clean ) {
+							$out['storage'][ $size_id ][ $storage_id ][ $colour_id ] = $clean;
+						}
+					}
 				}
 			}
 		}
@@ -231,6 +259,29 @@ class WCBC_Config {
 	private static function sanitize_colour_layer_map( $layers, $keep_empty = false ) {
 		$out = array();
 		foreach ( self::colour_layer_slots() as $layer ) {
+			if ( ! array_key_exists( $layer, $layers ) ) {
+				continue;
+			}
+			$id = absint( $layers[ $layer ] );
+			if ( $id ) {
+				$out[ $layer ] = $id;
+			} elseif ( $keep_empty ) {
+				$out[ $layer ] = 0;
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Keep only storage-scoped layer attachment IDs.
+	 *
+	 * @param array<string,mixed> $layers Layer map.
+	 * @param bool                $keep_empty Keep zero values so merge can clear attachments.
+	 * @return array<string,int>
+	 */
+	private static function sanitize_storage_layer_map( $layers, $keep_empty = false ) {
+		$out = array();
+		foreach ( self::storage_layer_slots() as $layer ) {
 			if ( ! array_key_exists( $layer, $layers ) ) {
 				continue;
 			}
@@ -317,6 +368,7 @@ class WCBC_Config {
 		$out = array(
 			'colour'    => array(),
 			'headboard' => array(),
+			'storage'   => array(),
 		);
 
 		if ( ! is_array( $posted ) ) {
@@ -361,6 +413,31 @@ class WCBC_Config {
 			}
 		}
 
+		if ( ! empty( $posted['storage'] ) && is_array( $posted['storage'] ) ) {
+			foreach ( $posted['storage'] as $size_id => $storage_options ) {
+				$size_id = sanitize_title( (string) $size_id );
+				if ( ! is_array( $storage_options ) ) {
+					continue;
+				}
+				foreach ( $storage_options as $storage_id => $colours ) {
+					$storage_id = sanitize_title( (string) $storage_id );
+					if ( ! is_array( $colours ) ) {
+						continue;
+					}
+					foreach ( $colours as $colour_id => $layers ) {
+						$colour_id = sanitize_title( (string) $colour_id );
+						if ( ! is_array( $layers ) ) {
+							continue;
+						}
+						$clean = self::sanitize_storage_layer_map( $layers, true );
+						if ( $clean ) {
+							$out['storage'][ $size_id ][ $storage_id ][ $colour_id ] = $clean;
+						}
+					}
+				}
+			}
+		}
+
 		return $out;
 	}
 
@@ -376,6 +453,7 @@ class WCBC_Config {
 			'size'      => ( ! empty( $existing['size'] ) && is_array( $existing['size'] ) ) ? $existing['size'] : array(),
 			'colour'    => ( ! empty( $existing['colour'] ) && is_array( $existing['colour'] ) ) ? $existing['colour'] : array(),
 			'headboard' => ( ! empty( $existing['headboard'] ) && is_array( $existing['headboard'] ) ) ? $existing['headboard'] : array(),
+			'storage'   => ( ! empty( $existing['storage'] ) && is_array( $existing['storage'] ) ) ? $existing['storage'] : array(),
 		);
 
 		if ( empty( $incoming['colour'] ) || ! is_array( $incoming['colour'] ) ) {
@@ -435,6 +513,39 @@ class WCBC_Config {
 			}
 		}
 
+		foreach ( $incoming['storage'] as $size_id => $storage_options ) {
+			if ( ! is_array( $storage_options ) ) {
+				continue;
+			}
+			if ( ! isset( $merged['storage'][ $size_id ] ) ) {
+				$merged['storage'][ $size_id ] = array();
+			}
+			foreach ( $storage_options as $storage_id => $colours ) {
+				if ( ! is_array( $colours ) ) {
+					continue;
+				}
+				if ( ! isset( $merged['storage'][ $size_id ][ $storage_id ] ) ) {
+					$merged['storage'][ $size_id ][ $storage_id ] = array();
+				}
+				foreach ( $colours as $colour_id => $layers ) {
+					if ( ! is_array( $layers ) ) {
+						continue;
+					}
+					if ( ! isset( $merged['storage'][ $size_id ][ $storage_id ][ $colour_id ] ) ) {
+						$merged['storage'][ $size_id ][ $storage_id ][ $colour_id ] = array();
+					}
+					foreach ( $layers as $layer => $attachment_id ) {
+						$attachment_id = absint( $attachment_id );
+						if ( $attachment_id ) {
+							$merged['storage'][ $size_id ][ $storage_id ][ $colour_id ][ $layer ] = $attachment_id;
+						} else {
+							unset( $merged['storage'][ $size_id ][ $storage_id ][ $colour_id ][ $layer ] );
+						}
+					}
+				}
+			}
+		}
+
 		return $merged;
 	}
 
@@ -450,6 +561,7 @@ class WCBC_Config {
 			'headboardStyles' => array(),
 			'sizeHeadboards'  => array(),
 			'colour'          => array(),
+			'storage'         => array(),
 		);
 
 		foreach ( $raw['headboard'] as $size_id => $styles ) {
@@ -481,6 +593,19 @@ class WCBC_Config {
 					$url = wp_get_attachment_image_url( (int) $attachment_id, 'full' );
 					if ( $url ) {
 						$out['colour'][ $size_id ][ $colour_id ][ $layer ] = $url;
+					}
+				}
+			}
+		}
+
+		foreach ( $raw['storage'] as $size_id => $storage_options ) {
+			foreach ( $storage_options as $storage_id => $colours ) {
+				foreach ( $colours as $colour_id => $layers ) {
+					foreach ( $layers as $layer => $attachment_id ) {
+						$url = wp_get_attachment_image_url( (int) $attachment_id, 'full' );
+						if ( $url ) {
+							$out['storage'][ $size_id ][ $storage_id ][ $colour_id ][ $layer ] = $url;
+						}
 					}
 				}
 			}
@@ -532,6 +657,20 @@ class WCBC_Config {
 
 		if ( $headboard_id && false !== strpos( $headboard_id, 'no-headboard' ) ) {
 			$layers['headboard'] = $transparent;
+		}
+
+		$storage_id = ! empty( $selections['storage'] ) ? sanitize_title( $selections['storage'] ) : ( ! empty( $defaults['storage'] ) ? sanitize_title( $defaults['storage'] ) : '' );
+		if ( $size_id && $storage_id && $colour_id && ! empty( $media['storage'][ $size_id ][ $storage_id ][ $colour_id ] ) ) {
+			$storage_set = $media['storage'][ $size_id ][ $storage_id ][ $colour_id ];
+			foreach ( self::storage_layer_slots() as $layer ) {
+				if ( empty( $storage_set[ $layer ] ) ) {
+					continue;
+				}
+				$url = wp_get_attachment_image_url( (int) $storage_set[ $layer ], 'full' );
+				if ( $url ) {
+					$layers[ $layer ] = $url;
+				}
+			}
 		}
 
 		return $layers;
@@ -619,6 +758,32 @@ class WCBC_Config {
 	}
 
 	/**
+	 * Storage options from config for per-size layer assignment.
+	 *
+	 * @param array<string,mixed> $config Config.
+	 * @return array<int,array<string,string>>
+	 */
+	public static function storage_options_for_admin( $config ) {
+		$options = array();
+		if ( empty( $config['groups'] ) ) {
+			return $options;
+		}
+		foreach ( $config['groups'] as $group ) {
+			if ( 'storage' !== $group['id'] || empty( $group['options'] ) ) {
+				continue;
+			}
+			foreach ( $group['options'] as $option ) {
+				$options[] = array(
+					'id'       => $option['id'],
+					'label'    => $option['label'],
+					'sublabel' => isset( $option['sublabel'] ) ? $option['sublabel'] : '',
+				);
+			}
+		}
+		return $options;
+	}
+
+	/**
 	 * Storefront + admin catalog sizes.
 	 *
 	 * @return string[]
@@ -690,7 +855,7 @@ class WCBC_Config {
 	 * @return string[]
 	 */
 	public static function customer_visible_group_ids() {
-		return array( 'size', 'colour', 'headboard' );
+		return array( 'size', 'colour', 'headboard', 'base_depth', 'storage' );
 	}
 
 	/**
@@ -949,19 +1114,21 @@ class WCBC_Config {
 	 * Save or remove one variation preview layer attachment immediately.
 	 *
 	 * @param int    $product_id Product ID.
-	 * @param string $layer_type colour|headboard.
+	 * @param string $layer_type colour|headboard|storage.
 	 * @param string $size_id Size id.
-	 * @param string $key_a Colour id (colour) or style id (headboard).
-	 * @param string $key_b Layer slug (colour) or colour id (headboard).
+	 * @param string $key_a Colour id (colour), style id (headboard), or storage id (storage).
+	 * @param string $key_b Layer slug (colour) or colour id (headboard/storage).
 	 * @param int    $attachment_id Attachment ID (0 removes).
+	 * @param string $key_c Layer slug when layer_type is storage.
 	 * @return bool
 	 */
-	public static function set_variation_layer_attachment( $product_id, $layer_type, $size_id, $key_a, $key_b, $attachment_id ) {
+	public static function set_variation_layer_attachment( $product_id, $layer_type, $size_id, $key_a, $key_b, $attachment_id, $key_c = '' ) {
 		$product_id    = absint( $product_id );
 		$layer_type    = sanitize_title( (string) $layer_type );
 		$size_id       = sanitize_title( (string) $size_id );
 		$key_a         = sanitize_title( (string) $key_a );
 		$key_b         = sanitize_title( (string) $key_b );
+		$key_c         = sanitize_title( (string) $key_c );
 		$attachment_id = absint( $attachment_id );
 
 		if ( ! $product_id || ! $size_id || ! $key_a || ! $key_b ) {
@@ -970,7 +1137,25 @@ class WCBC_Config {
 
 		$media = self::get_variation_layer_media( $product_id );
 
-		if ( 'headboard' === $layer_type ) {
+		if ( 'storage' === $layer_type ) {
+			if ( ! $key_c || ! in_array( $key_c, self::storage_layer_slots(), true ) ) {
+				return false;
+			}
+			if ( ! isset( $media['storage'][ $size_id ] ) ) {
+				$media['storage'][ $size_id ] = array();
+			}
+			if ( ! isset( $media['storage'][ $size_id ][ $key_a ] ) ) {
+				$media['storage'][ $size_id ][ $key_a ] = array();
+			}
+			if ( ! isset( $media['storage'][ $size_id ][ $key_a ][ $key_b ] ) ) {
+				$media['storage'][ $size_id ][ $key_a ][ $key_b ] = array();
+			}
+			if ( $attachment_id ) {
+				$media['storage'][ $size_id ][ $key_a ][ $key_b ][ $key_c ] = $attachment_id;
+			} else {
+				unset( $media['storage'][ $size_id ][ $key_a ][ $key_b ][ $key_c ] );
+			}
+		} elseif ( 'headboard' === $layer_type ) {
 			if ( ! isset( $media['headboard'][ $size_id ] ) ) {
 				$media['headboard'][ $size_id ] = array();
 			}
@@ -1069,6 +1254,15 @@ class WCBC_Config {
 	}
 
 	/**
+	 * Layers that swap when the customer changes storage option.
+	 *
+	 * @return string[]
+	 */
+	public static function storage_layer_slots() {
+		return array( 'base', 'storage_back', 'storage_1', 'storage_2', 'storage_3', 'storage_4' );
+	}
+
+	/**
 	 * Layers whose image file changes with customer selections (not one fixed upload).
 	 *
 	 * @return string[]
@@ -1162,8 +1356,11 @@ class WCBC_Config {
 						self::opt( 'ottoman', 'Ottoman', '', 80, $base . 'swatches/storage/ottoman.png' ),
 						self::opt( 'no-drawers', 'No Drawers', '', 0, $base . 'swatches/storage/no-drawers.png' ),
 						self::opt( 'end-drawer', 'End Drawer', '', 40, $base . 'swatches/storage/end-drawer.png' ),
+						self::opt( 'end-drawer-with-2-mini-drawers', 'End Drawer with 2 Mini Drawers', '', 55, $base . 'swatches/storage/end-drawer.png' ),
 						self::opt( '2-drawers', '2 Drawers', '', 50, $base . 'swatches/storage/2-drawers.png' ),
 						self::opt( '2-drawers-same-side', '2 Drawers Same Side', '', 50, $base . 'swatches/storage/2-drawers.png' ),
+						self::opt( '2-drawers-with-end-drawer', '2 Drawers with End Drawer', '', 60, $base . 'swatches/storage/2-drawers.png' ),
+						self::opt( '2-drawers-with-2-mini-drawers', '2 Drawers with 2 Mini Drawers', '', 65, $base . 'swatches/storage/2-drawers.png' ),
 						self::opt( '4-drawers', '4 Drawers', '', 90, $base . 'swatches/storage/4-drawers.png' ),
 					),
 				),

@@ -289,12 +289,16 @@
 
 	function buildVariationMediaLayers(selections) {
 		var transparent = wcbcData.transparentLayer || (wcbcData.layerBase || '') + 'transparent.png';
-		var maps = wcbcData.variationLayerMedia || { colour: {}, headboardStyles: {}, sizeHeadboards: {} };
+		var maps = wcbcData.variationLayerMedia || { colour: {}, headboardStyles: {}, sizeHeadboards: {}, storage: {} };
 		var colourSlots = wcbcData.colourLayerSlots || ['legs', 'headboard', 'storage_back', 'base', 'storage_1', 'storage_2', 'storage_3', 'storage_4'];
-		var size = pick(selections, 'size') || 'small-single';
-		var colour = resolveColourSlug(pick(selections, 'colour') || 'light-silver-velvet');
+		var storageSlots = wcbcData.storageLayerSlots || ['base', 'storage_back', 'storage_1', 'storage_2', 'storage_3', 'storage_4'];
+		var defaults = (wcbcData.config && wcbcData.config.defaults) ? wcbcData.config.defaults : {};
+		var size = pick(selections, 'size') || defaults.size || 'small-single';
+		var colour = resolveColourSlug(pick(selections, 'colour') || defaults.colour || 'light-silver-velvet');
+		var storage = pick(selections, 'storage') || defaults.storage || 'no-drawers';
 		var headboard = pick(selections, 'headboard');
 		var colourSet = (maps.colour[size] && maps.colour[size][colour]) ? maps.colour[size][colour] : {};
+		var storageSet = (maps.storage[size] && maps.storage[size][storage] && maps.storage[size][storage][colour]) ? maps.storage[size][storage][colour] : {};
 		var headboardStyles = maps.headboardStyles || {};
 		var legacyHeadboards = maps.sizeHeadboards || {};
 		var layers = {};
@@ -317,6 +321,12 @@
 		} else if (headboard && legacyHeadboards[size] && legacyHeadboards[size][headboard]) {
 			layers.headboard = legacyHeadboards[size][headboard];
 		}
+
+		storageSlots.forEach(function (layer) {
+			if (storageSet[layer]) {
+				layers[layer] = storageSet[layer];
+			}
+		});
 
 		return layers;
 	}
@@ -578,7 +588,7 @@
 		syncHiddenFields();
 		syncGroupSelectionUI(groupId, optionId);
 
-		var previewOpts = (groupId === 'headboard' || groupId === 'size' || groupId === 'colour') ? { forceHeadboard: true } : {};
+		var previewOpts = (groupId === 'headboard' || groupId === 'size' || groupId === 'colour' || groupId === 'storage' || groupId === 'base_depth') ? { forceHeadboard: true } : {};
 
 		// Update bed preview immediately from local layer map.
 		refreshPreview(previewOpts);

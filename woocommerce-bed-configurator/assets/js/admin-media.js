@@ -76,6 +76,10 @@
 		if (layerType === 'colour') {
 			data.colour_id = $input.data('colour-id');
 			data.layer = $input.data('layer');
+		} else if (layerType === 'storage') {
+			data.storage_id = $input.data('storage-id');
+			data.colour_id = $input.data('colour-id');
+			data.layer = $input.data('layer');
 		} else {
 			data.style_id = $input.data('style-id');
 			data.colour_id = $input.data('colour-id');
