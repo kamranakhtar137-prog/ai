@@ -14,8 +14,8 @@ WordPress plugin for post-launch SEO remediation on [vendavo.com](https://www.ve
 
 | Issue | Implementation |
 | --- | --- |
-| Organization schema staging URLs | Removes `vendavostg.wpenginepowered.com` JSON-LD from rendered HTML |
-| FAQPage / SoftwareApplication schema | Adds schema to `/platform/` pages from Elementor FAQ tab content |
+| Organization schema staging URLs | Removes staging JSON-LD from rendered HTML and sanitizes Yoast Organization URLs dynamically |
+| FAQPage / SoftwareApplication schema | **Dynamic** — generated at runtime from page title, SEO meta description, and Elementor FAQ tab content |
 | Paginated canonical tags | Forces absolute canonical URLs with `?page=N` via Yoast/core filters; removes duplicate relative canonical tags |
 | Infinite pagination | Removes `vfp-loadmore` links on the last page; 301 redirects invalid `?page=` URLs |
 | XML sitemap cleanup | Excludes author, category, board, leadership, and utility URLs from Yoast sitemaps |
@@ -37,6 +37,25 @@ See `docs/REDIRECT-REVIEW.md` for review notes.
 ## Sitemap exclusions
 
 See `docs/SITEMAP-REMOVED.md` for the list of URLs/types removed from Yoast XML sitemaps.
+
+## Dynamic schema behavior
+
+- **SoftwareApplication** name comes from the page title
+- **SoftwareApplication** description comes from Yoast/Rank Math meta description, excerpt, or first content paragraph
+- **FAQPage** questions/answers are parsed from Elementor `_elementor_data` (accordion/tabs) with rendered HTML fallback
+- **Organization** URLs are forced to `home_url()` and staging domains are stripped from Yoast schema
+- No static JSON files need to be maintained — update page content and schema updates automatically
+
+### Enable schema on additional pages later
+
+```php
+add_filter( 'vendavo_seo_schema_enabled_for_post', function( $enabled, $post ) {
+    if ( is_page( 'my-new-faq-page', $post ) ) {
+        return true;
+    }
+    return $enabled;
+}, 10, 2 );
+```
 
 ## Paginated archives configured
 
