@@ -1,0 +1,334 @@
+{% comment %}
+  PageSpeed-optimized product gallery snippet.
+
+  Performance changes vs default:
+  - Gallery markup renders first (LCP image is not blocked by CSS/JS)
+  - Removed unused image_list Liquid loop and per-image URL captures
+  - Right-sized srcset/sizes for mobile LCP
+  - Zoom/lightbox CSS + JS load only on user interaction
+{% endcomment %}
+
+{%- assign gallery_sizes = '(max-width: 798px) calc(100vw - 32px), (max-width: 1200px) 60vw, 38vw' -%}
+
+<div class="gallery-wrap
+            gallery-arrows--{{ gallery_arrows }}
+            {% if set_product_height != blank %}product-height-set{% endif %}
+            gallery-thumbnails--{{ gallery_thumbnail_position }}">
+  <div class="product_gallery
+              js-product-gallery product-{{ product.id }}-gallery
+              transparentBackground--{{ settings.slideshow_button_style }}
+              slideshow-transition--{{ gallery_slideshow_transition }}
+              popup-enabled--{{ gallery_click_to_zoom }}
+              show-gallery-arrows--{{ gallery_arrows }}
+              {% if product.media.size > 1 %} multi-image {% else %} single-image {% endif %}"
+              data-thumbnails-enabled="{{ gallery_thumbnails }}"
+              data-gallery-arrows-enabled="{{ gallery_arrows }}"
+              data-slideshow-speed="{{ gallery_slideshow_speed }}"
+              data-thumbnails-position="{{ gallery_thumbnail_position }}"
+              data-thumbnails-slider-enabled="{{ gallery_thumbnail_slider }}"
+              data-zoom="{{ gallery_hover_zoom }}"
+              data-video-loop="{{ video_looping }}"
+              data-product-id="{{ product.id }}"
+              data-product-lightbox="{{ gallery_click_to_zoom }}"
+              data-media-count="{{ product.media.size }}"
+              data-product-gallery>
+
+    {% for media in product.media %}
+      {%- liquid
+        assign image_alt = media.alt | escape
+        assign is_first_media = forloop.first
+        assign lazyload = true
+        if is_first_media
+          assign lazyload = false
+        endif
+      -%}
+
+      <div class="gallery-cell" data-product-id="{{ product.id }}" data-media-type="{% if media.alt contains 'youtube' or media.alt contains 'vimeo' %}external_video{% else %}{{ media.media_type }}{% endif %}" data-title="{% if image_alt contains 'youtube' or image_alt contains 'vimeo' %}{{ product.title | escape }}{% else %}{{ image_alt }}{% endif %}">
+        {% case media.media_type %}
+          {% when 'image' %}
+            {%- capture image_zoom -%}{{ media | image_url: width: 2048 }}{%- endcapture -%}
+
+            {% if image_alt contains 'youtube' or image_alt contains 'vimeo' %}
+              {% assign alt_text = image_alt | split: ' ' %}
+              {% for property in alt_text %}
+                {% if property contains "src" %}
+                  {% assign cleanURL = property | remove: 'src=' | remove: '&quot;' | remove: '"' %}
+                  <div class="product-gallery__video" data-youtube-video>
+                    <iframe src="{{ cleanURL }}" frameborder="0" loading="lazy" title="{{ product.title | escape }}"></iframe>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              {% if gallery_click_to_zoom and product.images.size > 0 %}
+                <a href="{{ image_zoom }}"
+                   class="product-lightbox-trigger"
+                   data-lightbox-index="{{ forloop.index0 }}"
+                   data-zoom-src="{{ image_zoom }}"
+                   data-zoom-alt="{{ image_alt }}"
+                   tabindex="-1">
+              {% endif %}
+
+              <div
+                class="image__container"
+                style="max-width: {{ media.width }}px; --gallery-aspect-ratio: {{ media.width }} / {{ media.height }};"
+              >
+                {% if product.images.size > 0 %}
+                  {% if gallery_hover_zoom %}
+                    <div class="zoom-container">
+                  {% endif %}
+
+                  {%- if lazyload -%}
+                    {%- capture srcset -%}
+                      {{ media | image_url: width: 1200 }} 1200w,
+                      {{ media | image_url: width: 800 }} 800w,
+                      {{ media | image_url: width: 600 }} 600w,
+                      {{ media | image_url: width: 400 }} 400w
+                    {%- endcapture -%}
+                    <img loading="lazy"
+                      decoding="async"
+                      data-zoom-src="{{ image_zoom }}"
+                      alt="{{ image_alt }}"
+                      class="product-gallery__image lazyload {{ settings.image_loading_style }}"
+                      data-image-id="{{ media.id }}"
+                      data-index="{{ forloop.index0 }}"
+                      sizes="{{ gallery_sizes }}"
+                      data-aspectratio="{{ media.width }}/{{ media.height }}"
+                      data-src="{{ media | image_url: width: 600 }}"
+                      data-srcset="{{ srcset }}"
+                      height="{{ media.height }}"
+                      width="{{ media.width }}"
+                      srcset="data:image/svg+xml;utf8,<svg%20xmlns='http://www.w3.org/2000/svg'%20width='{{ media.width }}'%20height='{{ media.height }}'></svg>"
+                    />
+                  {%- else -%}
+                    {%- capture srcset -%}
+                      {{ media | image_url: width: 1000 }} 1000w,
+                      {{ media | image_url: width: 800 }} 800w,
+                      {{ media | image_url: width: 600 }} 600w,
+                      {{ media | image_url: width: 500 }} 500w,
+                      {{ media | image_url: width: 400 }} 400w
+                    {%- endcapture -%}
+                    {{
+                      media
+                      | image_url: width: 500
+                      | image_tag:
+                        loading: 'eager',
+                        fetchpriority: 'high',
+                        decoding: 'async',
+                        class: 'product-gallery__image',
+                        alt: image_alt,
+                        width: media.width,
+                        height: media.height,
+                        sizes: gallery_sizes,
+                        srcset: srcset,
+                        data-image-id: media.id,
+                        data-index: forloop.index0,
+                        data-zoom-src: image_zoom
+                    }}
+                  {%- endif -%}
+
+                  {% if gallery_hover_zoom %}
+                    <div class="zoom-lens" aria-hidden="true">
+                      <img class="zoom-lens__img" src="" alt="" draggable="false" decoding="async">
+                    </div>
+                    </div>
+                  {% endif %}
+                {% else %}
+                  <img loading="lazy" decoding="async" width="800" height="1200" src="{{ product.featured_image | image_url: width: 800 }}" alt="{{ product.title | escape }}" />
+                {% endif %}
+              </div>
+
+              {% if gallery_click_to_zoom and product.images.size > 0 %}
+                </a>
+              {% endif %}
+            {% endif %}
+          {% when 'external_video' %}
+            <div class="product-gallery__video" data-youtube-video>
+              {{ media | external_video_tag }}
+            </div>
+          {% when 'video' %}
+            <div class="product-gallery__video" data-html5-video>
+              {{ media | video_tag: controls: true }}
+            </div>
+          {% when 'model' %}
+            <div class="product-gallery__model">
+              {{ media | model_viewer_tag: reveal: 'interaction', toggleable: true, image_size: '800x800' }}
+
+              <button class="view-in-your-space" data-shopify-xr data-shopify-model3d-id="{{ media.id }}" data-shopify-title={{ product.title | escape }} style="display: none;">
+                <svg width="33" height="33" viewBox="0 0 33 33" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M16 9L22.0622 12.5V19.5L16 23L9.93782 19.5V12.5L16 9Z" stroke="#3A3A3A" stroke-width="1.5"/>
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M16 23V15.6024C16.6225 15.2002 16.6225 15.2002 16.6225 15.2002L22 12V19.4082L16 23Z" fill="#3A3A3A"/>
+                </svg>
+                {{ 'products.product.view_in_your_space' | t | capitalize }}
+              </button>
+            </div>
+          {% else %}
+            {{ media | media_tag }}
+        {% endcase %}
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if gallery_thumbnails == true %}
+    {% if image_width != 'full' %}
+      <div class="
+            product_gallery_nav
+            {% unless gallery_thumbnail_slider %}
+              product_gallery_nav--slider-enabled
+            {% endunless %}
+            product-gallery__thumbnails
+            product_gallery_nav--{{ thumbnail_position }}
+            product-{{ product.id }}-gallery-nav
+          ">
+        {% if product.media.size > 1 %}
+          {% for media in product.media %}
+            {% if media.media_type contains 'video' %}
+              {% assign thumbnail_badge = 'video-thumbnail' %}
+            {% elsif media.media_type contains 'model' %}
+              {% assign thumbnail_badge = '3d-thumbnail' %}
+            {% else %}
+              {% assign thumbnail_badge = '' %}
+            {% endif %}
+
+            <div tabindex="0" class="gallery-cell product-gallery__thumbnail" data-title="{{ media.alt | escape }}">
+              {%
+                render 'image-element',
+                image: media,
+                alt: media.alt,
+                loading: 'lazy',
+              %}
+              {% if thumbnail_badge == 'video-thumbnail' %}
+                <svg class="media-badge" width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path fill-rule="evenodd" clip-rule="evenodd" d="M1 25H25V1H1V25Z" fill="white"/><path class="media-badge__outline" d="M0.5 25V25.5H1H25H25.5V25V1V0.5H25H1H0.5V1V25Z" stroke="black" stroke-opacity="0.05"/><path fill-rule="evenodd" clip-rule="evenodd" d="M8.19995 5.8V20.2L19.3999 12.5858L8.19995 5.8Z" fill="#3A3A3A" fill-opacity="0.6"/></svg>
+              {% elsif thumbnail_badge == '3d-thumbnail' %}
+                <svg class="media-badge" width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path fill-rule="evenodd" clip-rule="evenodd" d="M1 25H25V1H1V25Z" fill="white"/><path class="media-badge__outline" d="M0.5 25V25.5H1H25H25.5V25V1V0.5H25H1H0.5V1V25Z" stroke="black" stroke-opacity="0.05"/><g opacity="0.6"><path fill-rule="evenodd" clip-rule="evenodd" d="M13 6L19.0622 9.5V16.5L13 20L6.93782 16.5V9.5L13 6Z" stroke="#3A3A3A" stroke-width="1.5"/><path fill-rule="evenodd" clip-rule="evenodd" d="M13 20V12.6024C13.6225 12.2002 13.6225 12.2002 13.6225 12.2002L19 9V16.4082L13 20Z" fill="#3A3A3A"/></g></svg>
+              {% endif %}
+            </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+    {% endif %}
+  {% endif %}
+</div>
+
+{% style %}
+.shopify-model-viewer-ui model-viewer {
+  --progress-bar-height: 2px;
+  --progress-bar-color: {{ settings.regular_color }};
+}
+{% endstyle %}
+
+{% if gallery_click_to_zoom %}
+<div class="product-lightbox product-lightbox--{{ product.id }}" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Product image zoom">
+  <button type="button" class="product-lightbox__close" aria-label="Close">&times;</button>
+  <button type="button" class="product-lightbox__prev" aria-label="Previous image">&#8249;</button>
+  <button type="button" class="product-lightbox__next" aria-label="Next image">&#8250;</button>
+  <div class="product-lightbox__stage">
+    <div class="product-lightbox__content">
+      <img class="product-lightbox__image" src="" alt="" draggable="false" decoding="async">
+    </div>
+  </div>
+  <div class="product-lightbox__lens" aria-hidden="true">
+    <img class="product-lightbox__lens-img" src="" alt="" draggable="false" decoding="async">
+  </div>
+  <div class="product-lightbox__hint"></div>
+  <div class="product-lightbox__zoom-level" aria-live="polite"></div>
+</div>
+{% endif %}
+
+{% if gallery_click_to_zoom or gallery_hover_zoom %}
+<script>
+  (function () {
+    var productId = '{{ product.id }}';
+    var gallery = document.querySelector('.product-' + productId + '-gallery');
+    if (!gallery) {
+      return;
+    }
+
+    var zoomCssLoaded = false;
+    var lightboxJsPromise;
+    var hoverJsPromise;
+
+    function loadStylesheet(href) {
+      if (zoomCssLoaded) {
+        return Promise.resolve();
+      }
+
+      zoomCssLoaded = true;
+      return new Promise(function (resolve) {
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.onload = resolve;
+        link.onerror = resolve;
+        document.head.appendChild(link);
+      });
+    }
+
+    function loadScript(src) {
+      return new Promise(function (resolve) {
+        var script = document.createElement('script');
+        script.src = src;
+        script.defer = true;
+        script.onload = resolve;
+        script.onerror = resolve;
+        document.body.appendChild(script);
+      });
+    }
+
+    function ensureZoomCss() {
+      return loadStylesheet('{{ "product-gallery-zoom.css" | asset_url }}');
+    }
+
+    function ensureLightboxJs() {
+      if (!lightboxJsPromise) {
+        lightboxJsPromise = loadScript('{{ "product-gallery-lightbox.js" | asset_url }}');
+      }
+      return lightboxJsPromise;
+    }
+
+    function ensureHoverJs() {
+      if (!hoverJsPromise) {
+        hoverJsPromise = loadScript('{{ "product-gallery-hover-zoom.js" | asset_url }}');
+      }
+      return hoverJsPromise;
+    }
+
+    {% if gallery_click_to_zoom %}
+    gallery.addEventListener('click', function (event) {
+      var trigger = event.target.closest('.product-lightbox-trigger');
+      if (!trigger) {
+        return;
+      }
+
+      event.preventDefault();
+
+      var index = parseInt(trigger.getAttribute('data-lightbox-index'), 10);
+      if (isNaN(index)) {
+        index = 0;
+      }
+
+      Promise.all([ensureZoomCss(), ensureLightboxJs()]).then(function () {
+        if (window.ProductGalleryLightbox) {
+          window.ProductGalleryLightbox.open(productId, index);
+        }
+      });
+    }, true);
+    {% endif %}
+
+    {% if gallery_hover_zoom %}
+    gallery.addEventListener('mouseenter', function onHoverIntent() {
+      if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+        return;
+      }
+
+      gallery.removeEventListener('mouseenter', onHoverIntent);
+
+      Promise.all([ensureZoomCss(), ensureHoverJs()]).then(function () {
+        if (window.ProductGalleryHoverZoom) {
+          window.ProductGalleryHoverZoom.init(productId);
+        }
+      });
+    }, { passive: true });
+    {% endif %}
+  })();
+</script>
+{% endif %}

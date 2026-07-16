@@ -1,0 +1,61 @@
+{% comment %}
+  Deferred Shopify XR loader — replace the synchronous XR script block at the bottom of snippets/product.liquid.
+
+  @param model_media {Array}
+  @param context {String}
+{% endcomment %}
+
+{% if context == 'product' and model_media.size > 0 %}
+  <script>
+    window.ShopifyXR = window.ShopifyXR || function () {
+      (ShopifyXR.q = ShopifyXR.q || []).push(arguments);
+    };
+
+    ShopifyXR('addModels', {{ model_media | json }});
+
+    (function () {
+      var loaded = false;
+
+      function loadShopifyXR() {
+        if (loaded) {
+          return;
+        }
+        loaded = true;
+
+        var xrScript = document.createElement('script');
+        xrScript.defer = true;
+        xrScript.src = 'https://cdn.shopify.com/shopifycloud/shopify-xr-js/assets/v1.0/shopify-xr.en.js';
+        document.head.appendChild(xrScript);
+
+        var modelUiScript = document.createElement('script');
+        modelUiScript.defer = true;
+        modelUiScript.src = 'https://cdn.shopify.com/shopifycloud/model-viewer-ui/assets/v1.0/model-viewer-ui.en.js';
+        document.head.appendChild(modelUiScript);
+      }
+
+      function bindXRTriggers() {
+        document.querySelectorAll('[data-shopify-xr], model-viewer').forEach(function (el) {
+          el.addEventListener('pointerdown', loadShopifyXR, { once: true, passive: true });
+        });
+
+        var modelCell = document.querySelector('.product-gallery__model');
+        if (modelCell && 'IntersectionObserver' in window) {
+          new IntersectionObserver(function (entries, observer) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                loadShopifyXR();
+                observer.disconnect();
+              }
+            });
+          }, { rootMargin: '200px' }).observe(modelCell);
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindXRTriggers);
+      } else {
+        bindXRTriggers();
+      }
+    })();
+  </script>
+{% endif %}
