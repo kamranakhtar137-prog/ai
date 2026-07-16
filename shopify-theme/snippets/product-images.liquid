@@ -26,7 +26,7 @@
               data-slideshow-speed="{{ gallery_slideshow_speed }}"
               data-thumbnails-position="{{ gallery_thumbnail_position }}"
               data-thumbnails-slider-enabled="{{ gallery_thumbnail_slider }}"
-              data-zoom="{{ gallery_hover_zoom }}"
+              data-zoom="false"
               data-video-loop="{{ video_looping }}"
               data-product-id="{{ product.id }}"
               data-product-lightbox="{{ gallery_click_to_zoom }}"
@@ -127,9 +127,6 @@
                   {%- endif -%}
 
                   {% if gallery_hover_zoom %}
-                    <div class="zoom-lens" aria-hidden="true">
-                      <img class="zoom-lens__img" src="" alt="" draggable="false" decoding="async">
-                    </div>
                     </div>
                   {% endif %}
                 {% else %}
