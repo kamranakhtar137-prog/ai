@@ -315,19 +315,43 @@
     {% endif %}
 
     {% if gallery_hover_zoom %}
-    gallery.addEventListener('mouseenter', function onHoverIntent() {
+    var hoverAssetsLoading = false;
+    var hoverAssetsReady = false;
+
+    function loadHoverZoomAssets() {
+      if (hoverAssetsReady) {
+        if (window.ProductGalleryHoverZoom) {
+          window.ProductGalleryHoverZoom.init(productId);
+        }
+        return Promise.resolve();
+      }
+
+      if (hoverAssetsLoading) {
+        return hoverJsPromise || Promise.resolve();
+      }
+
+      hoverAssetsLoading = true;
+
+      return Promise.all([ensureZoomCss(), ensureHoverJs()]).then(function () {
+        hoverAssetsReady = true;
+        if (window.ProductGalleryHoverZoom) {
+          window.ProductGalleryHoverZoom.init(productId);
+        }
+      });
+    }
+
+    function onHoverIntent() {
       if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
         return;
       }
 
       gallery.removeEventListener('mouseenter', onHoverIntent);
+      gallery.removeEventListener('mousemove', onHoverIntent);
+      loadHoverZoomAssets();
+    }
 
-      Promise.all([ensureZoomCss(), ensureHoverJs()]).then(function () {
-        if (window.ProductGalleryHoverZoom) {
-          window.ProductGalleryHoverZoom.init(productId);
-        }
-      });
-    }, { passive: true });
+    gallery.addEventListener('mouseenter', onHoverIntent, { passive: true });
+    gallery.addEventListener('mousemove', onHoverIntent, { passive: true });
     {% endif %}
   })();
 </script>
