@@ -4,8 +4,9 @@
   position: relative;
   overflow: visible;
 }
-.zoom-container .zoom-lens {
-  position: absolute;
+.zoom-container .zoom-lens,
+.zoom-lens.is-gallery-hover {
+  position: fixed;
   top: 0;
   left: 0;
   width: 100px;
@@ -20,9 +21,10 @@
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.15s ease;
-  z-index: 5;
+  z-index: 1000;
 }
-.zoom-container .zoom-lens__img {
+.zoom-container .zoom-lens__img,
+.zoom-lens.is-gallery-hover .zoom-lens__img {
   position: absolute;
   top: 0;
   left: 0;
@@ -34,7 +36,8 @@
   user-select: none;
   -webkit-user-drag: none;
 }
-.zoom-container .zoom-lens.is-active {
+.zoom-container .zoom-lens.is-active,
+.zoom-lens.is-gallery-hover.is-active {
   opacity: 1;
   visibility: visible;
 }

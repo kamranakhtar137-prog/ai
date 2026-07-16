@@ -51,13 +51,27 @@
 
     container.setAttribute('data-hover-zoom-ready', 'true');
 
+    lens.classList.add('is-gallery-hover');
+    if (lens.parentNode !== document.body) {
+      document.body.appendChild(lens);
+    }
+
     var lensSize = 100;
     var lensRadius = lensSize / 2;
     var zoomRatio = 2.5;
 
+    function hideLens() {
+      lens.classList.remove('is-active');
+    }
+
     function moveLens(event) {
       var imageRect = image.getBoundingClientRect();
-      var containerRect = container.getBoundingClientRect();
+
+      if (!imageRect.width || !imageRect.height) {
+        hideLens();
+        return;
+      }
+
       var renderBox = getRenderedImageBox(image);
       var imgLeftEdge = imageRect.left + renderBox.offsetX;
       var imgTopEdge = imageRect.top + renderBox.offsetY;
@@ -69,12 +83,12 @@
       var imageY = pointerY - renderBox.offsetY;
 
       if (imageX < 0 || imageY < 0 || imageX > renderBox.width || imageY > renderBox.height) {
-        lens.classList.remove('is-active');
+        hideLens();
         return;
       }
 
       if (renderBox.width < lensSize || renderBox.height < lensSize) {
-        lens.classList.remove('is-active');
+        hideLens();
         return;
       }
 
@@ -90,8 +104,8 @@
 
       lens.style.width = lensSize + 'px';
       lens.style.height = lensSize + 'px';
-      lens.style.left = (clampedCenterX - containerRect.left - lensRadius) + 'px';
-      lens.style.top = (clampedCenterY - containerRect.top - lensRadius) + 'px';
+      lens.style.left = (clampedCenterX - lensRadius) + 'px';
+      lens.style.top = (clampedCenterY - lensRadius) + 'px';
 
       if (lensImg.getAttribute('src') !== zoomSrc) {
         lensImg.src = zoomSrc;
@@ -104,10 +118,9 @@
       lens.classList.add('is-active');
     }
 
-    container.addEventListener('mouseleave', function () {
-      lens.classList.remove('is-active');
-    });
+    container.addEventListener('mouseleave', hideLens);
     container.addEventListener('mousemove', moveLens);
+    image.addEventListener('mouseleave', hideLens);
 
     if (!image.complete) {
       image.addEventListener('load', function () {
