@@ -1,0 +1,52 @@
+{% comment %}
+  Phase 2: Lazy-load below-fold product page sections.
+  Add to theme.liquid before </body> on product template only.
+  Mark sections with data-lazy-section="name" in their snippet/section.
+{% endcomment %}
+<script>
+  (function () {
+    var lazyNodes = document.querySelectorAll('[data-lazy-section]');
+
+    if (!lazyNodes.length) {
+      return;
+    }
+
+    lazyNodes.forEach(function (node) {
+      node.setAttribute('data-lazy-pending', 'true');
+      node.style.contentVisibility = 'auto';
+      node.style.containIntrinsicSize = '0 400px';
+    });
+
+    function revealSection(node) {
+      if (node.getAttribute('data-lazy-loaded') === 'true') {
+        return;
+      }
+
+      node.setAttribute('data-lazy-loaded', 'true');
+      node.removeAttribute('data-lazy-pending');
+
+      node.querySelectorAll('img[data-src], img[loading="lazy"]').forEach(function (img) {
+        if (img.dataset.src && !img.src) {
+          img.src = img.dataset.src;
+        }
+      });
+    }
+
+    if ('IntersectionObserver' in window) {
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            revealSection(entry.target);
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { rootMargin: '300px 0px' });
+
+      lazyNodes.forEach(function (node) {
+        observer.observe(node);
+      });
+    } else {
+      lazyNodes.forEach(revealSection);
+    }
+  })();
+</script>
