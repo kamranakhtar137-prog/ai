@@ -724,16 +724,14 @@
     max-width: 100%;
     height: auto;
     min-height: 0;
-    aspect-ratio: var(--et-home-hero-video-aspect-ratio, 1920 / 1600);
     border-radius: 24px;
     overflow: hidden;
     background: #eef7fc;
 }
 
 /*
- * Poster and video share the same aspect box (1920×1600 from template inline vars).
- * object-fit: contain keeps the full frame visible — no top/bottom or side crop.
- * Max width is derived from viewport height using the real video aspect ratio.
+ * Video and poster scale naturally (width: 100%, height: auto) — no object-fit.
+ * The frame height follows the media aspect ratio, so nothing is cropped or letterboxed.
  */
 .et-home__hero--split-video {
     --et-home-hero-poster-aspect-ratio: 1400 / 1600;
@@ -746,7 +744,6 @@
 
 .et-home__hero--split-video .et-home__hero-video-wrap,
 .et-home__hero--split-video .et-home__hero-video-wrap.is-playing {
-    aspect-ratio: var(--et-home-hero-video-aspect-ratio);
     width: 100%;
     max-width: min(100%, calc(var(--et-home-hero-media-max-h) * var(--et-home-hero-video-ar-w) / var(--et-home-hero-video-ar-h)));
     height: auto;
@@ -759,6 +756,7 @@
 
 .et-home__hero--split-video .et-home__hero-video-wrap.is-loading .et-home__hero-video,
 .et-home__hero--split-video .et-home__hero-video-wrap.has-video-error .et-home__hero-video {
+    display: none;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -847,31 +845,24 @@
 
 .et-home__hero-video,
 .et-home__hero-video-fallback {
-    position: absolute;
-    inset: 0;
+    display: block;
     width: 100%;
     max-width: 100%;
-    height: 100%;
-    min-width: 0;
-    object-fit: contain;
-    object-position: center center;
+    height: auto;
+    vertical-align: top;
 }
 
 .et-home__hero-video-fallback {
     display: none;
-    z-index: 1;
-}
-
-.et-home__hero-video {
-    z-index: 2;
 }
 
 .et-home__hero-video-wrap.is-loading .et-home__hero-video-fallback {
     display: block;
 }
 
-.et-home__hero-video-wrap.is-loading .et-home__hero-video {
-    opacity: 0;
+.et-home__hero-video-wrap.is-loading .et-home__hero-video,
+.et-home__hero-video-wrap.has-video-error .et-home__hero-video {
+    display: none;
 }
 
 .et-home__hero-video-wrap.is-playing {
@@ -1349,7 +1340,6 @@
         max-width: 100%;
         border-radius: 18px;
         box-shadow: 0 10px 28px rgba(30, 58, 95, 0.14);
-        aspect-ratio: var(--et-home-hero-video-aspect-ratio, 1920 / 1600);
     }
 
     .et-home__hero--split-video .et-home__hero-video-play {
@@ -1387,7 +1377,6 @@
 
     .et-home__hero--split-video .et-home__hero-video-fallback {
         display: block;
-        object-fit: contain;
     }
 }
 
@@ -8943,7 +8932,6 @@
 }
 
 .main--home-v2 .et-home__hero--split-video .et-home__hero-video-wrap {
-    aspect-ratio: var(--et-home-hero-video-aspect-ratio, 1920 / 1600) !important;
     max-width: min(100%, calc(var(--et-home-hero-media-max-h, 80vh) * var(--et-home-hero-video-ar-w, 1920) / var(--et-home-hero-video-ar-h, 1600))) !important;
     overflow: hidden;
     height: auto !important;
@@ -8952,14 +8940,16 @@
 
 .main--home-v2 .et-home__hero--split-video .et-home__hero-video,
 .main--home-v2 .et-home__hero--split-video .et-home__hero-video-fallback {
-    object-fit: contain !important;
-    object-position: center center !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    object-fit: unset !important;
 }
 
 @media screen and (max-width: 768px) {
     .main--home-v2 .et-home__hero--split-video .et-home__hero-video-wrap {
         max-width: 100% !important;
-        aspect-ratio: var(--et-home-hero-video-aspect-ratio, 1920 / 1600) !important;
     }
 }
 
