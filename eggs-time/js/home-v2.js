@@ -360,9 +360,16 @@
                     }
                 },
                 {
+                    breakpoint: 768,
+                    settings: {
+                        slidesToShow: MOBILE_SLIDES_TO_SHOW,
+                        slidesToScroll: 1
+                    }
+                },
+                {
                     breakpoint: 576,
                     settings: {
-                        slidesToShow: 1,
+                        slidesToShow: MOBILE_SLIDES_TO_SHOW,
                         slidesToScroll: 1
                     }
                 }
@@ -398,9 +405,16 @@
                     }
                 },
                 {
+                    breakpoint: 768,
+                    settings: {
+                        slidesToShow: 3,
+                        slidesToScroll: 1
+                    }
+                },
+                {
                     breakpoint: 576,
                     settings: {
-                        slidesToShow: 1,
+                        slidesToShow: 3,
                         slidesToScroll: 1
                     }
                 }
@@ -435,14 +449,94 @@
             'resize.etHomeCharactersSlider'
         );
 
-        bindResponsiveSlider(
-            '.et-home__stories-slider',
-            '.et-home__stories-slider-wrap',
-            'Previous stories',
-            'Next stories',
-            'et-home__stories-arrow',
-            'resize.etHomeStoriesSlider'
-        );
+        function getStoriesSliderConfig($wrap, prevLabel, nextLabel, arrowClass) {
+            return {
+                slidesToShow: 3,
+                slidesToScroll: 1,
+                arrows: true,
+                appendArrows: $wrap,
+                autoplay: false,
+                pauseOnHover: true,
+                pauseOnFocus: true,
+                infinite: true,
+                swipe: true,
+                draggable: true,
+                touchMove: true,
+                adaptiveHeight: false,
+                prevArrow: '<button class="slick-prev ' + arrowClass + '" aria-label="' + prevLabel + '" type="button"></button>',
+                nextArrow: '<button class="slick-next ' + arrowClass + '" aria-label="' + nextLabel + '" type="button"></button>',
+                responsive: [
+                    {
+                        breakpoint: 992,
+                        settings: {
+                            slidesToShow: 2,
+                            slidesToScroll: 1
+                        }
+                    },
+                    {
+                        breakpoint: 768,
+                        settings: {
+                            slidesToShow: 2,
+                            slidesToScroll: 1
+                        }
+                    }
+                ]
+            };
+        }
+
+        (function initStoriesSlider() {
+            var MOBILE_MAX = 768;
+            var $sliders = $('.et-home__stories-slider');
+            var resizeTimer;
+
+            if (!$sliders.length || typeof $.fn.slick !== 'function') {
+                return;
+            }
+
+            function toggle($slider) {
+                var $wrap = $slider.closest('.et-home__stories-slider-wrap');
+                var $section = $slider.closest('.et-home__stories');
+
+                if (window.innerWidth >= DESKTOP_BREAKPOINT) {
+                    $wrap.removeClass('is-slider-active');
+                    $section.removeClass('et-home__stories--mobile-card');
+
+                    if ($slider.hasClass('slick-initialized')) {
+                        $slider.slick('unslick');
+                    }
+
+                    return;
+                }
+
+                $section.toggleClass('et-home__stories--mobile-card', window.innerWidth <= MOBILE_MAX);
+                $wrap.addClass('is-slider-active');
+
+                if ($slider.hasClass('slick-initialized')) {
+                    $slider.slick('setPosition');
+                    return;
+                }
+
+                $slider.slick(getStoriesSliderConfig(
+                    $wrap,
+                    'Previous stories',
+                    'Next stories',
+                    'et-home__stories-arrow'
+                ));
+            }
+
+            function refresh() {
+                $sliders.each(function () {
+                    toggle($(this));
+                });
+            }
+
+            refresh();
+
+            $(window).on('resize.etHomeStoriesSlider', function () {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(refresh, 150);
+            });
+        }());
 
         initEggWorldSlider(
             '.et-home__products-slider',
@@ -474,6 +568,103 @@
             'resize.etHomeGamesExtraSlider'
         );
 
+        function getFunEggPreviewsSliderConfig($wrap, prevLabel, nextLabel, arrowClass) {
+            var count = parseInt($wrap.find('.et-home__fun-egg-previews-slider').data('etPreviewCount'), 10) || 2;
+            var desktopShow = Math.min(count, 2);
+            var mobileShow = Math.min(count, 3);
+
+            return getEggWorldSliderConfig($wrap, prevLabel, nextLabel, arrowClass, {
+                slidesToShow: desktopShow,
+                slidesToScroll: 1,
+                infinite: count > desktopShow,
+                responsive: [
+                    {
+                        breakpoint: 991,
+                        settings: {
+                            slidesToShow: Math.min(count, 2),
+                            slidesToScroll: 1,
+                            infinite: count > 2
+                        }
+                    },
+                    {
+                        breakpoint: 768,
+                        settings: {
+                            slidesToShow: mobileShow,
+                            slidesToScroll: 1,
+                            infinite: count > mobileShow
+                        }
+                    },
+                    {
+                        breakpoint: 576,
+                        settings: {
+                            slidesToShow: mobileShow,
+                            slidesToScroll: 1,
+                            infinite: count > mobileShow
+                        }
+                    }
+                ]
+            });
+        }
+
+        /* Games Inside Every Egg previews: static 2-up grid for 2 items; carousel for 3–5. */
+        (function initFunEggPreviewsSlider() {
+            var $sliders = $('.et-home__fun-egg-previews-slider');
+            var resizeTimer;
+
+            if (!$sliders.length || typeof $.fn.slick !== 'function') {
+                return;
+            }
+
+            function toggle($slider) {
+                var $wrap = $slider.closest('.et-home__fun-egg-previews-slider-wrap');
+                var count = parseInt($slider.data('etPreviewCount'), 10) || 0;
+
+                if (count <= 2) {
+                    $wrap.removeClass('is-slider-active');
+
+                    if ($slider.hasClass('slick-initialized')) {
+                        $slider.slick('unslick');
+                    }
+
+                    return;
+                }
+
+                $wrap.addClass('is-slider-active');
+
+                if ($slider.hasClass('slick-initialized')) {
+                    $slider.slick('setPosition');
+                    return;
+                }
+
+                prepareEggWorldSliderForLoop($slider);
+                $slider.slick(
+                    getFunEggPreviewsSliderConfig(
+                        $wrap,
+                        'Previous game previews',
+                        'Next game previews',
+                        'et-home__fun-egg-preview-arrow'
+                    )
+                );
+                $slider.find('img').attr('draggable', 'false');
+                $slider.on('dragstart', 'img', function (event) {
+                    event.preventDefault();
+                });
+            }
+
+            function refresh() {
+                $sliders.each(function () {
+                    toggle($(this));
+                });
+            }
+
+            refresh();
+
+            $(window).on('resize.etHomeFunEggPreviewsSlider', function () {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(refresh, 150);
+            });
+        })();
+
         /* Fun Egg app game cards: static grid on desktop/tablet; slider on mobile. */
         (function initFunEggAppGamesMobileSlider() {
             var MOBILE_MAX = 767;
@@ -503,7 +694,7 @@
                 }
 
                 $slider.slick({
-                    slidesToShow: 1,
+                    slidesToShow: MOBILE_SLIDES_TO_SHOW,
                     slidesToScroll: 1,
                     arrows: true,
                     appendArrows: $wrap,
