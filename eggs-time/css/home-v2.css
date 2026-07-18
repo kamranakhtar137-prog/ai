@@ -8941,10 +8941,11 @@
 .main--home-v2 .et-home__hero--split-video .et-home__hero-video,
 .main--home-v2 .et-home__hero--split-video .et-home__hero-video-fallback {
     display: block !important;
+    position: static !important;
     width: 100% !important;
     height: auto !important;
     max-width: 100% !important;
-    object-fit: unset !important;
+    max-height: none !important;
 }
 
 @media screen and (max-width: 768px) {
@@ -8962,4 +8963,31 @@
         padding-top: var(--et-home-section-padding-y) !important;
         padding-bottom: 100px !important;
     }
+}
+
+/* ----- Hero video + poster: no object-fit contain (must be last) ----- */
+.main--home-v2 .et-home__hero--split-video .et-home__hero-video-fallback,
+.et-home__hero--split-video .et-home__hero-video-fallback {
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    object-fit: initial !important;
+    object-position: initial !important;
+}
+
+.main--home-v2 .et-home__hero--split-video .et-home__hero-video,
+.et-home__hero--split-video .et-home__hero-video {
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    object-fit: initial !important;
+    object-position: initial !important;
 }
