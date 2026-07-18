@@ -1619,8 +1619,8 @@
 }
 
 .et-home__best-sellers-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 28px rgba(30, 58, 95, 0.13);
+    transform: translateY(-2px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88);
 }
 
 .et-home__best-sellers-media {
@@ -8308,14 +8308,12 @@
 }
 
 .et-home__card-btn {
-    box-shadow: 0 6px 18px rgba(30, 58, 95, 0.14);
+    box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
 }
 
 .et-home__character-card,
 .et-home__best-sellers-card {
-    box-shadow:
-        0 10px 28px rgba(30, 58, 95, 0.11),
-        0 2px 0 rgba(255, 255, 255, 0.8) inset;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -9016,4 +9014,39 @@
 .main--home-v2 .et-home__hero--split-video .et-home__hero-video-wrap.is-loading .et-home__hero-video,
 .main--home-v2 .et-home__hero--split-video .et-home__hero-video-wrap.has-video-error .et-home__hero-video {
     display: none !important;
+}
+
+/* ----- Character / best-seller cards: no outer box-shadow bleed ----- */
+.et-home__character-card,
+.et-home__best-sellers-card,
+.main--home-v2 .et-home__character-card,
+.main--home-v2 .et-home__best-sellers-card {
+    overflow: hidden !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88) !important;
+}
+
+.et-home__character-card:hover,
+.et-home__best-sellers-card:hover,
+.main--home-v2 .et-home__character-card:hover,
+.main--home-v2 .et-home__best-sellers-card:hover {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88) !important;
+}
+
+.et-home__character-body,
+.et-home__best-sellers-body,
+.main--home-v2 .et-home__character-body,
+.main--home-v2 .et-home__best-sellers-body {
+    overflow: hidden;
+}
+
+.et-home__character-card .et-home__card-btn,
+.et-home__best-sellers-card .et-home__card-btn,
+.main--home-v2 .et-home__character-card .et-home__card-btn,
+.main--home-v2 .et-home__best-sellers-card .et-home__card-btn {
+    box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12) !important;
+}
+
+.et-home__characters-slider .slick-list,
+.main--home-v2 .et-home__characters-slider .slick-list {
+    padding-bottom: 4px !important;
 }
