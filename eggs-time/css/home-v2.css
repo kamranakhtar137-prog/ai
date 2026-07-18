@@ -9050,3 +9050,39 @@
 .main--home-v2 .et-home__characters-slider .slick-list {
     padding-bottom: 4px !important;
 }
+
+/* ----- Mobile: 2 character / best-seller cards per view ----- */
+@media screen and (max-width: 767px) {
+    .et-home__characters-slider:not(.slick-initialized),
+    .et-home__best-sellers-slider:not(.slick-initialized),
+    .main--home-v2 .et-home__characters-slider:not(.slick-initialized),
+    .main--home-v2 .et-home__best-sellers-slider:not(.slick-initialized) {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+    }
+
+    .et-home__characters-slider .slick-slide,
+    .et-home__best-sellers-slider .slick-slide,
+    .main--home-v2 .et-home__characters-slider .slick-slide,
+    .main--home-v2 .et-home__best-sellers-slider .slick-slide {
+        padding: 0 4px !important;
+    }
+
+    .et-home__character-body,
+    .main--home-v2 .et-home__character-body {
+        padding: 10px 8px 12px !important;
+        gap: 8px !important;
+    }
+
+    .et-home__character-name,
+    .main--home-v2 .et-home__character-name {
+        font-size: 13px !important;
+    }
+
+    .et-home__character-card .et-home__card-btn,
+    .main--home-v2 .et-home__character-card .et-home__card-btn {
+        min-height: 34px !important;
+        padding: 4px 4px 4px 10px !important;
+        font-size: 9px !important;
+    }
+}
