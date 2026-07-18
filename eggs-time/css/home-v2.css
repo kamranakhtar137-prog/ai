@@ -1418,6 +1418,7 @@
         --et-home-section-x: 32px;
         --et-home-section-gap: 52px;
         --et-home-section-padding-y: 52px;
+        --et-home-hero-padding-bottom: 100px;
     }
 }
 
@@ -1427,7 +1428,6 @@
         --et-home-section-x: 44px;
         --et-home-section-gap: 60px;
         --et-home-section-padding-y: 60px;
-        --et-home-hero-padding-bottom: 100px;
     }
 }
 
