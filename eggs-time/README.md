@@ -4,12 +4,12 @@ Breakpoint-based side padding and section spacing for the Eggs Time homepage (`h
 
 ## Breakpoint tokens
 
-| Breakpoint | Media query | Side padding (`--et-home-section-x`) | Section spacing (`--et-home-section-padding-y`) |
-|------------|-------------|--------------------------------------|-----------------------------------------------|
-| Mobile | default (0–767px) | 18px | 36px |
-| Tablet | `min-width: 768px` | 24px | 44px |
-| Laptop | `min-width: 1200px` | 32px | 52px |
-| Desktop | `min-width: 1440px` | 44px | 60px |
+| Breakpoint | Media query | Side padding (`--et-home-section-x`) | Section spacing (`--et-home-section-padding-y`) | Max width (`--et-home-max`) |
+|------------|-------------|--------------------------------------|-----------------------------------------------|-----------------------------|
+| Mobile | default (0–767px) | 18px (spec: 16–20px) | 36px (spec: 32–40px) | 1650px |
+| Tablet | `min-width: 768px` | 24px (spec: 24px) | 44px (spec: 40–48px) | 1650px |
+| Laptop | `min-width: 1200px` | 32px (spec: 32px) | 52px (spec: 48–56px) | 1650px |
+| Desktop | `min-width: 1440px` | 44px (spec: 40–48px) | 60px | 1420px (spec: 1400–1440px) |
 
 `--et-home-section-gap` matches `--et-home-section-padding-y` at each breakpoint.  
 `--et-home-section-top-spacing` is `calc(var(--et-home-section-gap) / 2)` for shared `.et-home__section-inner` rhythm.
