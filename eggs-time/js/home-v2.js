@@ -2,6 +2,9 @@
     'use strict';
 
     var DESKTOP_BREAKPOINT = 1200;
+    var MOBILE_SLIDES_TO_SHOW = 3;
+    /* Choose Your Egg World + Best Sellers only — 2 cards on mobile */
+    var EGG_CAROUSEL_MOBILE_SLIDES = 2;
 
     function getSliderConfig($wrap, prevLabel, nextLabel, arrowClass, options) {
         var settings = $.extend({
@@ -18,14 +21,14 @@
                 {
                     breakpoint: 768,
                     settings: {
-                        slidesToShow: 1,
+                        slidesToShow: MOBILE_SLIDES_TO_SHOW,
                         slidesToScroll: 1
                     }
                 },
                 {
                     breakpoint: 576,
                     settings: {
-                        slidesToShow: 1,
+                        slidesToShow: MOBILE_SLIDES_TO_SHOW,
                         slidesToScroll: 1
                     }
                 }
@@ -67,7 +70,7 @@
                 {
                     breakpoint: 768,
                     settings: {
-                        slidesToShow: 1,
+                        slidesToShow: MOBILE_SLIDES_TO_SHOW,
                         slidesToScroll: 1
                     }
                 }
@@ -84,7 +87,7 @@
                 {
                     breakpoint: 768,
                     settings: {
-                        slidesToShow: 1,
+                        slidesToShow: MOBILE_SLIDES_TO_SHOW,
                         slidesToScroll: 1
                     }
                 }
@@ -145,9 +148,16 @@
                     }
                 },
                 {
+                    breakpoint: 768,
+                    settings: {
+                        slidesToShow: MOBILE_SLIDES_TO_SHOW,
+                        slidesToScroll: 1
+                    }
+                },
+                {
                     breakpoint: 576,
                     settings: {
-                        slidesToShow: 1,
+                        slidesToShow: MOBILE_SLIDES_TO_SHOW,
                         slidesToScroll: 1
                     }
                 }
@@ -191,16 +201,9 @@
                     }
                 },
                 {
-                    breakpoint: 991,
+                    breakpoint: 768,
                     settings: {
-                        slidesToShow: 2,
-                        slidesToScroll: 1
-                    }
-                },
-                {
-                    breakpoint: 576,
-                    settings: {
-                        slidesToShow: 2,
+                        slidesToShow: EGG_CAROUSEL_MOBILE_SLIDES,
                         slidesToScroll: 1
                     }
                 }
@@ -221,16 +224,9 @@
                     }
                 },
                 {
-                    breakpoint: 991,
+                    breakpoint: 768,
                     settings: {
-                        slidesToShow: 2,
-                        slidesToScroll: 1
-                    }
-                },
-                {
-                    breakpoint: 576,
-                    settings: {
-                        slidesToShow: 2,
+                        slidesToShow: EGG_CAROUSEL_MOBILE_SLIDES,
                         slidesToScroll: 1
                     }
                 }
