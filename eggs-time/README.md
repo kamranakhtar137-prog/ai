@@ -11,7 +11,7 @@ Breakpoint-based side padding and section spacing for the Eggs Time homepage (`h
 | Laptop | `min-width: 1200px` | 32px (spec: 32px) | 52px (spec: 48–56px) | 1650px |
 | Desktop | `min-width: 1440px` | 44px (spec: 40–48px) | 60px (other sections) | 1420px (spec: 1400–1440px) |
 
-**Hero exception (laptop 1200px+ and desktop):** `--et-home-hero-padding-bottom: 100px` — only the split-video hero bottom padding; top uses `--et-home-section-padding-y` (52px laptop, 60px desktop).
+**Hero (laptop 1200px+ and desktop):** `padding-top` and `padding-bottom` both **100px** on split-video hero only. Mobile/tablet use section spacing tokens.
 
 `--et-home-section-gap` matches `--et-home-section-padding-y` at each breakpoint.  
 `--et-home-section-top-spacing` is `calc(var(--et-home-section-gap) / 2)` for shared `.et-home__section-inner` rhythm.
