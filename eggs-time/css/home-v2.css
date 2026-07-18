@@ -4432,6 +4432,54 @@
     display: flex;
 }
 
+.et-home__fun-egg-games-cards-slider-wrap .et-home__egg-carousel-arrow {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin: 0;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 50%;
+    background: #ff4d8d !important;
+    box-shadow: 0 6px 16px rgba(255, 77, 141, 0.35) !important;
+    color: #ffffff;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+.et-home__fun-egg-games-cards-slider-wrap .et-home__egg-carousel-arrow::before {
+    display: none !important;
+    content: none !important;
+}
+
+.et-home__fun-egg-games-cards-slider-wrap .et-home__egg-carousel-arrow::after {
+    content: '';
+    display: block;
+    width: 9px;
+    height: 9px;
+    border-top: 2px solid #ffffff;
+    border-right: 2px solid #ffffff;
+}
+
+.et-home__fun-egg-games-cards-slider-wrap .slick-prev.et-home__egg-carousel-arrow::after {
+    transform: translateX(2px) rotate(-135deg);
+}
+
+.et-home__fun-egg-games-cards-slider-wrap .slick-next.et-home__egg-carousel-arrow::after {
+    transform: translateX(-2px) rotate(45deg);
+}
+
+.et-home__fun-egg-games-cards-slider-wrap .et-home__egg-carousel-arrow:hover,
+.et-home__fun-egg-games-cards-slider-wrap .et-home__egg-carousel-arrow:focus {
+    background: #ff3380 !important;
+    transform: translateY(-50%) scale(1.06);
+    box-shadow: 0 8px 20px rgba(255, 77, 141, 0.42) !important;
+}
+
 .et-home__fun-egg-games-cards-slider-wrap .slick-prev.et-home__egg-carousel-arrow {
     left: -4px;
 }
@@ -4443,6 +4491,7 @@
 .et-home__fun-egg-games-cards-slider-wrap .et-home__egg-carousel-arrow.slick-disabled {
     opacity: 0.35;
     pointer-events: none;
+    transform: translateY(-50%);
 }
 
 .et-home__fun-egg-panel {
