@@ -5,6 +5,8 @@
     var MOBILE_SLIDES_TO_SHOW = 3;
     /* Choose Your Egg World + Best Sellers only — 2 cards on mobile */
     var EGG_CAROUSEL_MOBILE_SLIDES = 2;
+    /* Fun in Every Egg game cards slider — always 2 visible */
+    var FUN_EGG_GAME_CARDS_SLIDES = 2;
 
     function getSliderConfig($wrap, prevLabel, nextLabel, arrowClass, options) {
         var settings = $.extend({
@@ -568,14 +570,22 @@
             'resize.etHomeGamesExtraSlider'
         );
 
-        function getFunEggGameCardsSliderConfig($wrap, prevLabel, nextLabel, arrowClass) {
-            var count = parseInt($wrap.find('.et-home__fun-egg-games-cards-slider').data('etGameCount'), 10) || 2;
-            var slidesToShow = Math.min(count, 2);
+        function getFunEggGameCardsSliderConfig($wrap, count) {
+            var slidesToShow = Math.min(count, FUN_EGG_GAME_CARDS_SLIDES);
 
-            return getEggWorldSliderConfig($wrap, prevLabel, nextLabel, arrowClass, {
+            return {
                 slidesToShow: slidesToShow,
                 slidesToScroll: 1,
+                arrows: true,
+                appendArrows: $wrap,
                 infinite: count > slidesToShow,
+                swipe: true,
+                swipeToSlide: true,
+                draggable: true,
+                touchMove: true,
+                speed: 350,
+                prevArrow: '<button type="button" class="slick-prev et-home__fun-egg-games-cards-arrow" aria-label="Previous games"></button>',
+                nextArrow: '<button type="button" class="slick-next et-home__fun-egg-games-cards-arrow" aria-label="Next games"></button>',
                 responsive: [
                     {
                         breakpoint: 767,
@@ -586,10 +596,10 @@
                         }
                     }
                 ]
-            });
+            };
         }
 
-        /* Fun in Every Egg game cards: 2-up slider when more than 2 games. */
+        /* Fun in Every Egg game cards: static 2-up grid for 2 items; carousel for 3+. */
         (function initFunEggGameCardsSlider() {
             var $sliders = $('.et-home__fun-egg-games-cards-slider');
             var resizeTimer;
@@ -600,9 +610,9 @@
 
             function toggle($slider) {
                 var $wrap = $slider.closest('.et-home__fun-egg-games-cards-slider-wrap');
-                var count = parseInt($slider.data('etGameCount'), 10) || 0;
+                var count = parseInt($slider.data('etGameCount'), 10) || $slider.children('li').length;
 
-                if (count <= 2) {
+                if (count <= FUN_EGG_GAME_CARDS_SLIDES) {
                     $wrap.removeClass('is-slider-active');
 
                     if ($slider.hasClass('slick-initialized')) {
@@ -620,14 +630,7 @@
                 }
 
                 prepareEggWorldSliderForLoop($slider);
-                $slider.slick(
-                    getFunEggGameCardsSliderConfig(
-                        $wrap,
-                        'Previous games',
-                        'Next games',
-                        'et-home__fun-egg-games-cards-arrow'
-                    )
-                );
+                $slider.slick(getFunEggGameCardsSliderConfig($wrap, count));
                 $slider.find('img').attr('draggable', 'false');
                 $slider.on('dragstart', 'img', function (event) {
                     event.preventDefault();
