@@ -43,7 +43,7 @@
     --et-home-section-top-spacing: calc(var(--et-home-section-gap) / 2);
     --et-home-section-spacing: var(--et-home-section-top-spacing);
     --et-home-section-padding-y: 36px;
-    --et-home-hero-padding-bottom: var(--et-home-section-padding-y);
+    --et-home-hero-padding-y: var(--et-home-section-padding-y);
     /* Tight pad used above Best Sellers / Egg World / Stories headings */
     --et-home-tight-pad: 12px;
     --et-home-panel-bg: #f0f7ff;
@@ -652,8 +652,8 @@
     display: flex;
     align-items: flex-start;
     width: 100%;
-    padding-top: var(--et-home-section-padding-y);
-    padding-bottom: var(--et-home-hero-padding-bottom);
+    padding-top: var(--et-home-hero-padding-y);
+    padding-bottom: var(--et-home-hero-padding-y);
     margin-bottom: 0;
 }
 
@@ -1090,7 +1090,7 @@
 
 @media screen and (min-width: 768px) {
     .et-home__hero--split-video .et-home__hero-inner {
-        padding-bottom: var(--et-home-hero-padding-bottom);
+        padding-bottom: var(--et-home-hero-padding-y);
     }
 }
 
@@ -1115,7 +1115,7 @@
 
     .et-home__hero--split-video .et-home__hero-inner {
         padding-top: var(--et-home-section-padding-y);
-        padding-bottom: var(--et-home-hero-padding-bottom);
+        padding-bottom: var(--et-home-hero-padding-y);
     }
 
     .et-home__hero-grid {
@@ -1166,7 +1166,7 @@
 
     .et-home__hero--split-video .et-home__hero-inner {
         padding-top: var(--et-home-section-padding-y);
-        padding-bottom: var(--et-home-hero-padding-bottom);
+        padding-bottom: var(--et-home-hero-padding-y);
     }
 
     .et-home__hero-grid {
@@ -1226,7 +1226,7 @@
 
     .et-home__hero--split-video .et-home__hero-inner {
         padding-top: var(--et-home-section-padding-y);
-        padding-bottom: var(--et-home-hero-padding-bottom);
+        padding-bottom: var(--et-home-hero-padding-y);
     }
 }
 
@@ -1418,7 +1418,7 @@
         --et-home-section-x: 32px;
         --et-home-section-gap: 52px;
         --et-home-section-padding-y: 52px;
-        --et-home-hero-padding-bottom: 100px;
+        --et-home-hero-padding-y: 100px;
     }
 }
 
@@ -8445,8 +8445,8 @@
 .main--home-v2 .et-home__hero.et-home__hero--split-video .et-home__hero-inner {
     padding-left: var(--et-home-section-x);
     padding-right: var(--et-home-section-x);
-    padding-top: var(--et-home-section-padding-y);
-    padding-bottom: var(--et-home-hero-padding-bottom);
+    padding-top: var(--et-home-hero-padding-y);
+    padding-bottom: var(--et-home-hero-padding-y);
 }
 
 .main--home-v2 .et-home__bg-band--playful .et-home__characters .et-home__section-inner,
@@ -8466,13 +8466,17 @@
 }
 
 /* ----- Tight heading junctions (final cascade wins) ----- */
-.main--home-v2 .et-home__hero--split-video .et-home__hero-inner {
-    padding-top: var(--et-home-section-padding-y) !important;
+@media screen and (max-width: 1199px) {
+    .main--home-v2 .et-home__hero--split-video .et-home__hero-inner {
+        padding-top: var(--et-home-section-padding-y) !important;
+        padding-bottom: var(--et-home-section-padding-y) !important;
+    }
 }
 
 @media screen and (min-width: 1200px) {
     .main--home-v2 .et-home__hero.et-home__hero--split-video .et-home__hero-inner,
     .main--home-v2 .et-home__hero--split-video .et-home__hero-inner {
+        padding-top: 100px !important;
         padding-bottom: 100px !important;
     }
 }
@@ -8936,10 +8940,11 @@
     }
 }
 
-/* ----- Hero bottom: 100px laptop (1200px) + desktop (1440px) — final override ----- */
+/* ----- Hero: 100px top + bottom on laptop (1200px) and desktop — final override ----- */
 @media screen and (min-width: 1200px) {
     .main--home-v2 .et-home__hero.et-home__hero--split-video .et-home__hero-inner,
     .main--home-v2 .et-home__hero--split-video .et-home__hero-inner {
+        padding-top: 100px !important;
         padding-bottom: 100px !important;
     }
 }
