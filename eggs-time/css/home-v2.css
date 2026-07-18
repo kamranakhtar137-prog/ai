@@ -4241,6 +4241,210 @@
     line-height: 1;
 }
 
+.et-home__fun-egg-title-line {
+    display: inline;
+}
+
+.et-home__fun-egg-title-line--accent {
+    color: #e91e8c !important;
+}
+
+/* ----- Fun Egg game cards slider (2-up) ----- */
+.et-home__fun-egg-games-cards-slider-wrap {
+    position: relative;
+    width: 100%;
+    max-width: var(--et-fun-egg-box-max);
+    margin: 0 auto var(--et-fun-egg-box-gap);
+    padding: 0 var(--et-home-slider-inset-sm);
+    box-sizing: border-box;
+}
+
+.et-home__fun-egg-games-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.et-home__fun-egg-games-cards-item {
+    margin: 0;
+    min-width: 0;
+    height: 100%;
+}
+
+.et-home__fun-egg-game-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border: var(--et-home-panel-border);
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: 0 10px 28px rgba(30, 41, 59, 0.12);
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.et-home__fun-egg-game-card-media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: #f8fafc;
+}
+
+.et-home__fun-egg-game-card-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+}
+
+.et-home__fun-egg-game-card-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 16px 18px;
+    min-width: 0;
+}
+
+.et-home__fun-egg-game-card-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.et-home__fun-egg-game-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    background: var(--et-fun-egg-game-panel, #e8f3fc);
+    color: var(--et-fun-egg-game-accent, #1a9fe0);
+}
+
+.et-home__fun-egg-game-card-icon svg {
+    display: block;
+    width: 22px;
+    height: 22px;
+}
+
+.et-home__fun-egg-game-card-title {
+    margin: 0;
+    font-family: 'Quicksand', 'Ubuntu', sans-serif;
+    font-size: clamp(18px, 2vw, 22px);
+    font-weight: 800;
+    line-height: 1.15;
+    color: #1e293b !important;
+}
+
+.et-home__fun-egg-game-card-desc {
+    margin: 0;
+    font-size: clamp(13px, 1.2vw, 15px);
+    font-weight: 500;
+    line-height: 1.5;
+    color: #64748b !important;
+}
+
+.et-home__fun-egg-game-card-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 44px;
+    margin-top: auto;
+    padding: 10px 10px 10px 18px;
+    border: 0;
+    border-radius: 999px;
+    background: #e91e8c;
+    box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+    color: #ffffff !important;
+    font-family: 'Quicksand', 'Ubuntu', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-decoration: none !important;
+    text-transform: uppercase;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.et-home__fun-egg-game-card-btn:hover,
+.et-home__fun-egg-game-card-btn:focus {
+    background: #d4177f;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    text-decoration: none !important;
+}
+
+.et-home__fun-egg-game-card-btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    flex-shrink: 0;
+}
+
+.et-home__fun-egg-game-card-btn-icon svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+}
+
+.et-home__fun-egg-games-cards.slick-initialized {
+    display: block;
+}
+
+.et-home__fun-egg-games-cards.slick-initialized .slick-list {
+    overflow: hidden;
+    margin: 0 -8px;
+    padding-bottom: 4px;
+}
+
+.et-home__fun-egg-games-cards.slick-initialized .slick-track {
+    display: flex;
+    align-items: stretch;
+}
+
+.et-home__fun-egg-games-cards.slick-initialized .slick-slide {
+    height: auto;
+    padding: 0 8px;
+    box-sizing: border-box;
+}
+
+.et-home__fun-egg-games-cards.slick-initialized .slick-slide > div,
+.et-home__fun-egg-games-cards.slick-initialized .et-home__fun-egg-games-cards-item {
+    height: 100%;
+}
+
+.et-home__fun-egg-games-cards-slider-wrap.is-slider-active .et-home__egg-carousel-arrow {
+    display: flex;
+}
+
+.et-home__fun-egg-games-cards-slider-wrap .slick-prev.et-home__egg-carousel-arrow {
+    left: -4px;
+}
+
+.et-home__fun-egg-games-cards-slider-wrap .slick-next.et-home__egg-carousel-arrow {
+    right: -4px;
+}
+
+.et-home__fun-egg-games-cards-slider-wrap .et-home__egg-carousel-arrow.slick-disabled {
+    opacity: 0.35;
+    pointer-events: none;
+}
+
 .et-home__fun-egg-panel {
     width: 100%;
     max-width: var(--et-fun-egg-box-max);
@@ -5294,6 +5498,59 @@
     .et-home__fun-egg-lead {
         font-size: 14px;
         line-height: 1.45;
+    }
+
+    .et-home__fun-egg-games-cards-slider-wrap {
+        margin-bottom: 12px;
+        padding: 0 28px;
+    }
+
+    .et-home__fun-egg-games-cards:not(.slick-initialized) {
+        gap: 12px;
+    }
+
+    .et-home__fun-egg-game-card-body {
+        gap: 10px;
+        padding: 12px 12px 14px;
+    }
+
+    .et-home__fun-egg-game-card-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+    }
+
+    .et-home__fun-egg-game-card-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .et-home__fun-egg-game-card-title {
+        font-size: 15px;
+    }
+
+    .et-home__fun-egg-game-card-desc {
+        font-size: 12px;
+        line-height: 1.45;
+    }
+
+    .et-home__fun-egg-game-card-btn {
+        min-height: 38px;
+        padding: 8px 8px 8px 14px;
+        font-size: 10px;
+    }
+
+    .et-home__fun-egg-game-card-btn-icon {
+        width: 26px;
+        height: 26px;
+    }
+
+    .et-home__fun-egg-games-cards-slider-wrap .slick-prev.et-home__egg-carousel-arrow {
+        left: 0;
+    }
+
+    .et-home__fun-egg-games-cards-slider-wrap .slick-next.et-home__egg-carousel-arrow {
+        right: 0;
     }
 
     .et-home__fun-egg--desktop-detail {

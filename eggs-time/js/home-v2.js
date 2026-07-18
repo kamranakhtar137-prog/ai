@@ -568,47 +568,30 @@
             'resize.etHomeGamesExtraSlider'
         );
 
-        function getFunEggPreviewsSliderConfig($wrap, prevLabel, nextLabel, arrowClass) {
-            var count = parseInt($wrap.find('.et-home__fun-egg-previews-slider').data('etPreviewCount'), 10) || 2;
-            var desktopShow = Math.min(count, 2);
-            var mobileShow = Math.min(count, 3);
+        function getFunEggGameCardsSliderConfig($wrap, prevLabel, nextLabel, arrowClass) {
+            var count = parseInt($wrap.find('.et-home__fun-egg-games-cards-slider').data('etGameCount'), 10) || 2;
+            var slidesToShow = Math.min(count, 2);
 
             return getEggWorldSliderConfig($wrap, prevLabel, nextLabel, arrowClass, {
-                slidesToShow: desktopShow,
+                slidesToShow: slidesToShow,
                 slidesToScroll: 1,
-                infinite: count > desktopShow,
+                infinite: count > slidesToShow,
                 responsive: [
                     {
-                        breakpoint: 991,
+                        breakpoint: 767,
                         settings: {
-                            slidesToShow: Math.min(count, 2),
+                            slidesToShow: slidesToShow,
                             slidesToScroll: 1,
-                            infinite: count > 2
-                        }
-                    },
-                    {
-                        breakpoint: 768,
-                        settings: {
-                            slidesToShow: mobileShow,
-                            slidesToScroll: 1,
-                            infinite: count > mobileShow
-                        }
-                    },
-                    {
-                        breakpoint: 576,
-                        settings: {
-                            slidesToShow: mobileShow,
-                            slidesToScroll: 1,
-                            infinite: count > mobileShow
+                            infinite: count > slidesToShow
                         }
                     }
                 ]
             });
         }
 
-        /* Games Inside Every Egg previews: static 2-up grid for 2 items; carousel for 3–5. */
-        (function initFunEggPreviewsSlider() {
-            var $sliders = $('.et-home__fun-egg-previews-slider');
+        /* Fun in Every Egg game cards: 2-up slider when more than 2 games. */
+        (function initFunEggGameCardsSlider() {
+            var $sliders = $('.et-home__fun-egg-games-cards-slider');
             var resizeTimer;
 
             if (!$sliders.length || typeof $.fn.slick !== 'function') {
@@ -616,8 +599,8 @@
             }
 
             function toggle($slider) {
-                var $wrap = $slider.closest('.et-home__fun-egg-previews-slider-wrap');
-                var count = parseInt($slider.data('etPreviewCount'), 10) || 0;
+                var $wrap = $slider.closest('.et-home__fun-egg-games-cards-slider-wrap');
+                var count = parseInt($slider.data('etGameCount'), 10) || 0;
 
                 if (count <= 2) {
                     $wrap.removeClass('is-slider-active');
@@ -638,11 +621,11 @@
 
                 prepareEggWorldSliderForLoop($slider);
                 $slider.slick(
-                    getFunEggPreviewsSliderConfig(
+                    getFunEggGameCardsSliderConfig(
                         $wrap,
-                        'Previous game previews',
-                        'Next game previews',
-                        'et-home__fun-egg-preview-arrow'
+                        'Previous games',
+                        'Next games',
+                        'et-home__fun-egg-games-cards-arrow'
                     )
                 );
                 $slider.find('img').attr('draggable', 'false');
@@ -659,7 +642,7 @@
 
             refresh();
 
-            $(window).on('resize.etHomeFunEggPreviewsSlider', function () {
+            $(window).on('resize.etHomeFunEggGameCardsSlider', function () {
                 clearTimeout(resizeTimer);
                 resizeTimer = setTimeout(refresh, 150);
             });
