@@ -36,6 +36,7 @@ NEW_BREAKPOINTS = """@media screen and (min-width: 768px) {
 
 @media screen and (min-width: 1440px) {
     .et-home {
+        --et-home-max: 1420px;
         --et-home-section-x: 44px;
         --et-home-section-gap: 60px;
         --et-home-section-padding-y: 60px;
