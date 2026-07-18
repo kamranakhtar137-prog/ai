@@ -1226,7 +1226,7 @@
 
     .et-home__hero--split-video .et-home__hero-inner {
         padding-top: var(--et-home-section-padding-y);
-        padding-bottom: var(--et-home-section-padding-y);
+        padding-bottom: var(--et-home-hero-padding-bottom);
     }
 }
 
