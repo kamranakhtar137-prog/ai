@@ -8468,7 +8468,13 @@
 /* ----- Tight heading junctions (final cascade wins) ----- */
 .main--home-v2 .et-home__hero--split-video .et-home__hero-inner {
     padding-top: var(--et-home-section-padding-y) !important;
-    padding-bottom: var(--et-home-hero-padding-bottom) !important;
+}
+
+@media screen and (min-width: 1200px) {
+    .main--home-v2 .et-home__hero.et-home__hero--split-video .et-home__hero-inner,
+    .main--home-v2 .et-home__hero--split-video .et-home__hero-inner {
+        padding-bottom: 100px !important;
+    }
 }
 
 .main--home-v2 .et-home__hero--split-video .et-home__hero-grid {
@@ -8927,5 +8933,13 @@
         transform: none !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
+    }
+}
+
+/* ----- Hero bottom: 100px laptop (1200px) + desktop (1440px) — final override ----- */
+@media screen and (min-width: 1200px) {
+    .main--home-v2 .et-home__hero.et-home__hero--split-video .et-home__hero-inner,
+    .main--home-v2 .et-home__hero--split-video .et-home__hero-inner {
+        padding-bottom: 100px !important;
     }
 }
