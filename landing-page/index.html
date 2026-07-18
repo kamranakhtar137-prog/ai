@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Brand Licensing Platform</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="css/tokens.css">
+	<link rel="stylesheet" href="css/base.css">
+	<link rel="stylesheet" href="css/components.css">
+	<link rel="stylesheet" href="css/sections.css">
+</head>
+<body>
+
+	<!-- Header -->
+	<header class="header">
+		<div class="container header__inner">
+			<a href="#" class="header__logo">BrandCo</a>
+			<nav class="header__nav" aria-label="Main navigation">
+				<a href="#brands">Our Brands</a>
+				<a href="#products">Products</a>
+				<a href="#licensing">Licensing</a>
+				<a href="#about">About</a>
+				<a href="#contact">Contact</a>
+			</nav>
+			<button class="header__menu-btn" aria-label="Open menu" aria-expanded="false">
+				<span></span>
+				<span></span>
+				<span></span>
+			</button>
+		</div>
+	</header>
+
+	<main>
+
+		<!-- Hero -->
+		<section class="hero section" aria-labelledby="hero-title">
+			<div class="container">
+				<div class="hero__grid">
+					<div class="hero__content">
+						<span class="hero__badge">Global Licensing Leader</span>
+						<h1 id="hero-title" class="hero__title">Unlock the Power of Iconic Brands</h1>
+						<p class="hero__description">Partner with world-renowned brands to create products that captivate audiences and drive revenue across every market.</p>
+						<div class="btn-group">
+							<a href="#contact" class="btn btn--primary btn--full">Get Started</a>
+							<a href="#brands" class="btn btn--outline btn--full">Explore Brands</a>
+						</div>
+					</div>
+					<div class="hero__media">
+						<img src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=800&h=500&fit=crop" alt="Team collaborating on brand licensing strategy" width="800" height="500" loading="eager">
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Our Brands -->
+		<section id="brands" class="brands section" aria-labelledby="brands-title">
+			<div class="container">
+				<div class="section-header section-header--center">
+					<h2 id="brands-title">Our Brands</h2>
+					<p>Discover the portfolio of globally recognized brands available for licensing.</p>
+				</div>
+				<div class="slider" data-slider="brands">
+					<div class="slider__track" role="list">
+						<div class="slider__slide" role="listitem"><div class="brand-card"><span class="brand-card__logo">Nike</span></div></div>
+						<div class="slider__slide" role="listitem"><div class="brand-card"><span class="brand-card__logo">Disney</span></div></div>
+						<div class="slider__slide" role="listitem"><div class="brand-card"><span class="brand-card__logo">Marvel</span></div></div>
+						<div class="slider__slide" role="listitem"><div class="brand-card"><span class="brand-card__logo">LEGO</span></div></div>
+						<div class="slider__slide" role="listitem"><div class="brand-card"><span class="brand-card__logo">Star Wars</span></div></div>
+						<div class="slider__slide" role="listitem"><div class="brand-card"><span class="brand-card__logo">Barbie</span></div></div>
+						<div class="slider__slide" role="listitem"><div class="brand-card"><span class="brand-card__logo">Pokémon</span></div></div>
+						<div class="slider__slide" role="listitem"><div class="brand-card"><span class="brand-card__logo">NFL</span></div></div>
+					</div>
+					<div class="slider__nav" aria-label="Brand slider navigation">
+						<button class="slider__btn" data-slider-prev aria-label="Previous brands">
+							<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+						</button>
+						<button class="slider__btn" data-slider-next aria-label="Next brands">
+							<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+						</button>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Existing Products -->
+		<section id="products" class="products section" aria-labelledby="products-title">
+			<div class="container">
+				<div class="section-header">
+					<h2 id="products-title">Existing Products</h2>
+					<p>Browse successful licensed products already in market.</p>
+				</div>
+
+				<!-- Mobile/Tablet slider -->
+				<div class="products__slider slider" data-slider="products">
+					<div class="slider__track" role="list">
+						<div class="slider__slide" role="listitem">
+							<article class="product-card card--equal-height">
+								<div class="product-card__image"><img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=300&fit=crop" alt="Licensed watch product" width="400" height="300" loading="lazy"></div>
+								<div class="product-card__body">
+									<h3 class="product-card__title">Premium Timepiece Collection</h3>
+									<p class="product-card__desc">Luxury watches featuring iconic brand designs.</p>
+								</div>
+							</article>
+						</div>
+						<div class="slider__slide" role="listitem">
+							<article class="product-card card--equal-height">
+								<div class="product-card__image"><img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop" alt="Licensed footwear product" width="400" height="300" loading="lazy"></div>
+								<div class="product-card__body">
+									<h3 class="product-card__title">Athletic Footwear Line</h3>
+									<p class="product-card__desc">Performance shoes with licensed brand graphics.</p>
+								</div>
+							</article>
+						</div>
+						<div class="slider__slide" role="listitem">
+							<article class="product-card card--equal-height">
+								<div class="product-card__image"><img src="https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=400&h=300&fit=crop" alt="Licensed apparel product" width="400" height="300" loading="lazy"></div>
+								<div class="product-card__body">
+									<h3 class="product-card__title">Apparel &amp; Accessories</h3>
+									<p class="product-card__desc">Fashion-forward clothing with brand identity.</p>
+								</div>
+							</article>
+						</div>
+						<div class="slider__slide" role="listitem">
+							<article class="product-card card--equal-height">
+								<div class="product-card__image"><img src="https://images.unsplash.com/photo-1560343560-40d036bae05e?w=400&h=300&fit=crop" alt="Licensed toy product" width="400" height="300" loading="lazy"></div>
+								<div class="product-card__body">
+									<h3 class="product-card__title">Collectible Toy Series</h3>
+									<p class="product-card__desc">Action figures and playsets for all ages.</p>
+								</div>
+							</article>
+						</div>
+					</div>
+					<div class="slider__nav" aria-label="Product slider navigation">
+						<button class="slider__btn" data-slider-prev aria-label="Previous products">
+							<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+						</button>
+						<button class="slider__btn" data-slider-next aria-label="Next products">
+							<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+						</button>
+					</div>
+				</div>
+
+				<!-- Desktop grid -->
+				<div class="products__grid" role="list">
+					<article class="product-card card--equal-height" role="listitem">
+						<div class="product-card__image"><img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=300&fit=crop" alt="Licensed watch product" width="400" height="300" loading="lazy"></div>
+						<div class="product-card__body">
+							<h3 class="product-card__title">Premium Timepiece Collection</h3>
+							<p class="product-card__desc">Luxury watches featuring iconic brand designs.</p>
+						</div>
+					</article>
+					<article class="product-card card--equal-height" role="listitem">
+						<div class="product-card__image"><img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop" alt="Licensed footwear product" width="400" height="300" loading="lazy"></div>
+						<div class="product-card__body">
+							<h3 class="product-card__title">Athletic Footwear Line</h3>
+							<p class="product-card__desc">Performance shoes with licensed brand graphics.</p>
+						</div>
+					</article>
+					<article class="product-card card--equal-height" role="listitem">
+						<div class="product-card__image"><img src="https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=400&h=300&fit=crop" alt="Licensed apparel product" width="400" height="300" loading="lazy"></div>
+						<div class="product-card__body">
+							<h3 class="product-card__title">Apparel &amp; Accessories</h3>
+							<p class="product-card__desc">Fashion-forward clothing with brand identity.</p>
+						</div>
+					</article>
+					<article class="product-card card--equal-height" role="listitem">
+						<div class="product-card__image"><img src="https://images.unsplash.com/photo-1560343560-40d036bae05e?w=400&h=300&fit=crop" alt="Licensed toy product" width="400" height="300" loading="lazy"></div>
+						<div class="product-card__body">
+							<h3 class="product-card__title">Collectible Toy Series</h3>
+							<p class="product-card__desc">Action figures and playsets for all ages.</p>
+						</div>
+					</article>
+				</div>
+			</div>
+		</section>
+
+		<!-- Licensing Categories -->
+		<section id="licensing" class="licensing section" aria-labelledby="licensing-title">
+			<div class="container">
+				<div class="section-header section-header--center">
+					<h2 id="licensing-title">Licensing Categories</h2>
+					<p>Explore licensing opportunities across diverse product categories.</p>
+				</div>
+				<div class="licensing__grid" role="list">
+					<div class="licensing-card" role="listitem">
+						<div class="licensing-card__icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.47a1 1 0 00.99.84H21.15a1 1 0 00.99-.84l.58-3.47a2 2 0 00-1.34-2.23z"/><path d="M4 10v10a2 2 0 002 2h12a2 2 0 002-2V10"/></svg>
+						</div>
+						<span class="licensing-card__label">Apparel</span>
+					</div>
+					<div class="licensing-card" role="listitem">
+						<div class="licensing-card__icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+						</div>
+						<span class="licensing-card__label">Toys &amp; Games</span>
+					</div>
+					<div class="licensing-card" role="listitem">
+						<div class="licensing-card__icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+						</div>
+						<span class="licensing-card__label">Home &amp; Living</span>
+					</div>
+					<div class="licensing-card" role="listitem">
+						<div class="licensing-card__icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+						</div>
+						<span class="licensing-card__label">Electronics</span>
+					</div>
+					<div class="licensing-card" role="listitem">
+						<div class="licensing-card__icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+						</div>
+						<span class="licensing-card__label">Food &amp; Beverage</span>
+					</div>
+					<div class="licensing-card" role="listitem">
+						<div class="licensing-card__icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+						</div>
+						<span class="licensing-card__label">Entertainment</span>
+					</div>
+					<div class="licensing-card" role="listitem">
+						<div class="licensing-card__icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+						</div>
+						<span class="licensing-card__label">Publishing</span>
+					</div>
+					<div class="licensing-card" role="listitem">
+						<div class="licensing-card__icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+						</div>
+						<span class="licensing-card__label">Health &amp; Beauty</span>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Information Cards -->
+		<section id="about" class="section" aria-labelledby="info-title">
+			<div class="container">
+				<div class="section-header section-header--center">
+					<h2 id="info-title">Why Partner With Us</h2>
+					<p>Industry-leading expertise to maximize your licensing potential.</p>
+				</div>
+				<div class="info-cards">
+					<article class="info-card card--equal-height">
+						<div class="info-card__icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+						</div>
+						<h3 class="info-card__title">Brand Protection</h3>
+						<p>Comprehensive guidelines and quality control to safeguard brand integrity across all licensed products.</p>
+					</article>
+					<article class="info-card card--equal-height">
+						<div class="info-card__icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+						</div>
+						<h3 class="info-card__title">Global Reach</h3>
+						<p>Access to markets in over 80 countries with localized support and regional expertise.</p>
+					</article>
+					<article class="info-card card--equal-height">
+						<div class="info-card__icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+						</div>
+						<h3 class="info-card__title">Revenue Growth</h3>
+						<p>Proven strategies that have generated billions in licensed product sales worldwide.</p>
+					</article>
+				</div>
+			</div>
+		</section>
+
+		<!-- Contact Form -->
+		<section id="contact" class="contact section" aria-labelledby="contact-title">
+			<div class="container">
+				<div class="contact__grid">
+					<div class="contact__info">
+						<h2 id="contact-title">Get in Touch</h2>
+						<p>Ready to explore licensing opportunities? Our team is here to help you find the perfect brand partnership.</p>
+						<p><strong>Email:</strong> licensing@brandco.com</p>
+						<p><strong>Phone:</strong> +1 (800) 555-0199</p>
+					</div>
+					<form class="contact__form" action="#" method="post">
+						<div class="contact__form-row contact__form-row--2col">
+							<div class="form-group">
+								<label class="form-label" for="first-name">First Name</label>
+								<input class="form-input" type="text" id="first-name" name="first_name" required autocomplete="given-name">
+							</div>
+							<div class="form-group">
+								<label class="form-label" for="last-name">Last Name</label>
+								<input class="form-input" type="text" id="last-name" name="last_name" required autocomplete="family-name">
+							</div>
+						</div>
+						<div class="contact__form-row contact__form-row--2col">
+							<div class="form-group">
+								<label class="form-label" for="email">Email</label>
+								<input class="form-input" type="email" id="email" name="email" required autocomplete="email">
+							</div>
+							<div class="form-group">
+								<label class="form-label" for="company">Company</label>
+								<input class="form-input" type="text" id="company" name="company" autocomplete="organization">
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="form-label" for="category">Licensing Category</label>
+							<select class="form-select" id="category" name="category">
+								<option value="">Select a category</option>
+								<option value="apparel">Apparel</option>
+								<option value="toys">Toys &amp; Games</option>
+								<option value="home">Home &amp; Living</option>
+								<option value="electronics">Electronics</option>
+								<option value="food">Food &amp; Beverage</option>
+								<option value="other">Other</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label class="form-label" for="message">Message</label>
+							<textarea class="form-textarea" id="message" name="message" rows="4" required></textarea>
+						</div>
+						<button type="submit" class="btn btn--primary btn--full">Send Message</button>
+					</form>
+				</div>
+			</div>
+		</section>
+
+		<!-- CTA Banner -->
+		<section class="cta-banner" aria-labelledby="cta-title">
+			<div class="container">
+				<div class="cta-banner__inner">
+					<div class="cta-banner__content">
+						<h2 id="cta-title" class="cta-banner__title">Start Your Licensing Journey Today</h2>
+						<p class="cta-banner__text">Join hundreds of partners who have transformed their businesses through strategic brand licensing.</p>
+						<a href="#contact" class="btn btn--primary">Become a Partner</a>
+					</div>
+					<div class="cta-banner__characters" aria-hidden="true">
+						<div class="cta-banner__character">🦸</div>
+						<div class="cta-banner__character">🚀</div>
+						<div class="cta-banner__character">⭐</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+	</main>
+
+	<!-- Footer -->
+	<footer class="footer">
+		<div class="container">
+			<!-- Newsletter first -->
+			<div class="footer__newsletter">
+				<h3>Stay Updated</h3>
+				<p>Subscribe to our newsletter for the latest licensing news and opportunities.</p>
+				<form class="footer__newsletter-form" action="#" method="post">
+					<label class="sr-only" for="newsletter-email">Email address</label>
+					<input class="form-input" type="email" id="newsletter-email" name="newsletter_email" placeholder="Enter your email" required autocomplete="email">
+					<button type="submit" class="btn btn--primary">Subscribe</button>
+				</form>
+			</div>
+
+			<!-- Desktop columns -->
+			<div class="footer__columns">
+				<div class="footer__column">
+					<h4>Company</h4>
+					<ul>
+						<li><a href="#">About Us</a></li>
+						<li><a href="#">Careers</a></li>
+						<li><a href="#">Press</a></li>
+						<li><a href="#">Contact</a></li>
+					</ul>
+				</div>
+				<div class="footer__column">
+					<h4>Brands</h4>
+					<ul>
+						<li><a href="#">Brand Portfolio</a></li>
+						<li><a href="#">Become a Licensor</a></li>
+						<li><a href="#">Brand Guidelines</a></li>
+					</ul>
+				</div>
+				<div class="footer__column">
+					<h4>Resources</h4>
+					<ul>
+						<li><a href="#">Licensing Guide</a></li>
+						<li><a href="#">Case Studies</a></li>
+						<li><a href="#">FAQ</a></li>
+						<li><a href="#">Blog</a></li>
+					</ul>
+				</div>
+				<div class="footer__column">
+					<h4>Legal</h4>
+					<ul>
+						<li><a href="#">Privacy Policy</a></li>
+						<li><a href="#">Terms of Service</a></li>
+						<li><a href="#">Cookie Policy</a></li>
+					</ul>
+				</div>
+			</div>
+
+			<!-- Mobile accordion -->
+			<div class="footer__accordion accordion" data-accordion>
+				<div class="accordion__item">
+					<button class="accordion__trigger" aria-expanded="false">
+						Company
+						<svg class="accordion__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					</button>
+					<div class="accordion__panel">
+						<div class="accordion__content">
+							<div class="accordion__content-inner">
+								<a href="#">About Us</a>
+								<a href="#">Careers</a>
+								<a href="#">Press</a>
+								<a href="#">Contact</a>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="accordion__item">
+					<button class="accordion__trigger" aria-expanded="false">
+						Brands
+						<svg class="accordion__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					</button>
+					<div class="accordion__panel">
+						<div class="accordion__content">
+							<div class="accordion__content-inner">
+								<a href="#">Brand Portfolio</a>
+								<a href="#">Become a Licensor</a>
+								<a href="#">Brand Guidelines</a>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="accordion__item">
+					<button class="accordion__trigger" aria-expanded="false">
+						Resources
+						<svg class="accordion__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					</button>
+					<div class="accordion__panel">
+						<div class="accordion__content">
+							<div class="accordion__content-inner">
+								<a href="#">Licensing Guide</a>
+								<a href="#">Case Studies</a>
+								<a href="#">FAQ</a>
+								<a href="#">Blog</a>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="accordion__item">
+					<button class="accordion__trigger" aria-expanded="false">
+						Legal
+						<svg class="accordion__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					</button>
+					<div class="accordion__panel">
+						<div class="accordion__content">
+							<div class="accordion__content-inner">
+								<a href="#">Privacy Policy</a>
+								<a href="#">Terms of Service</a>
+								<a href="#">Cookie Policy</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="footer__social" aria-label="Social media links">
+				<a href="#" aria-label="Facebook">
+					<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+				</a>
+				<a href="#" aria-label="Twitter">
+					<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg>
+				</a>
+				<a href="#" aria-label="LinkedIn">
+					<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+				</a>
+				<a href="#" aria-label="Instagram">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+				</a>
+			</div>
+
+			<div class="footer__bottom">
+				<p>&copy; 2026 BrandCo. All rights reserved.</p>
+			</div>
+		</div>
+	</footer>
+
+	<script src="js/main.js"></script>
+</body>
+</html>
