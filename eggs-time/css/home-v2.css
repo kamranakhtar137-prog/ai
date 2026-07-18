@@ -8938,9 +8938,16 @@
     max-height: none !important;
 }
 
-.main--home-v2 .et-home__hero--split-video .et-home__hero-video,
-.main--home-v2 .et-home__hero--split-video .et-home__hero-video-fallback {
+.main--home-v2 .et-home__hero--split-video .et-home__hero-video {
     display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: none !important;
+}
+
+.main--home-v2 .et-home__hero--split-video .et-home__hero-video-fallback {
     position: static !important;
     width: 100% !important;
     height: auto !important;
@@ -8970,7 +8977,6 @@
 .et-home__hero--split-video .et-home__hero-video-fallback {
     position: static !important;
     inset: auto !important;
-    display: block !important;
     width: 100% !important;
     height: auto !important;
     max-width: 100% !important;
@@ -8990,4 +8996,24 @@
     max-height: none !important;
     object-fit: initial !important;
     object-position: initial !important;
+}
+
+/* One poster only: hide <img> fallback when video is ready (video uses poster attr) */
+.et-home__hero--split-video .et-home__hero-video-wrap:not(.is-loading):not(.has-video-error) .et-home__hero-video-fallback,
+.main--home-v2 .et-home__hero--split-video .et-home__hero-video-wrap:not(.is-loading):not(.has-video-error) .et-home__hero-video-fallback {
+    display: none !important;
+}
+
+.et-home__hero--split-video .et-home__hero-video-wrap.is-loading .et-home__hero-video-fallback,
+.et-home__hero--split-video .et-home__hero-video-wrap.has-video-error .et-home__hero-video-fallback,
+.main--home-v2 .et-home__hero--split-video .et-home__hero-video-wrap.is-loading .et-home__hero-video-fallback,
+.main--home-v2 .et-home__hero--split-video .et-home__hero-video-wrap.has-video-error .et-home__hero-video-fallback {
+    display: block !important;
+}
+
+.et-home__hero--split-video .et-home__hero-video-wrap.is-loading .et-home__hero-video,
+.et-home__hero--split-video .et-home__hero-video-wrap.has-video-error .et-home__hero-video,
+.main--home-v2 .et-home__hero--split-video .et-home__hero-video-wrap.is-loading .et-home__hero-video,
+.main--home-v2 .et-home__hero--split-video .et-home__hero-video-wrap.has-video-error .et-home__hero-video {
+    display: none !important;
 }
