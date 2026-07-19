@@ -8,8 +8,10 @@
     /* Fun in Every Egg game cards slider — 2 on tablet/desktop, 1 on mobile */
     var FUN_EGG_GAME_CARDS_SLIDES = 2;
     var FUN_EGG_GAME_CARDS_MOBILE_SLIDES = 1;
-    /* Stories, Products, Fun Egg — 1 card on mobile */
+    /* Stories, Products, Fun Egg game cards — 1 card on mobile */
     var SECTION_SINGLE_MOBILE_SLIDE = 1;
+    /* Fun Egg app games slider — 2 cards on mobile */
+    var FUN_EGG_APP_GAMES_MOBILE_SLIDES = 2;
 
     function getSliderConfig($wrap, prevLabel, nextLabel, arrowClass, options) {
         var settings = $.extend({
@@ -693,7 +695,7 @@
                 }
 
                 $slider.slick({
-                    slidesToShow: SECTION_SINGLE_MOBILE_SLIDE,
+                    slidesToShow: FUN_EGG_APP_GAMES_MOBILE_SLIDES,
                     slidesToScroll: 1,
                     arrows: true,
                     appendArrows: $wrap,
