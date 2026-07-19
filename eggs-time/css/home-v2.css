@@ -4290,9 +4290,15 @@
 .et-home__fun-egg-game-card-media {
     position: relative;
     width: 100%;
-    aspect-ratio: 16 / 10;
+    flex-shrink: 0;
     overflow: hidden;
     background: #f8fafc;
+}
+
+.et-home__fun-egg-game-card-media--bottom {
+    margin-top: auto;
+    aspect-ratio: 16 / 10;
+    border-top: 1px solid rgba(30, 41, 59, 0.06);
 }
 
 .et-home__fun-egg-game-card-image {
@@ -4308,7 +4314,7 @@
     flex: 1 1 auto;
     flex-direction: column;
     gap: 12px;
-    padding: 16px 16px 18px;
+    padding: 16px 16px 14px;
     min-width: 0;
 }
 
@@ -5571,7 +5577,11 @@
 
     .et-home__fun-egg-game-card-body {
         gap: 10px;
-        padding: 12px 12px 14px;
+        padding: 12px 12px 10px;
+    }
+
+    .et-home__fun-egg-game-card-media--bottom {
+        aspect-ratio: 4 / 3;
     }
 
     .et-home__fun-egg-game-card-icon {

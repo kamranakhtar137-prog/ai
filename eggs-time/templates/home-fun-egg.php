@@ -64,16 +64,6 @@ $magik_character = $brand_meta['magik']['character_image'];
 							class="et-home__fun-egg-game-card et-home__fun-egg-game-card--<?php echo esc_attr( $game['tone'] ); ?>"
 							style="--et-fun-egg-game-panel: <?php echo esc_attr( $game['panel'] ); ?>; --et-fun-egg-game-accent: <?php echo esc_attr( $game['accent'] ); ?>;"
 						>
-							<div class="et-home__fun-egg-game-card-media">
-								<img
-									src="<?php echo esc_url( $game['image'] ); ?>"
-									alt="<?php echo esc_attr( $game['title'] ); ?>"
-									class="et-home__fun-egg-game-card-image"
-									loading="lazy"
-									decoding="async"
-								/>
-							</div>
-
 							<div class="et-home__fun-egg-game-card-body">
 								<div class="et-home__fun-egg-game-card-head">
 									<span class="et-home__fun-egg-game-card-icon" aria-hidden="true">
@@ -98,6 +88,18 @@ $magik_character = $brand_meta['magik']['character_image'];
 									</span>
 								</a>
 							</div>
+
+							<?php if ( ! empty( $game['image'] ) ) : ?>
+							<div class="et-home__fun-egg-game-card-media et-home__fun-egg-game-card-media--bottom">
+								<img
+									src="<?php echo esc_url( $game['image'] ); ?>"
+									alt=""
+									class="et-home__fun-egg-game-card-image"
+									loading="lazy"
+									decoding="async"
+								/>
+							</div>
+							<?php endif; ?>
 						</article>
 					</li>
 				<?php endforeach; ?>
