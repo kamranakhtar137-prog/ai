@@ -111,7 +111,6 @@
     --et-lic-form-gap: 12px;
     --et-lic-form-textarea-min: 100px;
     --et-lic-contact-panel-padding: clamp(14px, 1.2vw, 18px);
-    --et-lic-contact-panel-max: 680px;
     --et-lic-contact-header-gap: 10px;
     --et-lic-slider-arrow-bg: #ff4d8d;
     --et-lic-slider-arrow-color: #ffffff;
@@ -2035,14 +2034,14 @@
 
 .et-license__contact-panel {
     width: 100%;
-    max-width: var(--et-lic-contact-panel-max);
-    margin-left: auto;
-    margin-right: auto;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
     padding: var(--et-lic-contact-panel-padding);
     background: #ffffff;
     border: var(--et-lic-card-border);
     border-radius: var(--et-lic-card-radius);
-    box-shadow: none;
+    box-shadow: 0 10px 32px rgba(26, 51, 82, 0.1);
     box-sizing: border-box;
 }
 
@@ -2550,6 +2549,12 @@
     flex: 0 0 calc((100% - 32px) / 3);
     min-width: 0;
     margin-left: 0;
+}
+
+@media screen and (max-width: 767px) {
+    .et-license__cta-cast:not(.slick-initialized) .et-license__cta-cast-item {
+        flex: 0 0 calc((100% - 16px) / 2);
+    }
 }
 
 .et-license__cta-cast.slick-initialized {
@@ -3586,16 +3591,17 @@ body.page-license footer.footer .center.row_top1 {
 .et-license__category-card:hover,
 .et-license__info-card,
 .et-license__info-card:hover,
-.et-license__products-panel,
-.et-license__contact-panel {
+.et-license__products-panel {
     box-shadow: none !important;
 }
 
 /* ----- Contact panel + slider arrows (final cascade) ----- */
 .et-license__contact-panel {
-    max-width: var(--et-lic-contact-panel-max, 680px) !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-shadow: 0 10px 32px rgba(26, 51, 82, 0.1) !important;
 }
 
 .et-license__brands-slider-wrap .slick-arrow,
