@@ -107,12 +107,12 @@
     --et-lic-info-check-icon-size: 28px;
     --et-lic-info-partner-icon-size: 64px;
     --et-lic-info-process-icon-size: 56px;
-    --et-lic-form-field-height: 46px;
-    --et-lic-form-gap: 14px;
-    --et-lic-form-textarea-min: 132px;
-    --et-lic-contact-panel-padding: clamp(16px, 1.35vw, 22px);
-    --et-lic-contact-panel-max: 900px;
-    --et-lic-contact-header-gap: 12px;
+    --et-lic-form-field-height: 42px;
+    --et-lic-form-gap: 12px;
+    --et-lic-form-textarea-min: 100px;
+    --et-lic-contact-panel-padding: clamp(14px, 1.2vw, 18px);
+    --et-lic-contact-panel-max: 680px;
+    --et-lic-contact-header-gap: 10px;
     --et-lic-slider-arrow-bg: #ff4d8d;
     --et-lic-slider-arrow-color: #ffffff;
     --et-lic-cta-banner-height: clamp(280px, 22vw, 320px);
@@ -978,13 +978,13 @@
     background: #ffffff;
     border: var(--et-lic-card-border);
     border-radius: var(--et-lic-card-radius);
-    box-shadow: var(--et-lic-card-shadow-elevated);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    box-shadow: none;
+    transition: border-color 0.2s ease, transform 0.2s ease;
 }
 
 .et-license__brand-card:hover {
     border-color: rgba(var(--et-brand-blue-rgb), 0.16);
-    box-shadow: var(--et-lic-card-shadow-elevated-hover);
+    box-shadow: none;
     transform: translateY(-4px);
 }
 
@@ -1309,7 +1309,7 @@
     background: #ffffff;
     border: var(--et-lic-card-border);
     border-radius: var(--et-lic-card-radius);
-    box-shadow: var(--et-lic-card-shadow-elevated);
+    box-shadow: none;
     padding: var(--et-lic-card-padding);
     overflow: visible;
     box-sizing: border-box;
@@ -1381,15 +1381,15 @@
     background: #ffffff;
     border: var(--et-lic-card-border);
     border-radius: var(--et-lic-card-radius);
-    box-shadow: var(--et-lic-card-shadow-elevated);
+    box-shadow: none;
     overflow: hidden;
-    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    transition: transform 0.22s ease, border-color 0.22s ease;
 }
 
 .et-license__product-card:hover {
     transform: translateY(-6px);
     border-color: rgba(var(--et-brand-blue-rgb), 0.16);
-    box-shadow: var(--et-lic-card-shadow-elevated-hover);
+    box-shadow: none;
 }
 
 .et-license__product-image-wrap {
@@ -1559,14 +1559,14 @@
     background: #ffffff;
     border: var(--et-lic-card-border);
     border-radius: var(--et-lic-card-radius);
-    box-shadow: var(--et-lic-card-shadow);
+    box-shadow: none;
     text-align: center;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    transition: border-color 0.2s ease, transform 0.2s ease;
 }
 
 .et-license__category-card:hover {
     border-color: rgba(var(--et-brand-blue-rgb), 0.14);
-    box-shadow: var(--et-lic-card-shadow-hover);
+    box-shadow: none;
     transform: translateY(-2px);
 }
 
@@ -1731,9 +1731,9 @@
     border: var(--et-lic-card-border);
     border-radius: var(--et-lic-card-radius);
     background: #ffffff;
-    box-shadow: var(--et-lic-card-shadow);
+    box-shadow: none;
     box-sizing: border-box;
-    transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+    transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
 .et-license__info-card:hover {
@@ -2042,7 +2042,7 @@
     background: #ffffff;
     border: var(--et-lic-card-border);
     border-radius: var(--et-lic-card-radius);
-    box-shadow: var(--et-lic-card-shadow-elevated);
+    box-shadow: none;
     box-sizing: border-box;
 }
 
@@ -2052,8 +2052,8 @@
 }
 
 .et-license__contact-title {
-    margin: 0 0 6px;
-    font-size: clamp(24px, 2.8vw, 34px);
+    margin: 0 0 4px;
+    font-size: clamp(20px, 2.4vw, 28px);
     font-weight: var(--et-lic-fw-display);
     line-height: 1.15;
     letter-spacing: 0.05em;
@@ -2063,7 +2063,7 @@
 
 .et-license__contact-subtitle {
     margin: 0;
-    font-size: clamp(15px, 1.45vw, 18px);
+    font-size: clamp(14px, 1.3vw, 16px);
     font-weight: var(--et-lic-fw-body);
     line-height: 1.45;
     color: var(--et-lic-text-muted) !important;
@@ -2107,8 +2107,8 @@
 
 .et-license__form-label {
     display: block;
-    margin: 0 0 6px;
-    font-size: clamp(15px, 1.2vw, 16px);
+    margin: 0 0 5px;
+    font-size: clamp(14px, 1.1vw, 15px);
     font-weight: var(--et-lic-fw-heading);
     line-height: 1.35;
     color: var(--et-lic-heading) !important;
@@ -2125,7 +2125,7 @@
     height: var(--et-lic-form-field-height) !important;
     min-height: var(--et-lic-form-field-height) !important;
     max-height: var(--et-lic-form-field-height) !important;
-    padding: 0 18px !important;
+    padding: 0 14px !important;
     border: 1px solid #dde2e8 !important;
     border-radius: calc(var(--et-lic-card-radius) - 4px) !important;
     background: #ffffff !important;
@@ -2192,12 +2192,12 @@
     height: auto !important;
     min-height: var(--et-lic-form-textarea-min) !important;
     max-height: none !important;
-    padding: 12px 16px !important;
+    padding: 10px 14px !important;
     line-height: 1.5 !important;
 }
 
 .et-license__contact select.et-license__form-input {
-    padding: 0 44px 0 18px !important;
+    padding: 0 40px 0 14px !important;
 }
 
 .et-license__form-actions {
@@ -3391,7 +3391,7 @@ body.page-license footer.footer .center.row_top1 {
 
     /* Contact — single column, tall inputs, full-width submit */
     .et-license__contact-panel {
-        padding: 16px;
+        padding: 14px;
     }
 
     .et-license,
@@ -3399,7 +3399,7 @@ body.page-license footer.footer .center.row_top1 {
         --et-lic-info-partner-icon-size: 58px;
         --et-lic-info-process-icon-size: 52px;
         --et-lic-info-check-icon-size: 26px;
-        --et-lic-form-textarea-min: 120px;
+        --et-lic-form-textarea-min: 96px;
     }
 
     .et-license__form-grid {
@@ -3550,7 +3550,7 @@ body.page-license footer.footer .center.row_top1 {
     }
 }
 
-/* ----- Cards: no box shadow (final cascade) ----- */
+/* ----- Cards + contact panel: no box shadow (final cascade) ----- */
 .et-license__brand-card,
 .et-license__brand-card:hover,
 .et-license__product-card,
@@ -3559,16 +3559,16 @@ body.page-license footer.footer .center.row_top1 {
 .et-license__category-card:hover,
 .et-license__info-card,
 .et-license__info-card:hover,
-.et-license__products-panel {
+.et-license__products-panel,
+.et-license__contact-panel {
     box-shadow: none !important;
 }
 
 /* ----- Contact panel + slider arrows (final cascade) ----- */
 .et-license__contact-panel {
-    max-width: var(--et-lic-contact-panel-max, 900px) !important;
+    max-width: var(--et-lic-contact-panel-max, 680px) !important;
     margin-left: auto !important;
     margin-right: auto !important;
-    box-shadow: var(--et-lic-card-shadow-elevated) !important;
 }
 
 .et-license__brands-slider-wrap .slick-arrow,
