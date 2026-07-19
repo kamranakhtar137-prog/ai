@@ -14,6 +14,8 @@
     var PRODUCTS_MOBILE_SLIDES = 2;
     /* Fun Egg app games slider — 2 cards on mobile */
     var FUN_EGG_APP_GAMES_MOBILE_SLIDES = 2;
+    /* Distributor brand logos — 2 visible on mobile scroll carousel */
+    var DISTRIBUTOR_MOBILE_SLIDES = 2;
 
     function getSliderConfig($wrap, prevLabel, nextLabel, arrowClass, options) {
         var settings = $.extend({
@@ -793,10 +795,35 @@
         /* Distributor brand logos: CSS scroll carousel on mobile (no slick — avoids overflow). */
         (function initDistributorBrandsScrollCarousel() {
             var MOBILE_MAX = 767;
+            var SCROLL_GAP_PX = 12;
             var $wraps = $('.et-home__distributor-showcase-slider-wrap');
 
             if (!$wraps.length) {
                 return;
+            }
+
+            function getDistributorItemBasis() {
+                var gapTotal = SCROLL_GAP_PX * (DISTRIBUTOR_MOBILE_SLIDES - 1);
+
+                return 'calc((100% - ' + gapTotal + 'px) / ' + DISTRIBUTOR_MOBILE_SLIDES + ')';
+            }
+
+            function applyDistributorMobileItemSize($wrap) {
+                var basis = getDistributorItemBasis();
+
+                $wrap.find('.et-home__distributor-showcase-item').css({
+                    flex: '0 0 ' + basis,
+                    width: basis,
+                    maxWidth: 'none'
+                });
+            }
+
+            function clearDistributorMobileItemSize($wrap) {
+                $wrap.find('.et-home__distributor-showcase-item').css({
+                    flex: '',
+                    width: '',
+                    maxWidth: ''
+                });
             }
 
             function ensureArrows($wrap) {
@@ -821,7 +848,9 @@
 
                 function scrollByCard(direction) {
                     var card = $track.find('.et-home__distributor-showcase-item').get(0);
-                    var amount = card ? card.getBoundingClientRect().width + 12 : $track.innerWidth() * 0.8;
+                    var amount = card
+                        ? card.getBoundingClientRect().width + SCROLL_GAP_PX
+                        : ($track.innerWidth() / DISTRIBUTOR_MOBILE_SLIDES) * 0.95;
                     $track.get(0).scrollBy({ left: direction * amount, behavior: 'smooth' });
                 }
 
@@ -846,8 +875,13 @@
                     }
 
                     $wrap.toggleClass('is-scroll-carousel', isMobile);
+                    $wrap.attr('data-et-distributor-slides', isMobile ? DISTRIBUTOR_MOBILE_SLIDES : '');
+
                     if (isMobile) {
                         bindWrap($wrap);
+                        applyDistributorMobileItemSize($wrap);
+                    } else {
+                        clearDistributorMobileItemSize($wrap);
                     }
                 });
             }
@@ -855,7 +889,15 @@
             syncMode();
             $(window).on('resize.etHomeDistributorBrandsScroll', function () {
                 window.clearTimeout(window.__etDistributorScrollTimer);
-                window.__etDistributorScrollTimer = window.setTimeout(syncMode, 150);
+                window.__etDistributorScrollTimer = window.setTimeout(function () {
+                    syncMode();
+
+                    if (window.innerWidth <= MOBILE_MAX) {
+                        $wraps.each(function () {
+                            applyDistributorMobileItemSize($(this));
+                        });
+                    }
+                }, 150);
             });
         })();
 
