@@ -5,8 +5,11 @@
     var MOBILE_SLIDES_TO_SHOW = 3;
     /* Choose Your Egg World + Best Sellers only — 2 cards on mobile */
     var EGG_CAROUSEL_MOBILE_SLIDES = 2;
-    /* Fun in Every Egg game cards slider — always 2 visible */
+    /* Fun in Every Egg game cards slider — 2 on tablet/desktop, 1 on mobile */
     var FUN_EGG_GAME_CARDS_SLIDES = 2;
+    var FUN_EGG_GAME_CARDS_MOBILE_SLIDES = 1;
+    /* Stories, Products, Fun Egg — 1 card on mobile */
+    var SECTION_SINGLE_MOBILE_SLIDE = 1;
 
     function getSliderConfig($wrap, prevLabel, nextLabel, arrowClass, options) {
         var settings = $.extend({
@@ -409,14 +412,14 @@
                 {
                     breakpoint: 768,
                     settings: {
-                        slidesToShow: 3,
+                        slidesToShow: SECTION_SINGLE_MOBILE_SLIDE,
                         slidesToScroll: 1
                     }
                 },
                 {
                     breakpoint: 576,
                     settings: {
-                        slidesToShow: 3,
+                        slidesToShow: SECTION_SINGLE_MOBILE_SLIDE,
                         slidesToScroll: 1
                     }
                 }
@@ -478,7 +481,7 @@
                     {
                         breakpoint: 768,
                         settings: {
-                            slidesToShow: 2,
+                            slidesToShow: SECTION_SINGLE_MOBILE_SLIDE,
                             slidesToScroll: 1
                         }
                     }
@@ -572,6 +575,7 @@
 
         function getFunEggGameCardsSliderConfig($wrap, count) {
             var slidesToShow = Math.min(count, FUN_EGG_GAME_CARDS_SLIDES);
+            var mobileSlidesToShow = Math.min(count, FUN_EGG_GAME_CARDS_MOBILE_SLIDES);
 
             return {
                 slidesToShow: slidesToShow,
@@ -590,16 +594,25 @@
                     {
                         breakpoint: 767,
                         settings: {
-                            slidesToShow: slidesToShow,
+                            slidesToShow: mobileSlidesToShow,
                             slidesToScroll: 1,
-                            infinite: count > slidesToShow
+                            infinite: count > mobileSlidesToShow
                         }
                     }
                 ]
             };
         }
 
-        /* Fun in Every Egg game cards: static 2-up grid for 2 items; carousel for 3+. */
+        function funEggGameCardsNeedsSlider(count) {
+            var isMobile = window.innerWidth <= 767;
+            var minSlidesForCarousel = isMobile
+                ? FUN_EGG_GAME_CARDS_MOBILE_SLIDES
+                : FUN_EGG_GAME_CARDS_SLIDES;
+
+            return count > minSlidesForCarousel;
+        }
+
+        /* Fun in Every Egg game cards: static 2-up grid on desktop for 2 items; carousel for 3+ (1-up on mobile). */
         (function initFunEggGameCardsSlider() {
             var $sliders = $('.et-home__fun-egg-games-cards-slider');
             var resizeTimer;
@@ -612,7 +625,7 @@
                 var $wrap = $slider.closest('.et-home__fun-egg-games-cards-slider-wrap');
                 var count = parseInt($slider.data('etGameCount'), 10) || $slider.children('li').length;
 
-                if (count <= FUN_EGG_GAME_CARDS_SLIDES) {
+                if (!funEggGameCardsNeedsSlider(count)) {
                     $wrap.removeClass('is-slider-active');
 
                     if ($slider.hasClass('slick-initialized')) {
@@ -680,7 +693,7 @@
                 }
 
                 $slider.slick({
-                    slidesToShow: MOBILE_SLIDES_TO_SHOW,
+                    slidesToShow: SECTION_SINGLE_MOBILE_SLIDE,
                     slidesToScroll: 1,
                     arrows: true,
                     appendArrows: $wrap,
