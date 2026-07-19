@@ -2311,9 +2311,11 @@
     }
 
     .et-license__process-steps {
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px 12px;
+        align-items: start;
+        justify-items: stretch;
         min-width: 0;
         width: 100%;
     }
@@ -2321,8 +2323,8 @@
     .et-license__process-step {
         flex: none;
         width: 100%;
-        max-width: 260px;
-        gap: 12px;
+        max-width: none;
+        gap: 10px;
     }
 
     .et-license__process-connector {
@@ -2330,21 +2332,22 @@
     }
 
     .et-license__process-label {
-        font-size: var(--et-lic-font-body);
+        font-size: clamp(13px, 3.5vw, 15px);
         font-weight: var(--et-lic-fw-heading);
         min-height: 0;
+        padding: 0 2px;
     }
 
     .et-license__process-num {
-        width: 30px;
-        height: 30px;
-        font-size: 13px;
+        width: 26px;
+        height: 26px;
+        font-size: 12px;
     }
 
     .et-license__process-icon {
-        width: 54px;
-        height: 54px;
-        font-size: 23px;
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
     }
 
     .et-license__contact-panel {
@@ -3286,13 +3289,14 @@ body.page-license footer.footer .center.row_top1 {
         --et-lic-footer-block-gap: 16px;
     }
 
-    .et-license__section-inner,
-    .et-license__cta-inner,
-
-    .et-license__section-title {
+    .et-license__section-title,
+    .et-license__brands .et-license__section-title,
+    .et-license__products .et-license__section-title,
+    .et-license__categories .et-license__section-title {
         gap: 8px;
         margin-bottom: 16px;
-        font-size: clamp(24px, 6.5vw, 30px);
+        font-size: 30px;
+        line-height: 1.15;
     }
 
     /* Hero — text above media, auto height, full-width image, stacked buttons */
@@ -3649,6 +3653,24 @@ body.page-license footer.footer .center.row_top1 {
     word-break: normal !important;
     overflow-wrap: normal !important;
     text-wrap: balance;
+}
+
+@media screen and (max-width: 767px) {
+    .et-license__section-title,
+    .et-license__brands .et-license__section-title,
+    .et-license__products .et-license__section-title,
+    .et-license__categories .et-license__section-title {
+        font-size: 30px !important;
+    }
+
+    .et-license__info-card--process .et-license__process-steps {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .et-license__info-card--process .et-license__process-connector {
+        display: none !important;
+    }
 }
 
 /* ----- Footer shell (final cascade) ----- */
