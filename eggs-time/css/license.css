@@ -3312,7 +3312,7 @@ body.page-license footer.footer .center.row_top1 {
     .et-license__categories .et-license__section-title {
         gap: 8px;
         margin-bottom: 16px;
-        font-size: 30px;
+        font-size: 25px;
         line-height: 1.15;
     }
 
@@ -3677,7 +3677,7 @@ body.page-license footer.footer .center.row_top1 {
     .et-license__brands .et-license__section-title,
     .et-license__products .et-license__section-title,
     .et-license__categories .et-license__section-title {
-        font-size: 30px !important;
+        font-size: 25px !important;
     }
 
     .et-license__info-card--process .et-license__process-steps {
