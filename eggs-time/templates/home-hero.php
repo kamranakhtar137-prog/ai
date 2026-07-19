@@ -8,11 +8,11 @@ $et_home_hero_use_video       = true;
 $et_home_hero_video_url       = 'http://eggstime.com/wp-content/uploads/2026/07/51be273fce2746bcbecc5fda78856c43.mp4';
 /* Poster shown before play, while buffering, or if playback fails. */
 $et_home_hero_video_poster    = 'http://eggstime.com/wp-content/uploads/2026/07/Baber_girl_650x650.png';
-$et_home_hero_poster_width    = 1400;
-$et_home_hero_poster_height   = 1600;
-$et_home_hero_video_width     = 1920;
-$et_home_hero_video_height    = 1600;
-$et_home_hero_bg              = 'https://eggstime.com/wp-content/uploads/2026/07/0de91431-1eb6-414e-986e-5b2724b4f923.png';
+$et_home_hero_poster_width    = 800;
+$et_home_hero_poster_height   = 600;
+$et_home_hero_video_width     = 800;
+$et_home_hero_video_height    = 600;
+$et_home_hero_bg              = 'http://eggstime.com/wp-content/uploads/2026/07/800Х600.jpg.jpeg';
 $et_home_hero_btn_arrow       = '<svg class="et-home__hero-btn-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path fill="none" d="M8 5l8 7-8 7" stroke="#098BE5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 $et_home_hero_video_style = sprintf(
