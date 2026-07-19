@@ -1,0 +1,82 @@
+:root {
+	/* Breakpoints (reference only — applied via media queries) */
+	/* Mobile: 375–767px | Tablet: 768–1199px | Laptop: 1200–1439px | Desktop: 1440px+ */
+
+	/* Colors */
+	--color-primary: #e63946;
+	--color-primary-dark: #c1121f;
+	--color-secondary: #1d3557;
+	--color-accent: #f4a261;
+	--color-background: #ffffff;
+	--color-surface: #f8f9fa;
+	--color-surface-alt: #edf2f7;
+	--color-text: #1a1a2e;
+	--color-text-muted: #64748b;
+	--color-border: #e2e8f0;
+	--color-white: #ffffff;
+
+	/* Typography */
+	--font-heading: "Inter", system-ui, -apple-system, sans-serif;
+	--font-body: "Inter", system-ui, -apple-system, sans-serif;
+	--font-size-xs: 0.75rem;
+	--font-size-sm: 0.875rem;
+	--font-size-base: 1rem;
+	--font-size-lg: 1.125rem;
+	--font-size-xl: 1.25rem;
+	--font-size-2xl: 1.5rem;
+	--font-size-3xl: 2rem;
+	--font-size-4xl: 2.5rem;
+	--font-size-5xl: 3rem;
+	--line-height-tight: 1.15;
+	--line-height-normal: 1.5;
+	--line-height-relaxed: 1.65;
+
+	/* Spacing — Mobile defaults (375–767px) */
+	--side-padding: 18px;
+	--section-spacing: 36px;
+	--card-radius: 16px;
+	--card-padding: 20px;
+	--gap-sm: 12px;
+	--gap-md: 16px;
+	--gap-lg: 24px;
+	--gap-xl: 32px;
+
+	/* Layout */
+	--content-max-width: 100%;
+	--input-height: 50px;
+	--button-height: 48px;
+
+	/* Card dimensions */
+	--brand-card-width: 130px;
+	--licensing-icon-size: 44px;
+
+	/* Transitions */
+	--transition-fast: 150ms ease;
+	--transition-base: 250ms ease;
+}
+
+@media (min-width: 768px) {
+	:root {
+		--side-padding: 24px;
+		--section-spacing: 44px;
+		--card-radius: 20px;
+		--content-max-width: 100%;
+	}
+}
+
+@media (min-width: 1200px) {
+	:root {
+		--side-padding: 32px;
+		--section-spacing: 52px;
+		--card-radius: 24px;
+		--content-max-width: 1200px;
+	}
+}
+
+@media (min-width: 1440px) {
+	:root {
+		--side-padding: 44px;
+		--section-spacing: 60px;
+		--content-max-width: 1420px;
+	}
+}
