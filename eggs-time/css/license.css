@@ -3079,18 +3079,44 @@
 
 }
 
-/* License page — yellow site footer (shared footer.php)
-   NOTE: --et-lic-footer-* vars live on .et-license and do NOT inherit to
-   sibling footer.main; use literal px so padding is not invalid-at-computed-value. */
+/* License page — site footer (shared footer.php)
+   Footer is a sibling of .main--license, so shell tokens must live on footer itself. */
 .main--license + footer.footer,
 body.page-template-page-license footer.footer,
 body.page-license footer.footer {
+    --et-lic-footer-max: 1650px;
+    --et-lic-footer-x: 18px;
     padding-top: 100px !important;
     padding-bottom: 100px !important;
     box-sizing: border-box;
 }
 
-/* ----- Footer container (match home-v2 / license shell) ----- */
+@media screen and (min-width: 768px) {
+    .main--license + footer.footer,
+    body.page-template-page-license footer.footer,
+    body.page-license footer.footer {
+        --et-lic-footer-x: 24px;
+    }
+}
+
+@media screen and (min-width: 1200px) {
+    .main--license + footer.footer,
+    body.page-template-page-license footer.footer,
+    body.page-license footer.footer {
+        --et-lic-footer-x: 32px;
+    }
+}
+
+@media screen and (min-width: 1440px) {
+    .main--license + footer.footer,
+    body.page-template-page-license footer.footer,
+    body.page-license footer.footer {
+        --et-lic-footer-max: 1420px;
+        --et-lic-footer-x: 44px;
+    }
+}
+
+/* ----- Footer container (match home-v2 shell) ----- */
 .main--license + footer.footer .center,
 .main--license + footer.footer .center.row_top1,
 body.page-template-page-license footer.footer .center,
@@ -3098,11 +3124,11 @@ body.page-template-page-license footer.footer .center.row_top1,
 body.page-license footer.footer .center,
 body.page-license footer.footer .center.row_top1 {
     width: 100% !important;
-    max-width: var(--et-lic-max) !important;
+    max-width: var(--et-lic-footer-max) !important;
     margin-left: auto !important;
     margin-right: auto !important;
-    padding-left: var(--et-lic-section-x) !important;
-    padding-right: var(--et-lic-section-x) !important;
+    padding-left: var(--et-lic-footer-x) !important;
+    padding-right: var(--et-lic-footer-x) !important;
     box-sizing: border-box !important;
 }
 
@@ -3196,6 +3222,7 @@ body.page-license footer.footer .center.row_top1 {
     .main--license + footer.footer,
     body.page-template-page-license footer.footer,
     body.page-license footer.footer {
+        --et-lic-footer-x: 18px;
         padding-top: 56px !important;
         padding-bottom: 56px !important;
     }
@@ -3601,4 +3628,16 @@ body.page-license footer.footer .center.row_top1 {
 
 .et-license__info-card--process .et-license__process-wrap {
     padding-top: 0;
+}
+
+/* ----- Footer shell (final cascade) ----- */
+.main--license + footer.footer .center,
+.main--license + footer.footer .center.row_top1,
+body.page-template-page-license footer.footer .center,
+body.page-template-page-license footer.footer .center.row_top1,
+body.page-license footer.footer .center,
+body.page-license footer.footer .center.row_top1 {
+    max-width: var(--et-lic-footer-max, 1650px) !important;
+    padding-left: var(--et-lic-footer-x, 18px) !important;
+    padding-right: var(--et-lic-footer-x, 18px) !important;
 }
