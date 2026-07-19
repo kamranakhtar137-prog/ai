@@ -92,9 +92,7 @@ $magik_character = $brand_meta['magik']['character_image'];
 								>
 									<span class="et-home__fun-egg-game-card-btn-label"><?php esc_html_e( 'Play Now', 'eggs-shop' ); ?></span>
 									<span class="et-home__fun-egg-game-card-btn-icon" aria-hidden="true">
-										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-											<path d="M5 12h12M13 7l5 5-5 5"></path>
-										</svg>
+										<?php echo et_home_icon( 'arrow-right' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 									</span>
 								</a>
 							</div>

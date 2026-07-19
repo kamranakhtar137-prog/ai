@@ -165,12 +165,18 @@ function et_home_get_game_rating_badge_images( $theme_uri = '' ) {
  * @return string
  */
 function et_home_get_fun_egg_game_card_icon( $icon ) {
-	$icons = array(
-		'maze' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h3v8H8zM13 8h3v3h-3zM13 16h3v-3h-3z"/></svg>',
-		'chat' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-1.9 5.4 8.5 8.5 0 0 1-6.6 3.1 8.4 8.4 0 0 1-3.9-1L3 21l1.9-5.6a8.4 8.4 0 0 1-1-3.9 8.5 8.5 0 0 1 3.1-6.6A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 5.5 2 8.4 8.4 0 0 1 3 6.5z"/><path d="M9.5 11h.01M12 11h.01M14.5 11h.01"/></svg>',
-		'palette' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22a10 10 0 1 0-8.6-15"/><circle cx="8.5" cy="10.5" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="15.5" cy="10.5" r="1"/><circle cx="10" cy="14.5" r="1"/></svg>',
-		'puzzle' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4h2v3h3a2 2 0 0 1 2 2v2h-3v2h3v2a2 2 0 0 1-2 2h-3v3H11v-3H8a2 2 0 0 1-2-2v-2h3v-2H6v-2a2 2 0 0 1 2-2h3z"/></svg>',
+	if ( ! function_exists( 'et_home_icon' ) ) {
+		require_once get_template_directory() . '/inc/home-icons.php';
+	}
+
+	$icon_map = array(
+		'maze'    => 'game-maze',
+		'chat'    => 'game-chat',
+		'palette' => 'game-palette',
+		'puzzle'  => 'game-puzzle',
 	);
 
-	return isset( $icons[ $icon ] ) ? $icons[ $icon ] : $icons['maze'];
+	$icon_key = isset( $icon_map[ $icon ] ) ? $icon_map[ $icon ] : 'game-maze';
+
+	return et_home_icon( $icon_key );
 }
