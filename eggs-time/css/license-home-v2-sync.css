@@ -1,0 +1,205 @@
+/**
+ * License page — layout rhythm synced with home-v2.css
+ * Enqueue AFTER license.css so these tokens win the cascade.
+ *
+ * Breakpoints (match home-v2):
+ *   <768px   section-x 18px, section-gap 36px, max 1650px
+ *   768+     section-x 24px, section-gap 44px
+ *   1200+    section-x 32px, section-gap 52px
+ *   1440+    section-x 44px, section-gap 60px, max 1420px
+ */
+
+.main--license {
+    --et-lic-shell-max: 1650px;
+    --et-lic-shell-x: 18px;
+}
+
+.et-license,
+.main--license {
+    --et-lic-max: var(--et-lic-shell-max, 1650px);
+    --et-lic-section-x: var(--et-lic-shell-x, 18px);
+    --et-lic-section-gap: 36px;
+    --et-lic-section-top-spacing: calc(var(--et-lic-section-gap) / 2);
+    --et-lic-section-pad-y: 36px;
+    --et-lic-section-half: var(--et-lic-section-top-spacing);
+    --et-lic-slider-inset: 52px;
+    --et-lic-slider-inset-md: 42px;
+    --et-lic-slider-inset-sm: 34px;
+    --et-lic-slider-inset-xs: 30px;
+}
+
+@media screen and (min-width: 768px) {
+    .et-license,
+    .main--license {
+        --et-lic-shell-x: 24px;
+        --et-lic-section-x: 24px;
+        --et-lic-section-gap: 44px;
+        --et-lic-section-top-spacing: calc(var(--et-lic-section-gap) / 2);
+        --et-lic-section-pad-y: 44px;
+        --et-lic-section-half: var(--et-lic-section-top-spacing);
+    }
+}
+
+@media screen and (min-width: 1200px) {
+    .et-license,
+    .main--license {
+        --et-lic-shell-x: 32px;
+        --et-lic-section-x: 32px;
+        --et-lic-section-gap: 52px;
+        --et-lic-section-top-spacing: calc(var(--et-lic-section-gap) / 2);
+        --et-lic-section-pad-y: 52px;
+        --et-lic-section-half: var(--et-lic-section-top-spacing);
+    }
+}
+
+@media screen and (min-width: 1440px) {
+    .et-license,
+    .main--license {
+        --et-lic-shell-max: 1420px;
+        --et-lic-max: 1420px;
+        --et-lic-shell-x: 44px;
+        --et-lic-section-x: 44px;
+        --et-lic-section-gap: 60px;
+        --et-lic-section-top-spacing: calc(var(--et-lic-section-gap) / 2);
+        --et-lic-section-pad-y: 60px;
+        --et-lic-section-half: var(--et-lic-section-top-spacing);
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .et-license,
+    .main--license {
+        --et-lic-shell-x: 18px;
+        --et-lic-section-x: 18px;
+        --et-lic-section-gap: 36px;
+        --et-lic-section-top-spacing: 18px;
+        --et-lic-section-pad-y: 36px;
+        --et-lic-section-half: var(--et-lic-section-top-spacing);
+    }
+}
+
+/* ----- Shared page shell (match .et-home__section-inner) ----- */
+.et-license__section-inner,
+.et-license__cta-inner,
+.et-license__hero-wrap .et-home__hero-inner.center {
+    width: 100% !important;
+    max-width: var(--et-lic-max) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: var(--et-lic-section-x) !important;
+    padding-right: var(--et-lic-section-x) !important;
+    box-sizing: border-box !important;
+}
+
+.et-license__section-inner {
+    padding-top: var(--et-lic-section-top-spacing) !important;
+    padding-bottom: var(--et-lic-section-top-spacing) !important;
+}
+
+.et-license__cta-inner {
+    padding-top: var(--et-lic-section-pad-y) !important;
+    padding-bottom: var(--et-lic-section-pad-y) !important;
+}
+
+/* ----- Slider side inset (match home-v2 carousel arrows) ----- */
+.et-license__brands-slider-wrap,
+.et-license__products-slider-wrap {
+    padding-left: var(--et-lic-slider-inset-sm) !important;
+    padding-right: var(--et-lic-slider-inset-sm) !important;
+}
+
+.et-license__categories-slider-wrap {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+@media screen and (min-width: 768px) and (max-width: 1199px) {
+    .et-license__brands-slider-wrap,
+    .et-license__products-slider-wrap {
+        padding-left: var(--et-lic-slider-inset-md) !important;
+        padding-right: var(--et-lic-slider-inset-md) !important;
+    }
+}
+
+@media screen and (min-width: 1200px) {
+    .et-license__brands-slider-wrap,
+    .et-license__products-slider-wrap {
+        padding-left: var(--et-lic-slider-inset) !important;
+        padding-right: var(--et-lic-slider-inset) !important;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .et-license__brands-slider-wrap,
+    .et-license__products-slider-wrap,
+    .et-license__categories-slider-wrap.is-slider-active {
+        padding-left: 28px !important;
+        padding-right: 28px !important;
+    }
+}
+
+@media screen and (max-width: 479px) {
+    .et-license__brands-slider-wrap,
+    .et-license__products-slider-wrap,
+    .et-license__categories-slider-wrap.is-slider-active {
+        padding-left: var(--et-lic-slider-inset-xs) !important;
+        padding-right: var(--et-lic-slider-inset-xs) !important;
+    }
+}
+
+/* ----- Hero banner shell ----- */
+.et-license__hero-wrap .et-home__hero-inner.center {
+    padding-top: var(--et-lic-section-pad-y) !important;
+    padding-bottom: var(--et-lic-section-pad-y) !important;
+}
+
+@media screen and (min-width: 1200px) {
+    .et-license__hero-wrap .et-home__hero-inner.center {
+        padding-bottom: 100px !important;
+    }
+}
+
+/* ----- Footer container (match home-v2 / license shell) ----- */
+.main--license + footer.footer .center,
+.main--license + footer.footer .center.row_top1,
+body.page-template-page-license footer.footer .center,
+body.page-template-page-license footer.footer .center.row_top1,
+body.page-license footer.footer .center,
+body.page-license footer.footer .center.row_top1 {
+    width: 100% !important;
+    max-width: var(--et-lic-max) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: var(--et-lic-section-x) !important;
+    padding-right: var(--et-lic-section-x) !important;
+    box-sizing: border-box !important;
+}
+
+/* Neutralize legacy per-breakpoint shell overrides in license.css */
+@media screen and (min-width: 768px) and (max-width: 1199px) {
+    .et-license__section-inner,
+    .et-license__cta-inner,
+    .et-license__hero-wrap .et-home__hero-inner.center {
+        padding-left: var(--et-lic-section-x) !important;
+        padding-right: var(--et-lic-section-x) !important;
+    }
+}
+
+@media screen and (min-width: 1200px) and (max-width: 1439px) {
+    .et-license__section-inner,
+    .et-license__cta-inner,
+    .et-license__hero-wrap .et-home__hero-inner.center {
+        padding-left: var(--et-lic-section-x) !important;
+        padding-right: var(--et-lic-section-x) !important;
+    }
+}
+
+@media screen and (min-width: 1440px) {
+    .et-license__section-inner,
+    .et-license__cta-inner,
+    .et-license__hero-wrap .et-home__hero-inner.center {
+        max-width: var(--et-lic-max) !important;
+        padding-left: var(--et-lic-section-x) !important;
+        padding-right: var(--et-lic-section-x) !important;
+    }
+}
