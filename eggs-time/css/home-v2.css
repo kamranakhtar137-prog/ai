@@ -724,14 +724,14 @@
     max-width: 100%;
     height: auto;
     min-height: 0;
+    aspect-ratio: var(--et-home-hero-video-aspect-ratio, 800 / 600);
     border-radius: 24px;
     overflow: hidden;
     background: #eef7fc;
 }
 
 /*
- * Video and poster scale naturally (width: 100%, height: auto) — no object-fit.
- * The frame height follows the media aspect ratio, so nothing is cropped or letterboxed.
+ * Video and poster share one fixed 800×600 frame — both fill the wrap exactly.
  */
 .et-home__hero--split-video {
     --et-home-hero-poster-aspect-ratio: 800 / 600;
@@ -845,10 +845,15 @@
 
 .et-home__hero-video,
 .et-home__hero-video-fallback {
+    position: absolute;
+    inset: 0;
     display: block;
     width: 100%;
-    max-width: 100%;
-    height: auto;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    object-fit: cover;
+    object-position: center center;
     vertical-align: top;
 }
 
@@ -9249,6 +9254,7 @@
 }
 
 .main--home-v2 .et-home__hero--split-video .et-home__hero-video-wrap {
+    aspect-ratio: var(--et-home-hero-video-aspect-ratio, 800 / 600) !important;
     max-width: min(100%, calc(var(--et-home-hero-media-max-h, 80vh) * var(--et-home-hero-video-ar-w, 800) / var(--et-home-hero-video-ar-h, 600))) !important;
     overflow: hidden;
     height: auto !important;
@@ -9257,19 +9263,25 @@
 
 .main--home-v2 .et-home__hero--split-video .et-home__hero-video {
     display: block !important;
-    position: static !important;
+    position: absolute !important;
+    inset: 0 !important;
     width: 100% !important;
-    height: auto !important;
-    max-width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
     max-height: none !important;
+    object-fit: cover !important;
+    object-position: center center !important;
 }
 
 .main--home-v2 .et-home__hero--split-video .et-home__hero-video-fallback {
-    position: static !important;
+    position: absolute !important;
+    inset: 0 !important;
     width: 100% !important;
-    height: auto !important;
-    max-width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
     max-height: none !important;
+    object-fit: cover !important;
+    object-position: center center !important;
 }
 
 @media screen and (max-width: 768px) {
@@ -9289,30 +9301,30 @@
     }
 }
 
-/* ----- Hero video + poster: no object-fit contain (must be last) ----- */
+/* ----- Hero video + poster: shared 800×600 frame (must be last) ----- */
 .main--home-v2 .et-home__hero--split-video .et-home__hero-video-fallback,
 .et-home__hero--split-video .et-home__hero-video-fallback {
-    position: static !important;
-    inset: auto !important;
+    position: absolute !important;
+    inset: 0 !important;
     width: 100% !important;
-    height: auto !important;
-    max-width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
     max-height: none !important;
-    object-fit: initial !important;
-    object-position: initial !important;
+    object-fit: cover !important;
+    object-position: center center !important;
 }
 
 .main--home-v2 .et-home__hero--split-video .et-home__hero-video,
 .et-home__hero--split-video .et-home__hero-video {
-    position: static !important;
-    inset: auto !important;
+    position: absolute !important;
+    inset: 0 !important;
     display: block !important;
     width: 100% !important;
-    height: auto !important;
-    max-width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
     max-height: none !important;
-    object-fit: initial !important;
-    object-position: initial !important;
+    object-fit: cover !important;
+    object-position: center center !important;
 }
 
 /* One poster only: hide <img> fallback when video is ready (video uses poster attr) */

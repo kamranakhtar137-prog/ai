@@ -7,7 +7,7 @@
 $et_home_hero_use_video       = true;
 $et_home_hero_video_url       = 'http://eggstime.com/wp-content/uploads/2026/07/51be273fce2746bcbecc5fda78856c43.mp4';
 /* Poster shown before play, while buffering, or if playback fails. */
-$et_home_hero_video_poster    = 'http://eggstime.com/wp-content/uploads/2026/07/Baber_girl_650x650.png';
+$et_home_hero_video_poster    = 'http://eggstime.com/wp-content/uploads/2026/07/800Х600.jpg.jpeg';
 $et_home_hero_poster_width    = 800;
 $et_home_hero_poster_height   = 600;
 $et_home_hero_video_width     = 800;
