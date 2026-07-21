@@ -26,6 +26,8 @@ Store: https://mainstreetnewcanaan.com/  ·  Location: 102 Main Street, New Cana
 
 ![Frontend: checkout delivery showing pickup at 102 Main St (FREE, ready in 24h)](audit_checkout_delivery.png)
 ![Frontend: product page shows only "Available in store only"](audit_product_pickup_widget.png)
+![Backend: In-store pickup for 102 Main St - status ON, ready in 24h, ready-for-pickup message](backend/backend_pickup_config.png)
+![Backend: Locations - 1 of 10 active; 102 Main St (POS Lite, Active)](backend/backend_locations.png)
 
 ---
 
@@ -53,6 +55,9 @@ Store: https://mainstreetnewcanaan.com/  ·  Location: 102 Main Street, New Cana
 
 ![Frontend: homepage is sparse (logo + email signup only)](audit_homepage_top.png)
 ![Frontend: collections index](audit_collections_page.png)
+![Backend: Collections - stocked Sports (1,027) & Pokemon (216) hidden; empty collections shown](backend/backend_collections.png)
+![Backend: Main menu items](backend/backend_main_menu.png)
+![Backend: Blog posts - none published](backend/backend_blog_posts.png)
 
 ---
 
@@ -76,5 +81,6 @@ Store: https://mainstreetnewcanaan.com/  ·  Location: 102 Main Street, New Cana
 - Test end-to-end (incl. edge cases) + client review.
 
 ![Frontend: existing structured intake field inside booking](audit_booking_form_details.png)
+![Backend: installed apps (Forms, Easy Appointment Booking, CardDealerPro, Flow, ...)](backend/backend_installed_apps.png)
 
 ---
