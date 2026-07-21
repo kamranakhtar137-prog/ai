@@ -14,8 +14,14 @@ Store: https://mainstreetnewcanaan.com/  ·  Location: 102 Main Street, New Cana
 
 ### Backend (admin) findings
 
-- Shipping & delivery -> Pickup (102 Main St): Location status is ON, expected pickup date is set to "Usually ready in 24 hours", and a custom ready-for-pickup message is configured ("Bring your photo id along with confirmation email... All orders must match name and photo ID"). Store transfers are unavailable because only one location exists.
-- Locations: using 1 of 10 active locations - 102 Main St (POS Lite, Active). Pickup is correctly tied to this single storefront location; the remaining work is making sure key collections/products are stocked and assigned here and surfacing pickup earlier on product pages.
+- Shipping & delivery -> Pickup (102 Main St):
+  - Location status: ON (customers can pick up orders at this location).
+  - Expected pickup date: "Usually ready in 24 hours".
+  - Ready-for-pickup notification: custom message set - "Bring your photo id along with confirmation email when you come to collect your order. All orders must match name and photo ID".
+  - Store transfers: unavailable (requires multiple active locations).
+- Locations:
+  - Using 1 of 10 active locations.
+  - 102 Main St - POS subscription: POS Lite - Status: Active.
 
 ### Work remaining
 
@@ -41,9 +47,31 @@ Store: https://mainstreetnewcanaan.com/  ·  Location: 102 Main Street, New Cana
 
 ### Backend (admin) findings
 
-- Collections: admin has 10 collections but the two with real inventory - Sports (1,027 products) and Pokemon (216) - are NOT shown on the site, while several empty ones (GIFT CARDS, WNBA, Basketball, Baseball = 0 products) ARE shown. Frontend shows only: Baseball, Basketball, Consulting, GIFT CARDS, Tcg CARD, ONLINE STORE (15). Recommend hiding/merging the empty collections and surfacing Sports/Pokemon so shoppers can actually browse stock.
-- Main menu: Home, Sell your Cards, Store Pickup, Gift cards, Reviews, Hours and Info, Contact, Trading Card Donations. There is no clear "Shop / All products" entry and "Store Pickup" points to the ONLINE STORE collection - relabel and add a proper shopping path.
-- Content -> Blog posts is empty (no posts). Optional: publish a few posts for SEO/community, or remove any blog links so the storefront stays tidy.
+- Collections (admin) - product count and whether shown on the website:
+  - ONLINE STORE - 15 products - shown on site.
+  - Sports - 1,027 products (auto: title does not contain Pokemon) - NOT shown on site.
+  - Pokemon - 216 products (auto: title contains Pokemon) - NOT shown on site.
+  - Consulting - 1 product - shown on site.
+  - Tcg CARD - 1 product - shown on site.
+  - Tcg - 1 product - not shown on site.
+  - GIFT CARDS - 0 products (empty) - shown on site.
+  - WNBA - 0 products (empty) - shown on site.
+  - Basketball - 0 products (empty) - shown on site.
+  - Baseball - 0 products (empty) - shown on site.
+  - Issue: the two collections that actually hold inventory (Sports, Pokemon) are hidden, while four empty collections are shown. Hide/merge the empty ones and surface Sports/Pokemon.
+- Main menu items:
+  - Home
+  - Sell your Cards
+  - Store Pickup
+  - Gift cards
+  - Reviews
+  - Hours and Info
+  - Contact
+  - Trading Card Donations
+  - Note: no clear "Shop / All products" entry, and "Store Pickup" points to the ONLINE STORE collection - relabel and add a proper shopping path.
+- Content -> Blog posts:
+  - No blog posts published.
+  - Optional: publish a few posts for SEO/community, or remove blog links so the storefront stays tidy.
 
 ### Work remaining
 
@@ -65,18 +93,37 @@ Store: https://mainstreetnewcanaan.com/  ·  Location: 102 Main Street, New Cana
 
 ### Current state
 
-- A structured selling intake ALREADY exists inside the "15 Minute Trading Card Consultation" (Easy Appointment Booking): required field "Please provide a description of your cards and value / asking price" (guides Year, Set, Sport, Condition, Grading Company, Grade, Cert Number, price) + First/Last name, Email, Phone, and date/time picker.
+- A structured selling intake ALREADY exists inside the "15 Minute Trading Card Consultation" (Easy Appointment Booking).
+- The booking currently collects:
+  - Card details (required free-text): "Please provide a description of your cards and value / asking price" - guides Year, Set, Sport, Condition, Grading Company, Grade, Cert Number, price.
+  - First name, Last name, Email, Phone.
+  - Appointment date/time (15-minute slots).
 - Separate generic Contact form (Name, Email, Phone, Comment) — not an intake form.
 
 ### Backend (admin) findings
 
-- 8 apps installed: Testimonials Master, Forms, Easy Appointment Booking, Koin, Flow, CardDealerPro, Retail Barcode Labels, Messaging.
-- The intake form can be built with the already-installed Forms + Easy Appointment Booking apps (no new app needed); CardDealerPro (card buying/inventory) and Flow (automation) can route submissions into the existing buying workflow.
+- Installed apps (8):
+  - Testimonials Master - collects/displays customer testimonials.
+  - Forms - build custom forms (can power a structured selling intake form).
+  - Easy Appointment Booking - runs the consultation scheduling + intake question (core of the buying workflow).
+  - Koin - store credit / loyalty (role to confirm in admin).
+  - Flow - Shopify automation (can route/notify on new intake submissions).
+  - CardDealerPro - trading-card buying / inventory management.
+  - Retail Barcode Labels - POS barcode label printing.
+  - Messaging - customer messaging / inbox.
+- Relevant to the intake form: Forms + Easy Appointment Booking can build it (no new app needed); CardDealerPro and Flow can route submissions into the existing buying workflow.
 
 ### Work remaining (align to buying workflow + better structure)
 
 - Confirm requirements/workflow with client.
-- Convert the single free-text field into structured inputs (sport dropdown, grading company, grade, cert #, quantity, condition, optional card-image upload) via Easy Appointment Booking custom questions / Forms.
+- Convert the single free-text field into structured inputs via Easy Appointment Booking custom questions / Forms:
+  - Sport (dropdown)
+  - Grading company (dropdown: PSA / BGS / SGC / CGC / Raw)
+  - Grade
+  - Cert number
+  - Quantity
+  - Condition
+  - Optional card-image upload
 - Ensure details are captured pre-appointment and land somewhere usable (order notes / metafields / email / CardDealerPro / Flow) — schema + validation.
 - Test end-to-end (incl. edge cases) + client review.
 
