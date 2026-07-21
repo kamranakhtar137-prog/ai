@@ -12,6 +12,11 @@ Store: https://mainstreetnewcanaan.com/  ·  Location: 102 Main Street, New Cana
 - Product pages do NOT use Shopify's native "Pickup availability" widget — only plain text "Available in store only".
 - "Store Pickup" nav link points to the "ONLINE STORE" collection (15 products); other collections not verified for pickup / inventory-location assignment.
 
+### Backend (admin) findings
+
+- Shipping & delivery -> Pickup (102 Main St): Location status is ON, expected pickup date is set to "Usually ready in 24 hours", and a custom ready-for-pickup message is configured ("Bring your photo id along with confirmation email... All orders must match name and photo ID"). Store transfers are unavailable because only one location exists.
+- Locations: using 1 of 10 active locations - 102 Main St (POS Lite, Active). Pickup is correctly tied to this single storefront location; the remaining work is making sure key collections/products are stocked and assigned here and surfacing pickup earlier on product pages.
+
 ### Work remaining
 
 - Verify pickup + inventory location assigned across all key collections; make each shoppable.
@@ -19,8 +24,8 @@ Store: https://mainstreetnewcanaan.com/  ·  Location: 102 Main Street, New Cana
 - Confirm pickup prep-time and "ready for pickup" notification email.
 - End-to-end checkout test per key collection; client documentation.
 
-![Checkout delivery showing pickup at 102 Main St (FREE, ready in 24h)](audit_checkout_delivery.png)
-![Product page shows only "Available in store only" (no native widget)](audit_product_pickup_widget.png)
+![Frontend: checkout delivery showing pickup at 102 Main St (FREE, ready in 24h)](audit_checkout_delivery.png)
+![Frontend: product page shows only "Available in store only"](audit_product_pickup_widget.png)
 
 ---
 
@@ -29,23 +34,25 @@ Store: https://mainstreetnewcanaan.com/  ·  Location: 102 Main Street, New Cana
 ### Current state
 
 - Theme is clean but homepage is very sparse — logo + email signup only; no hero, featured products, or collections grid.
-- 6 of 7 collections use default Shopify placeholder images; "Baseball" collection is empty (0 products).
 - Navigation labeling is confusing ("Store Pickup" → "ONLINE STORE"); no "Shop All" discovery path.
 - Footer is minimal — no phone/email, hours not repeated, no shipping/FAQ links.
+
+### Backend (admin) findings
+
+- Collections: admin has 10 collections but the two with real inventory - Sports (1,027 products) and Pokemon (216) - are NOT shown on the site, while several empty ones (GIFT CARDS, WNBA, Basketball, Baseball = 0 products) ARE shown. Frontend shows only: Baseball, Basketball, Consulting, GIFT CARDS, Tcg CARD, ONLINE STORE (15). Recommend hiding/merging the empty collections and surfacing Sports/Pokemon so shoppers can actually browse stock.
+- Main menu: Home, Sell your Cards, Store Pickup, Gift cards, Reviews, Hours and Info, Contact, Trading Card Donations. There is no clear "Shop / All products" entry and "Store Pickup" points to the ONLINE STORE collection - relabel and add a proper shopping path.
+- Content -> Blog posts is empty (no posts). Optional: publish a few posts for SEO/community, or remove any blog links so the storefront stays tidy.
 
 ### Work remaining
 
 - Build out homepage (hero, featured collections/products, CTAs).
-- Replace 6 placeholder collection images + add collection descriptions.
-- Populate or hide the empty "Baseball" collection.
+- Hide/merge empty collections (Baseball, Basketball, WNBA, GIFT CARDS) and surface stocked ones (Sports, Pokemon); add collection images + descriptions.
 - Restructure/relabel nav + add shop discovery.
 - Complete footer (contact, hours, policy/FAQ links).
 - Review core settings/config (checkout, notifications, SEO/meta, favicon, policies) and QA broken elements cross-device.
 
-![Homepage is sparse (logo + email signup only)](audit_homepage_top.png)
-![Collections index — 6/7 use placeholder images](audit_collections_page.png)
-![Empty "Baseball" collection (0 products)](audit_collection_baseball_empty.png)
-![Navigation menu / labeling](audit_nav_menu.png)
+![Frontend: homepage is sparse (logo + email signup only)](audit_homepage_top.png)
+![Frontend: collections index](audit_collections_page.png)
 
 ---
 
@@ -56,14 +63,18 @@ Store: https://mainstreetnewcanaan.com/  ·  Location: 102 Main Street, New Cana
 - A structured selling intake ALREADY exists inside the "15 Minute Trading Card Consultation" (Easy Appointment Booking): required field "Please provide a description of your cards and value / asking price" (guides Year, Set, Sport, Condition, Grading Company, Grade, Cert Number, price) + First/Last name, Email, Phone, and date/time picker.
 - Separate generic Contact form (Name, Email, Phone, Comment) — not an intake form.
 
+### Backend (admin) findings
+
+- 8 apps installed: Testimonials Master, Forms, Easy Appointment Booking, Koin, Flow, CardDealerPro, Retail Barcode Labels, Messaging.
+- The intake form can be built with the already-installed Forms + Easy Appointment Booking apps (no new app needed); CardDealerPro (card buying/inventory) and Flow (automation) can route submissions into the existing buying workflow.
+
 ### Work remaining (align to buying workflow + better structure)
 
 - Confirm requirements/workflow with client.
-- Convert the single free-text field into structured inputs (sport dropdown, grading company, grade, cert #, quantity, condition, optional card-image upload) via Easy Appointment Booking custom questions.
-- Ensure details are captured pre-appointment and land somewhere usable (order notes / metafields / email / export) — schema + validation.
+- Convert the single free-text field into structured inputs (sport dropdown, grading company, grade, cert #, quantity, condition, optional card-image upload) via Easy Appointment Booking custom questions / Forms.
+- Ensure details are captured pre-appointment and land somewhere usable (order notes / metafields / email / CardDealerPro / Flow) — schema + validation.
 - Test end-to-end (incl. edge cases) + client review.
 
-![Existing structured intake field inside booking](audit_booking_form_details.png)
-![Appointment date/time selection (Easy Appointment Booking)](audit_booking_timeslots.png)
+![Frontend: existing structured intake field inside booking](audit_booking_form_details.png)
 
 ---
