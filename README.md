@@ -6,4 +6,4 @@ See [`youtube-playlist-widget/README.md`](youtube-playlist-widget/README.md) for
 
 ## Main Street Collectibles (Shopify)
 
-In-store pickup setup guide for [mainstreetnewcanaan.com](https://mainstreetnewcanaan.com/): [`docs/main-street-collectibles/in-store-pickup-configuration.md`](docs/main-street-collectibles/in-store-pickup-configuration.md).
+In-store pickup for [mainstreetnewcanaan.com](https://mainstreetnewcanaan.com/): [audit](docs/main-street-collectibles/in-store-pickup-audit.md) · [configuration guide](docs/main-street-collectibles/in-store-pickup-configuration.md).
