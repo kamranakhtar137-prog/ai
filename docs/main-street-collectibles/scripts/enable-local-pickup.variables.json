@@ -1,0 +1,7 @@
+{
+  "localPickupSettings": {
+    "locationId": "gid://shopify/Location/REPLACE_WITH_102_MAIN_STREET_LOCATION_ID",
+    "pickupTime": "TWENTY_FOUR_HOURS",
+    "instructions": "Pick up at 102 Main Street, New Canaan, CT 06840. Bring your order confirmation email. Open daily — see mainstreetnewcanaan.com for hours."
+  }
+}

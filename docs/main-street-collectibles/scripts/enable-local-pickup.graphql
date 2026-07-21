@@ -1,0 +1,29 @@
+# Enable local pickup at a retail location (102 Main Street).
+# Requires: write_shipping or manage_delivery_settings scope.
+#
+# 1) List locations and copy the GID for 102 Main Street:
+#
+# query {
+#   locations(first: 10) {
+#     nodes {
+#       id
+#       name
+#       address { address1 city province zip country }
+#       fulfillsOnlineOrders
+#     }
+#   }
+# }
+
+mutation EnableLocalPickup($localPickupSettings: DeliveryLocationLocalPickupEnableInput!) {
+  locationLocalPickupEnable(localPickupSettings: $localPickupSettings) {
+    localPickupSettings {
+      pickupTime
+      instructions
+    }
+    userErrors {
+      field
+      message
+      code
+    }
+  }
+}
