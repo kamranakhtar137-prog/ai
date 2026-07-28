@@ -28,6 +28,12 @@
     collectibles_seo_h1
     collectibles_seo_title
     collectibles_seo_description
+
+  This snippet only reads the global `product` object and its metafields, so
+  it works unchanged in any theme, including Horizon's block-based product
+  template. See ../README.md for Horizon-specific wiring into
+  snippets/meta-tags.liquid (title/meta description) and templates/product.json
+  (H1 via a Custom Liquid block).
 {%- endcomment -%}
 
 {%- liquid
