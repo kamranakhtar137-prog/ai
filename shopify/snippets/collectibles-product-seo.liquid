@@ -1,0 +1,77 @@
+{%- comment -%}
+  collectibles-product-seo.liquid
+  --------------------------------
+  Builds the SEO title tag, meta description, and H1 text for a single
+  product page, following the Main Street Collectibles product SEO template:
+
+    Title tag:        [Year] [Set] [Card Name] [Grade/Edition] | Main Street Collectibles
+    Meta description: Buy the [Card Name], graded [condition/grade] with [key attribute].
+                       In stock at Main Street Collectibles, New Canaan CT. [Price if available].
+    H1:                [Year] [Set] [Card Name] [Grade/Edition]
+
+  Required product metafields (namespace: custom):
+    custom.year           single line text  e.g. "2003"
+    custom.set            single line text  e.g. "Topps Chrome"
+    custom.grade          single line text  e.g. "PSA 10" or "Raw / Ungraded"
+    custom.condition      single line text  (optional, falls back to custom.grade)
+    custom.key_attribute  single line text  (optional) e.g. "Rookie Card", "Autographed"
+
+  [Card Name] is taken from product.title.
+
+  Usage (from another template/section/snippet):
+    {%- render 'collectibles-product-seo', product: product -%}
+    <title>{{ collectibles_seo_title }}</title>
+    <meta name="description" content="{{ collectibles_seo_description | escape }}">
+    <h1>{{ collectibles_seo_h1 }}</h1>
+
+  Output variables (scoped to wherever this snippet is rendered):
+    collectibles_seo_h1
+    collectibles_seo_title
+    collectibles_seo_description
+{%- endcomment -%}
+
+{%- liquid
+  assign card_year = product.metafields.custom.year.value | default: product.metafields.custom.year
+  assign card_set = product.metafields.custom.set.value | default: product.metafields.custom.set
+  assign card_name = product.title
+  assign card_grade = product.metafields.custom.grade.value | default: product.metafields.custom.grade
+  assign card_condition = product.metafields.custom.condition.value | default: product.metafields.custom.condition
+  assign card_condition = card_condition | default: card_grade
+  assign card_key_attribute = product.metafields.custom.key_attribute.value | default: product.metafields.custom.key_attribute
+
+  assign h1 = ''
+  if card_year != blank
+    assign h1 = h1 | append: card_year | append: ' '
+  endif
+  if card_set != blank
+    assign h1 = h1 | append: card_set | append: ' '
+  endif
+  assign h1 = h1 | append: card_name
+  if card_grade != blank
+    assign h1 = h1 | append: ' ' | append: card_grade
+  endif
+  assign collectibles_seo_h1 = h1 | strip
+
+  assign collectibles_seo_title = collectibles_seo_h1 | append: ' | Main Street Collectibles' | strip | truncate: 70
+
+  assign description = 'Buy the ' | append: card_name | append: ','
+  if card_condition != blank
+    assign description = description | append: ' graded ' | append: card_condition
+  endif
+  if card_key_attribute != blank
+    assign description = description | append: ' with ' | append: card_key_attribute
+  endif
+  assign description = description | append: '.'
+
+  if product.available
+    assign description = description | append: ' In stock at Main Street Collectibles, New Canaan CT.'
+  else
+    assign description = description | append: ' Currently unavailable at Main Street Collectibles, New Canaan CT.'
+  endif
+
+  if product.available and product.price_varies == false
+    assign description = description | append: ' ' | append: product.price | money | append: '.'
+  endif
+
+  assign collectibles_seo_description = description | strip_newlines | strip | truncate: 160
+-%}
