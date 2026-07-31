@@ -15,7 +15,67 @@ blocked with HTTP 429 by the site's bot protection, which could also be
 happening intermittently to Google's own lab test runner and inflating
 isolated lab scores without reflecting what most real visitors experience.
 
+**Third update — likely root cause of the lab-only spike identified.** The
+actual Lighthouse lab numbers for mobile were shared:
+
+| Metric | Value |
+| --- | --- |
+| First Contentful Paint | **9.6s** |
+| Speed Index | **9.6s** |
+| Largest Contentful Paint | **20.6s** |
+| Total Blocking Time | 220ms |
+| Cumulative Layout Shift | 0 |
+
+FCP and Speed Index being identical at 9.6s means **nothing paints on the
+page at all for 9.6 seconds**, then LCP finishes 11 seconds after that. That
+"frozen, then everything happens at once" signature is the classic shape of
+a single blocking network request hanging, not a gradual slowdown from too
+many scripts or images (those would show a more gradual FCP/LCP gap, not an
+identical FCP/Speed Index freeze).
+
+This points directly at **§1b/§2 below**: the geo-blocking app's
+`/tools/_?_t=page` request carries `blocking="render"` — the browser is
+explicitly told not to paint anything until it resolves. Under Lighthouse's
+test conditions (a fresh, uncached, automated session — the same profile
+that got our own Lighthouse run blocked with a 429), this check likely
+takes several seconds to resolve (bot/IP verification, retries, or a
+challenge) instead of the near-instant response a normal cached visitor
+gets. That would produce exactly this pattern: paint frozen for ~9.6s while
+the check resolves, then the already-slow carousel/script loading (all the
+findings elsewhere in this doc) stacks on top to push LCP out to 20.6s.
+
+This is a **hypothesis backed by strong circumstantial evidence, not yet
+directly confirmed** — the real-user field data (1.6s LCP) suggests most
+visitors don't hit this multi-second freeze, only certain sessions/test
+conditions do. **Fastest way to confirm it:** temporarily disable the
+geo-blocking app (or ask its vendor for a way to turn off `blocking="render"`
+specifically) on a staging/preview, then re-run the PageSpeed Insights
+mobile test. If FCP drops from 9.6s to ~1–2s, this is confirmed as the
+primary cause — bigger than every other finding in this document combined,
+and should be prioritized above the GTM tag delays and image lazy-loading
+work.
+
 ## Solution — do these in order
+
+### 0. Confirm and fix the render-blocking geo-check freeze (do this first — likely the single biggest win available)
+
+**Who:** whoever manages the geo-blocking/country-restriction app, with us
+or Termly/EggFlow support as needed.
+**Time:** ~10 minutes to test, more to fix depending on the app's options.
+
+1. On a staging/preview environment (or briefly on production during low
+   traffic, if staging isn't available), disable the geo-blocking app or
+   its render-blocking mode.
+2. Re-run PageSpeed Insights (mobile) on the same URL.
+3. If FCP/Speed Index drop from ~9.6s to ~1–2s, this confirms the
+   render-blocking geo-check is the primary cause of the reported LCP
+   spike — re-enable the app and work with its vendor on a non-blocking
+   verification method (most geo-restriction apps have one; `blocking="render"`
+   is an aggressive, non-default choice), or ask Shopify support whether
+   **Settings → Markets** can enforce the same restriction natively without
+   a render-blocking script.
+4. If FCP doesn't improve, the cause is elsewhere and the GTM/image fixes
+   below remain the priority.
 
 No further theme code change is required for #1 (the plumbing already
 exists live); the highest-impact fix is a GTM configuration change.
