@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Homepage Speed Update: Third-Party Tracking Scripts</title>
+  <title>Homepage Speed Update: Third-Party Scripts</title>
   <style>
     html {
       color: #1a1a1a;
@@ -166,173 +166,82 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Homepage Speed Update: Third-Party Tracking
-Scripts</h1>
+<h1 class="title">Homepage Speed Update: Third-Party Scripts</h1>
 </header>
-<h1 id="homepage-speed-update-third-party-tracking-scripts">Homepage
-Speed Update: Third-Party Tracking Scripts</h1>
-<p><strong>Prepared for:</strong> Main Street Collectibles / Film/Art
-Gallery <strong>Site:</strong> filmartgallery.com
-<strong>Subject:</strong> Findings and recommended fixes for third-party
-scripts slowing the homepage</p>
-<hr />
+<h1 id="homepage-speed-update-third-party-scripts">Homepage Speed
+Update: Third-Party Scripts</h1>
+<p><strong>Site:</strong> filmartgallery.com</p>
 <h2 id="summary">Summary</h2>
-<p>You asked whether Crazy Egg, Microsoft Clarity, ClickCease, and the
-Facebook Pixel (104KB) could be consolidated into Google Tag Manager
-(GTM) to speed up the homepage, since none of them appear as installed
-Shopify apps.</p>
-<p>We checked the live homepage directly (not just the theme code) to
-confirm exactly what’s happening. Here’s the short version:</p>
-<ul>
-<li><strong>Good news: these four tools are already running through
-Google Tag Manager.</strong> They aren’t separate, disorganized scripts
-— they’re already centralized in one GTM container.</li>
-<li><strong>The actual problem: none of them are told to wait.</strong>
-All four (plus a few more tools riding along in the same container) fire
-within a fraction of a second of each other, the instant the page starts
-loading — at exactly the moment your homepage image is trying to load
-and paint. They are actively competing with your content for the
-visitor’s connection.</li>
-<li><strong>This is fixable without touching your website’s
-code.</strong> It’s a configuration change inside Google Tag Manager’s
-dashboard — tell each tool to wait until the visitor scrolls, taps, or
-after a few seconds, instead of firing instantly.</li>
-<li>Along the way, we also found two additional things worth your
-attention that are separate from your original question — one of them is
-currently the single largest script slowing down your homepage, bigger
-than the Facebook Pixel.</li>
-</ul>
-<p>Nothing described in this update changes what your visitors see, and
-no image, layout, or design quality is affected. This is entirely about
-<em>when</em> background tracking scripts are allowed to load, not
-removing any of them.</p>
-<hr />
-<h2 id="what-we-found">What we found</h2>
-<h3 id="crazy-egg-microsoft-clarity-clickcease-and-facebook-pixel">1.
-Crazy Egg, Microsoft Clarity, ClickCease, and Facebook Pixel</h3>
-<p>These are already inside your Google Tag Manager container. The real
-issue is timing: all four load at essentially the same instant as the
-page starts, with no delay applied. The Facebook Pixel alone confirmed
-at <strong>104KB</strong> — matching the number you saw in your speed
-report exactly.</p>
-<p><strong>Recommended fix:</strong> Configure Google Tag Manager so
-that: - Crazy Egg, Microsoft Clarity, and the Facebook Pixel wait until
-the visitor interacts with the page (scrolls, taps, or clicks), or a few
-seconds have passed — whichever comes first. These tools don’t need to
-run before the page has even finished appearing; delaying them a few
-seconds has no effect on the data they collect. - ClickCease keeps
-loading quickly, right after the page finishes loading — it’s a
-fraud-detection tool for your ad spend, and it needs to react fast, so
-we recommend <em>not</em> delaying it the same way.</p>
-<p>This is a settings change inside your Tag Manager account — no code
-deployment needed, and it can typically be done and verified within the
-same day.</p>
-<h3 id="a-possible-duplicate-tracking-issue-worth-a-quick-check">2. A
-possible duplicate tracking issue (worth a quick check)</h3>
-<p>Separately from Tag Manager, your homepage also loads four
-independent tracking “pixels” through Shopify’s own built-in tracking
-system. One is clearly a standard Shopify pixel; the other three aren’t
-identified from outside the site. <strong>We recommend a quick look at
-Shopify Admin → Settings → Customer events</strong> to confirm none of
-those three is a second Facebook pixel — if it is, you may currently be
-double-counting sales/conversions in Meta Ads Manager, which would make
-your ad performance numbers look different than they actually are.</p>
-<h3
-id="your-cookie-consent-script-is-currently-your-single-biggest-homepage-script-bigger-than-the-facebook-pixel">3.
-Your cookie-consent script is currently your single biggest homepage
-script — bigger than the Facebook Pixel</h3>
-<p>This wasn’t part of your original question, but it showed up as the
-largest individual contributor to slow loading during our check. Your
-cookie-consent tool (Termly) loads a script that is <strong>larger than
-the Facebook Pixel</strong> and is positioned to load before literally
-anything else on the page, without any of the “wait a moment” treatment
-recommended above.</p>
-<p>We are <strong>not</strong> recommending an immediate change here,
-because this particular script’s job is to enforce cookie-consent rules
-— changing how it loads without confirming it’s safe first could risk
-your compliance setup. <strong>Recommended next step:</strong> ask
-Termly’s support team whether their script can be loaded in a less
-disruptive way without breaking its consent-enforcement feature. If they
-confirm it’s safe, this is a very quick fix and one of the biggest
-single wins available on the page.</p>
-<h3
-id="a-country-restriction-tool-is-intentionally-holding-up-the-page">4.
-A country-restriction tool is intentionally holding up the page</h3>
-<p>Your site currently uses a tool that blocks the page from displaying
-until it verifies a visitor’s country — this is very likely an
-intentional setup (a legal/compliance requirement for who can purchase
-from you), and we want to flag that as a known, deliberate trade-off
-rather than a mistake. <strong>Recommended next step:</strong> a quick
-conversation with whoever set this up (or the app’s support team) to
-confirm whether it can run in a faster, less disruptive way while still
-meeting the same requirement.</p>
-<hr />
-<h2 id="what-this-means-for-your-performance-goals">What this means for
-your performance goals</h2>
-<p>None of the fixes above require changing your design, your images, or
-removing any tracking tool you currently rely on for marketing or fraud
-protection. They’re entirely about <strong>timing</strong> — making sure
-background tools don’t compete with your actual homepage content for the
-visitor’s first few seconds on a slow mobile connection.</p>
-<p>Combined with the image-loading fixes already in progress on the
-carousel sliders, addressing item #1 above (the GTM tag timing) is the
-next highest-impact, lowest-risk item — it requires no code deployment
-and can be done directly in your Google Tag Manager account.</p>
-<hr />
-<h2 id="recommended-order-of-action">Recommended order of action</h2>
+<p>Crazy Egg, Microsoft Clarity, ClickCease, and Facebook Pixel are
+already running through Google Tag Manager — they’re not scattered,
+uncontrolled scripts. The problem: all of them fire the instant the page
+starts loading, competing with your homepage content for bandwidth.
+Fixing this is a settings change, not a code change.</p>
+<h2 id="findings-fixes">Findings &amp; Fixes</h2>
 <table>
 <colgroup>
-<col style="width: 29%" />
-<col style="width: 17%" />
-<col style="width: 17%" />
-<col style="width: 17%" />
-<col style="width: 17%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th style="text-align: center;">Priority</th>
-<th>Action</th>
+<th>#</th>
+<th>Finding</th>
+<th>Fix</th>
 <th>Who</th>
 <th>Effort</th>
-<th>Risk</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: center;">1</td>
-<td>Delay Crazy Egg, Clarity, Facebook Pixel, and a few related
-ad-tracking tags inside Google Tag Manager</td>
-<td>Tag Manager account holder</td>
-<td>~15 minutes</td>
-<td>None — configuration only</td>
+<td>1</td>
+<td>Crazy Egg, Clarity, Facebook Pixel (104KB), + Google/Bing ad tags
+all fire at once, on page load</td>
+<td>Delay these in Google Tag Manager until scroll/click/tap (or
+~4s)</td>
+<td>GTM account holder</td>
+<td>~15 min</td>
 </tr>
 <tr class="even">
-<td style="text-align: center;">2</td>
-<td>Confirm no duplicate Facebook tracking in Shopify’s Customer Events
-settings</td>
-<td>Shopify Admin</td>
-<td>~5 minutes</td>
-<td>None — read-only check</td>
+<td>2</td>
+<td>ClickCease also fires at once</td>
+<td>Keep it fast (fraud protection needs speed) — no change needed</td>
+<td>—</td>
+<td>—</td>
 </tr>
 <tr class="odd">
-<td style="text-align: center;">3</td>
-<td>Ask Termly if their consent script can load without disrupting
-consent enforcement</td>
-<td>Termly support</td>
-<td>Their response time</td>
-<td>None until we act on their answer</td>
+<td>3</td>
+<td>3 unidentified tracking pixels found outside GTM</td>
+<td>Check Shopify Admin → Customer Events for a duplicate Facebook
+pixel</td>
+<td>Shopify Admin</td>
+<td>~5 min</td>
 </tr>
 <tr class="even">
-<td style="text-align: center;">4</td>
-<td>Confirm whether the country-restriction tool can run without holding
-up the page</td>
-<td>App vendor / whoever owns the requirement</td>
-<td>Their response time</td>
-<td>Business/legal decision, not technical</td>
+<td>4</td>
+<td>Cookie-consent script (Termly) is the single largest script on the
+page — bigger than the Facebook Pixel</td>
+<td>Ask Termly if it can load without breaking consent enforcement,
+before we touch it</td>
+<td>Termly support</td>
+<td>Pending their reply</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>Country-restriction tool intentionally delays page render</td>
+<td>Confirm with vendor if a faster mode exists</td>
+<td>App vendor</td>
+<td>Pending their reply</td>
 </tr>
 </tbody>
 </table>
-<p>We’re ready to make any resulting code change (for item 3, once
-Termly confirms) as soon as we hear back.</p>
+<h2 id="bottom-line">Bottom line</h2>
+<p>No images, design, or tracking tools are removed. This is purely
+about <em>timing</em> — stopping background scripts from competing with
+your content on first load. Item 1 is the biggest win and can be done
+today with no development work.</p>
 </body>
 </html>
