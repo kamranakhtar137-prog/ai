@@ -6,6 +6,85 @@ tags. I inspected the live homepage (rendered HTML + full network waterfall,
 mobile UA) to verify that before writing a plan, and the actual situation is
 different — and more fixable than "add these to GTM."
 
+## Solution — do these in order
+
+No further theme code change is required for #1 (the plumbing already
+exists live); the highest-impact fix is a GTM configuration change.
+
+### 1. Delay 6 of the 7 tags already in GTM-57VH77Q (highest impact, lowest risk, no code)
+
+**Who:** whoever has tagmanager.google.com access to this container.
+**Time:** ~15 minutes.
+
+In the `GTM-57VH77Q` container, open each tag below and change its trigger
+to a **Custom Event** trigger with event name **`delayedAnalytics`**
+(create this trigger once under Triggers → New → Custom Event — the event
+itself is already being pushed to `dataLayer` live by the theme's existing
+`theme-phase2-defer-third-party` snippet on first scroll/click/touch, or
+after ~4s idle):
+
+| Tag to find in GTM | Identifier to match it by | New trigger |
+| --- | --- | --- |
+| Facebook Pixel | Pixel ID `814773616537076` | Custom Event: `delayedAnalytics` |
+| Microsoft Clarity | Project ID `r5hv5em0xa` | Custom Event: `delayedAnalytics` |
+| Crazy Egg | account/script `0094/8571` | Custom Event: `delayedAnalytics` |
+| Google Ads conversion | `AW-823233215` | Custom Event: `delayedAnalytics` |
+| GA4 config | `G-SF2H4TEH22` | Custom Event: `delayedAnalytics` |
+| Bing/Microsoft UET | action id `136001197` | Custom Event: `delayedAnalytics` |
+| **ClickCease** | `clickcease.com/monitor/stat.js` | **Window Loaded** (not `delayedAnalytics` — needs to stay fast for fraud detection) |
+
+After retagging, use GTM **Preview** mode on the homepage: confirm none of
+the first six fire until you scroll/click/tap (or ~4s idle), and ClickCease
+still fires right after window load. Then **Publish** the container version.
+
+**Expected result:** ~250KB (Facebook Pixel + Clarity + Crazy Egg + Bing UET
+combined, compressed) moves off the critical path on every homepage load,
+with zero code deployment.
+
+### 2. Rule out duplicate Facebook tracking (5 minutes, no risk)
+
+**Who:** whoever has Shopify Admin access.
+
+Go to **Admin → Settings → Customer events**. The homepage loads 4
+independent Shopify "Web Pixel" sandbox workers outside of GTM — one is
+labeled as a native Shopify app pixel, three are unlabeled numeric IDs I
+can't identify from outside the site. Open each one listed there; if any is
+a second Facebook/Meta pixel, remove it (or remove the GTM one) so Meta Ads
+Manager isn't double-counting.
+
+### 3. Get a professional opinion on the Termly resource-blocker before touching it (do not just add `async`)
+
+**Who:** Termly support, or whoever manages the Termly account, before any
+code change.
+
+This script is ~152KB compressed / ~495KB uncompressed, sits as the literal
+first line in `<head>` (before `<meta charset>`), and has no `defer`/
+`async` — it is the single largest blocking script on the page, larger than
+the Facebook Pixel. But it's also what enforces cookie-consent blocking, so
+I'm not proposing a blind code edit here. Ask Termly support: *"Does the
+resource-blocker script support `async` loading without breaking
+`autoBlock`, given our trackers load via a separately-injected GTM
+container (Elevar), not inline `type=text/plain` script tags?"* If yes,
+adding `async` is a one-line change I can make immediately. If no, the
+longer-term fix is migrating to **Google Consent Mode v2** (supported by
+both Termly and GTM), which gates tag firing via a signal instead of
+blocking script tags outright — no head-blocking script needed at all. That
+migration is a larger scope, flag it as a follow-up rather than doing it
+today.
+
+### 4. Ask whether the geo-blocking app can run without `blocking="render"` (business decision)
+
+**Who:** whoever owns the country-restriction requirement.
+
+Two requests from this app explicitly opt into blocking first paint. That
+may be a deliberate, accepted trade-off (compliance/legal), but it's worth
+confirming: ask the app vendor if a non-blocking check mode exists, or
+evaluate whether Shopify's native **Settings → Markets** country
+restrictions could cover the same requirement without a render-blocking
+third-party script at all.
+
+---
+
 ## What's actually happening
 
 **GTM is already active and already fires all four tools** — just not from
