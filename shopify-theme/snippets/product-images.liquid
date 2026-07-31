@@ -5,7 +5,9 @@
   - Gallery markup renders first (LCP image is not blocked by CSS/JS)
   - Removed unused image_list Liquid loop and per-image URL captures
   - Right-sized srcset/sizes for mobile LCP
-  - Zoom/lightbox CSS + JS load only on user interaction
+  - Zoom/lightbox CSS + JS + DOM markup all load only on user interaction
+    (the lightbox modal's HTML is now built by JS on first click instead of
+    being rendered into every page load — see ensureLightboxMarkup() below)
 {% endcomment %}
 
 {%- assign gallery_sizes = '(max-width: 798px) calc(100vw - 32px), (max-width: 1200px) 60vw, 38vw' -%}
@@ -213,23 +215,16 @@
 }
 {% endstyle %}
 
-{% if gallery_click_to_zoom %}
-<div class="product-lightbox product-lightbox--{{ product.id }}" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Product image zoom">
-  <button type="button" class="product-lightbox__close" aria-label="Close">&times;</button>
-  <button type="button" class="product-lightbox__prev" aria-label="Previous image">&#8249;</button>
-  <button type="button" class="product-lightbox__next" aria-label="Next image">&#8250;</button>
-  <div class="product-lightbox__stage">
-    <div class="product-lightbox__content">
-      <img class="product-lightbox__image" src="" alt="" draggable="false" decoding="async">
-    </div>
-  </div>
-  <div class="product-lightbox__lens" aria-hidden="true">
-    <img class="product-lightbox__lens-img" src="" alt="" draggable="false" decoding="async">
-  </div>
-  <div class="product-lightbox__hint"></div>
-  <div class="product-lightbox__zoom-level" aria-live="polite"></div>
-</div>
-{% endif %}
+{% comment %}
+  The lightbox modal markup below used to be rendered here unconditionally
+  (an empty, hidden <div> on every single product page load, even though
+  gallery_click_to_zoom only means "clicking is allowed to zoom," not "the
+  visitor clicked"). Its CSS/JS were already deferred until interaction —
+  the DOM markup wasn't, which was inconsistent and added dead HTML/DOM
+  nodes to every mobile page load. It's now built by ensureLightboxMarkup()
+  below, at the same moment the CSS/JS are requested (first click), instead
+  of being part of the initial server-rendered HTML.
+{% endcomment %}
 
 {% if gallery_click_to_zoom or gallery_hover_zoom %}
 <script>
@@ -282,6 +277,38 @@
       return lightboxJsPromise;
     }
 
+    {% if gallery_click_to_zoom %}
+    var lightboxMarkupCreated = false;
+
+    function ensureLightboxMarkup() {
+      if (lightboxMarkupCreated || document.querySelector('.product-lightbox--' + productId)) {
+        lightboxMarkupCreated = true;
+        return;
+      }
+
+      var wrapper = document.createElement('div');
+      wrapper.innerHTML =
+        '<div class="product-lightbox product-lightbox--' + productId + '" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Product image zoom">' +
+          '<button type="button" class="product-lightbox__close" aria-label="Close">\u00D7</button>' +
+          '<button type="button" class="product-lightbox__prev" aria-label="Previous image">\u2039</button>' +
+          '<button type="button" class="product-lightbox__next" aria-label="Next image">\u203A</button>' +
+          '<div class="product-lightbox__stage">' +
+            '<div class="product-lightbox__content">' +
+              '<img class="product-lightbox__image" src="" alt="" draggable="false" decoding="async">' +
+            '</div>' +
+          '</div>' +
+          '<div class="product-lightbox__lens" aria-hidden="true">' +
+            '<img class="product-lightbox__lens-img" src="" alt="" draggable="false" decoding="async">' +
+          '</div>' +
+          '<div class="product-lightbox__hint"></div>' +
+          '<div class="product-lightbox__zoom-level" aria-live="polite"></div>' +
+        '</div>';
+
+      document.body.appendChild(wrapper.firstElementChild);
+      lightboxMarkupCreated = true;
+    }
+    {% endif %}
+
     function ensureHoverJs() {
       if (!hoverJsPromise) {
         hoverJsPromise = loadScript('{{ "product-gallery-hover-zoom.js" | asset_url }}');
@@ -297,6 +324,7 @@
       }
 
       event.preventDefault();
+      ensureLightboxMarkup();
 
       var index = parseInt(trigger.getAttribute('data-lightbox-index'), 10);
       if (isNaN(index)) {
