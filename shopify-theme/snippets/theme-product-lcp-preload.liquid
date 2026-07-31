@@ -1,0 +1,17 @@
+{% comment %}
+  Paste into theme.liquid <head>, inside {% if template.name == 'product' %}.
+  Must match product-images.liquid eager image (image_url width 500 + srcset).
+{% endcomment %}
+{%- if template.name == 'product' -%}
+  {%- assign lcp_media = product.selected_or_first_available_variant.featured_media | default: product.featured_media -%}
+  {%- if lcp_media and lcp_media.media_type == 'image' -%}
+    <link
+      rel="preload"
+      as="image"
+      href="{{ lcp_media | image_url: width: 500 }}"
+      imagesrcset="{{ lcp_media | image_url: width: 400 }} 400w, {{ lcp_media | image_url: width: 500 }} 500w, {{ lcp_media | image_url: width: 600 }} 600w, {{ lcp_media | image_url: width: 800 }} 800w, {{ lcp_media | image_url: width: 1000 }} 1000w"
+      imagesizes="(max-width: 798px) calc(100vw - 32px), (max-width: 1200px) 60vw, 38vw"
+      fetchpriority="high"
+    >
+  {%- endif -%}
+{%- endif -%}

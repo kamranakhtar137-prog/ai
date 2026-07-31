@@ -1,0 +1,57 @@
+{% comment %}
+  Phase 2: Load non-critical stylesheets without blocking render.
+  Add in theme.liquid <head> after main theme CSS.
+{% endcomment %}
+<script>
+  (function () {
+    function deferStylesheet(href) {
+      if (!href || document.querySelector('link[data-deferred-style="' + href + '"]')) {
+        return;
+      }
+
+      var link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = href;
+      link.media = 'print';
+      link.setAttribute('data-deferred-style', href);
+      link.onload = function () {
+        link.media = 'all';
+      };
+      document.head.appendChild(link);
+    }
+
+    function deferMatchingStyles() {
+      var patterns = [
+        /iwish/i,
+        /accelerated-checkout/i,
+        /fast-simon/i,
+        /mailchimp/i,
+        /termly/i,
+        /fancybox/i
+      ];
+
+      document.querySelectorAll('link[rel="stylesheet"]').forEach(function (link) {
+        var href = link.getAttribute('href') || '';
+
+        patterns.forEach(function (pattern) {
+          if (pattern.test(href) && !link.hasAttribute('data-phase2-skipped')) {
+            link.setAttribute('data-phase2-skipped', 'true');
+            link.disabled = true;
+            deferStylesheet(href);
+          }
+        });
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', deferMatchingStyles);
+    } else {
+      deferMatchingStyles();
+    }
+
+    new MutationObserver(deferMatchingStyles).observe(document.documentElement, {
+      childList: true,
+      subtree: true
+    });
+  })();
+</script>
