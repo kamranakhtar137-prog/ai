@@ -6,6 +6,15 @@ tags. I inspected the live homepage (rendered HTML + full network waterfall,
 mobile UA) to verify that before writing a plan, and the actual situation is
 different — and more fixable than "add these to GTM."
 
+**Second update:** pulled the current PageSpeed Insights real-user (CrUX)
+field data directly. Mobile is currently **passing** Core Web Vitals — LCP
+1.6s, INP 146ms, CLS 0.03 — a big contrast with the "10.9s" figure
+originally reported. See the bot-blocking finding below (§1b) for a
+plausible explanation of that gap: our own automated Lighthouse run got
+blocked with HTTP 429 by the site's bot protection, which could also be
+happening intermittently to Google's own lab test runner and inflating
+isolated lab scores without reflecting what most real visitors experience.
+
 ## Solution — do these in order
 
 No further theme code change is required for #1 (the plumbing already
@@ -203,6 +212,30 @@ which gates tag *firing* via a signal rather than blocking script tags
 outright, and doesn't require a synchronous head-blocking script at all.
 That's a bigger, longer-term change than a one-line edit, but worth raising
 given its size.
+
+### 1b. That same geo-blocking layer also appears to rate-limit automated testing tools (possible cause of volatile/spiked lab scores)
+
+While independently trying to verify the homepage's mobile performance with
+our own Lighthouse run (same tool PageSpeed Insights uses), every automated
+browser-driven request to `https://filmartgallery.com/` was rejected with
+**HTTP 429**, while a plain `curl` request (no JS/browser automation) to the
+same URL at the same time succeeded normally. This was reproducible across
+multiple attempts and cooldown periods.
+
+This suggests the site's bot/geo-blocking layer (Cloudflare + the
+geo-blocker app, see below) may be flagging automated performance-testing
+tools (Lighthouse/PageSpeed Insights itself, and possibly some real Google
+crawler or slow-network sessions) as bot traffic and blocking them. If
+Google's own PageSpeed Insights lab runner occasionally gets challenged or
+blocked the same way, that would produce an artificially inflated LCP for
+that specific test run — a plausible explanation for a lab-reported spike
+like "LCP 10.9s" that doesn't match the (good) real-user field data below.
+
+**Recommended next step:** check Cloudflare's firewall/bot-management event
+log (and the geo-blocking app's logs) for 429s served to Google's
+Lighthouse/PageSpeed Insights user agent or IP ranges, and consider
+allowlisting Google's testing infrastructure so lab scores reflect the real
+page, not a bot-challenge response.
 
 ### 2. A geo/country-blocking app is deliberately render-blocking on every page load
 
