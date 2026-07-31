@@ -1,0 +1,663 @@
+{% comment %} <script src="https://unpkg.com/flickity@2/dist/flickity.pkgd.min.js"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/flickity@2/dist/flickity.min.css"> {% endcomment %}
+
+<link rel="stylesheet" href="{{ 'flickity.min.css' | asset_url }}">
+<script src="{{ 'flickity.pkgd.min.js' | asset_url }}" defer></script>
+
+<style>
+    .product-wrap:hover a.hidden-product-link {
+        background: #00000073;
+    }
+    .relative.product_image.seeallbtndiv a {
+        height: 400px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .thumbnail-overlay .title {
+        font-size: 14px;
+    }
+
+      .flickity-prev-next-button .arrow {
+        opacity: 1 !important;
+    }
+
+    .flickity-prev-next-button .flickity-button-icon {
+        height: 60px !important;
+    }
+
+    button.flickity-button.flickity-prev-next-button.previous {
+        left: -60px;
+    }
+
+    button.flickity-button.flickity-prev-next-button.next {
+        right: -50px;
+    }
+
+    path.arrow {
+        padding: 16px !important;
+    }
+
+    .current_year,.current_size{
+        margin:0px !important;
+    }
+    @media only screen and (max-width: 768px) {
+      {% comment %} .flickity-viewport {
+          height: 173px !important;
+      } {% endcomment %}
+ 
+      .homepage-slider1 .carousel__cell {
+        width: 33% !important;
+        height: 260px !important;
+      }
+      a.hidden-product-link {
+    top: -30px !important;
+}
+      .relative.product_image {
+    overflow: hidden;
+    height: 210px;
+}
+      .flickity-section__carousel{
+        height: 260px !important;
+      }
+      .featured-list .heading .one-whole .link {
+        position: relative;
+        font-size: 10px;
+        width: 80px;
+        justify-content: center;
+        margin-left: 10px;
+        text-decoration: unset;
+        border:0px;
+        padding:0px;
+      }
+      .featured-list .heading .one-whole .link:after {
+          content: "";
+          position: absolute;
+          width: 100%;
+          height: 1px;
+          background: #fff;
+          bottom: -.5rem;
+          width: 47px;
+          opacity: 1;
+      }
+    }
+    @media only screen and (max-width: 430px) {
+      .flickity-viewport {
+        height: 290px !important;
+      }
+      .slider-gallery .thumbnail img {
+        height: 190px;
+      }
+
+      .homepage-slider1 .carousel__cell {
+          width: 33% !important;
+          height: 260px !important;
+      }
+      .flickity-section__carousel{
+        height: 260px !important;
+      }
+      .featured-collection__products button.flickity-button.flickity-prev-next-button.previous ,.featured-collection__products button.flickity-button.flickity-prev-next-button.next{display:block !important;}
+
+      .products-slider.slider-gallery .gallery-cell.visible-4 {
+          width: calc(50% - 5px);
+      }
+      .featured-collection__products .flickity-slider{
+          left: 70px !important;
+      }
+    }
+
+
+    
+</style>
+
+{% assign collection_main = collections[section.settings.collection_main] %}
+
+{% assign collection_limit = section.settings.collection_limit %}
+
+{% assign cell_align = section.settings.cell_align %}
+
+{% assign wrap_around = section.settings.wrap_around %}
+
+{% assign img_width = section.settings.img_width | append: 'x' %}
+
+{% assign preload_first_image = section.settings.preload_first_image %}
+
+{% comment %}
+  LCP preload: only emit this <link rel="preload"> for the ONE slider on the
+  page that is actually above the fold (enable "Preload first image" on that
+  single instance in the Theme Editor). Every other instance of this section
+  must keep the setting OFF so we don't compete with the real LCP request.
+  The href/srcset/sizes below are generated the exact same way as the eager
+  <img> further down, so the preload and the real image request are byte
+  identical (no wasted download, no re-fetch, no quality change).
+{% endcomment %}
+{% if preload_first_image %}
+  {% assign lcp_product = nil %}
+  {% for product in collection_main.products limit: collection_limit %}
+    {%- if product.metafields.inventory.ShappifyHidden == 'true' -%}
+      {%- continue -%}
+    {%- endif -%}
+    {% assign lcp_product = product %}
+    {% break %}
+  {% endfor %}
+
+  {% if lcp_product %}
+    {% assign lcp_variant = lcp_product.selected_or_first_available_variant %}
+    {% assign lcp_img_src = lcp_variant.featured_img.src | default: lcp_product.featured_image.src %}
+    {% assign lcp_img = lcp_variant.featured_image | default: lcp_product.featured_image %}
+    {% assign lcp_w = lcp_img.width | default: 2617 %}
+    {% assign lcp_h = lcp_img.height | default: 3587 %}
+    {% assign lcp_w_f = lcp_w | times: 1.0 %}
+    {% assign lcp_box_w = lcp_w_f | divided_by: lcp_h | times: 400 | round %}
+    {%- capture lcp_srcset -%}
+      {{ lcp_img_src | img_url: '200x' }} 200w,
+      {{ lcp_img_src | img_url: '300x' }} 300w,
+      {{ lcp_img_src | img_url: '400x' }} 400w,
+      {{ lcp_img_src | img_url: '600x' }} 600w,
+      {{ lcp_img_src | img_url: '800x' }} 800w,
+      {{ lcp_img_src | img_url: '1200x' }} 1200w
+    {%- endcapture -%}
+    <link
+      rel="preload"
+      as="image"
+      href="{{ lcp_img_src | img_url: '400x' }}"
+      imagesrcset="{{ lcp_srcset }}"
+      imagesizes="{{ lcp_box_w }}px"
+      fetchpriority="high"
+    >
+  {% endif %}
+{% endif %}
+
+<section class="section">
+  <div class="container">
+    <div class="one-whole column center homepage_content">
+      <!-- Dynamic Collection Title above the slider -->
+      <h3 style="text-decoration:underline" class="heading">
+        <a href="{{ collection_main.url }}" title="{{ collection_main.title }}">{{ collection_main.title }}</a>
+      </h3>
+
+      <div
+        class="flickity-section-{{ section.id }} flickity-index-slider collection"
+        style="background-color: {{ section.settings.bg }}"
+      >
+        <div class="page-width">
+          <div
+            class="flickity-section__carousel carousel-{{section.id }} text-center"
+            data-flickity='
+              {
+
+              "cellAlign": "{{ cell_align }}",
+
+              "pageDots": false,
+
+              "freeScroll": false,
+
+              "contain": true,
+
+              "wrapAround": {{ wrap_around }},
+              "draggable": ">1"
+
+              }
+            '
+          >
+            {% assign rendered_index = 0 %}
+            {% for product in collection_main.products limit: collection_limit %}
+              {%- if product.metafields.inventory.ShappifyHidden == 'true' -%}
+                {%- continue -%}
+              {%- endif -%}
+              {% assign rendered_index = rendered_index | plus: 1 %}
+              {% assign first_variant = product.selected_or_first_available_variant %}
+              {% assign featured_img_src = first_variant.featured_img.src | default: product.featured_image.src %}
+              {% assign fs_img = first_variant.featured_image | default: product.featured_image %}
+              {% assign fs_w = fs_img.width | default: 2617 %}
+              {% assign fs_h = fs_img.height | default: 3587 %}
+              {% assign price = first_variant.price %}
+              {% assign compare_at_price = first_variant.compare_at_price %}
+
+              {% comment %}
+                Only the very first slide of the single "priority" slider on the
+                page (see preload_first_image above) is allowed to be eager /
+                high priority. Every other slide, on every instance of this
+                section, is lazy-loaded so the browser isn't asked to fetch
+                dozens of images before the real LCP image has finished.
+              {% endcomment %}
+              {% assign is_priority_slide = false %}
+              {% if preload_first_image and rendered_index == 1 %}
+                {% assign is_priority_slide = true %}
+              {% endif %}
+
+              {% comment %}
+                Right-size the srcset/sizes to the box the image actually
+                renders at: this design keeps a constant `max-height: 400px`
+                image box (width derived from the real image aspect ratio),
+                it does not scale with the viewport. Hinting the true pixel
+                width (instead of a flat vw guess) stops the browser from
+                downloading a larger-than-needed file on wide desktop
+                viewports, with zero change to the image itself, so no
+                quality is lost — the browser still always picks a srcset
+                entry that is full resolution for the box, just not bigger
+                than it needs to be.
+              {% endcomment %}
+              {% assign fs_w_f = fs_w | times: 1.0 %}
+              {% assign img_box_w = fs_w_f | divided_by: fs_h | times: 400 | round %}
+              {% assign image_sizes = img_box_w | append: 'px' %}
+
+              <div
+                class="carousel__cell"
+                style="width:{{ section.settings.cell_width }};margin-right:{{ section.settings.mr }}px"
+              >
+                <div class="product-wrap ">
+                  <div class="relative product_image">
+                    <a href="{{ product.url }}">
+                      <div class="image__container">
+                        {%- capture fs_srcset -%}
+                          {{ featured_img_src | img_url: '200x' }} 200w,
+                          {{ featured_img_src | img_url: '300x' }} 300w,
+                          {{ featured_img_src | img_url: '400x' }} 400w,
+                          {{ featured_img_src | img_url: '600x' }} 600w,
+                          {{ featured_img_src | img_url: '800x' }} 800w,
+                          {{ featured_img_src | img_url: '1200x' }} 1200w
+                        {%- endcapture -%}
+
+<div class="image-element__wrap" style="max-height: 400px; width: calc({{ fs_w }} / {{ fs_h }} * 400px);">
+  {%- if is_priority_slide -%}
+    <img
+      alt="{{ fs_img.alt | default: product.title | escape }}"
+      src="{{ featured_img_src | img_url: '400x' }}"
+      srcset="{{ fs_srcset }}"
+      sizes="{{ image_sizes }}"
+      loading="eager"
+      fetchpriority="high"
+      width="{{ fs_w }}"
+      height="{{ fs_h }}"
+    >
+  {%- else -%}
+    <img
+      class="lazyload"
+      alt="{{ fs_img.alt | default: product.title | escape }}"
+      src="data:image/svg+xml;utf8,<svg%20xmlns='http://www.w3.org/2000/svg'%20width='{{ fs_w }}'%20height='{{ fs_h }}'></svg>"
+      data-src="{{ featured_img_src | img_url: '400x' }}"
+      data-srcset="{{ fs_srcset }}"
+      data-sizes="{{ image_sizes }}"
+      width="{{ fs_w }}"
+      height="{{ fs_h }}"
+      loading="lazy"
+    >
+  {%- endif -%}
+</div>
+                        <noscript>
+  <img
+    loading="lazy"
+    src="{{ featured_img_src | img_url: '400x' }}"
+    srcset="{{ fs_srcset }}"
+    sizes="{{ image_sizes }}"
+    alt="{{ fs_img.alt | default: product.title | escape }}"
+    width="{{ fs_w }}"
+    height="{{ fs_h }}"
+  >
+</noscript>
+                      </div>
+                    </a>
+                    <div class="thumbnail-overlay">
+                      <a
+  href="{{ product.url }}"
+  itemprop="url"
+  class="hidden-product-link"
+  aria-label="View {{ product.title | escape }}"
+>
+  {{ product.title }}
+</a>
+                      <div class="info">
+                        <div class="product-details">
+                          <span class="title" itemprop="name">{{ product.title }}</span>
+
+                          <p class="current_year">
+                            <span class="year">Year: {{ product.variants[0].option1 }} </span>
+                          </p>
+                          <!-- Display country tags -->
+                          <div class="tags">
+                            {% for tag in product.tags %}
+                              {% if tag contains 'country-' %}
+                                <span class="tag">Country: {{ tag | remove: 'country-' }}</span>
+                              {% endif %}
+                            {% endfor %}
+                          </div>
+                          <p class="current_size">
+                            <span class="size">Size: {{ product.variants[0].option3 }} </span>
+                          </p>
+
+                          <span class="price ">
+                            {%- if product.available -%}
+                              <span class="current_price">
+                                <span class="money">{{ price | money }}</span>
+                              </span>
+                            {%- else -%}
+                              <button
+                                class="my-inquery search-product-inquire"
+                                style="margin-top:20px;background-color: transparent;border: 1px solid white;color: white;width: 120px;height: 25px;"
+                              >
+                                INQUIRE
+                              </button>
+                            {%- endif -%}
+
+                            <!--
+                              <span class="current_price">
+                                <span class="money"> {{ price | money }} </span>
+                              </span>
+                            -->
+                            <span class="was_price"></span>
+                            <div class="sold_out qqq"></div>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="price-ui-badges price-ui-badges--square">
+                      <div class="price-ui-badge price-ui-badge--loading" data-price-ui-badge="">
+                        <noscript>
+                          <style>
+                            .price-ui-badge--loading {
+                              display: block !important;
+                              opacity: 1 !important;
+                            }
+                          </style>
+                        </noscript>
+                      </div>
+                    </div>
+                  </div>
+                  <a
+                    class="product-info__caption hidden"
+                    href="/collections/vintage-movie-posters-may-2024/products/for-a-few-dollars-more-12"
+                  >
+                    <div class="product-details">
+                      <span class="title" itemprop="name">{{ product.title }}</span>
+                      <span class="price ">
+                        <span class="current_price">
+                          <span class="money"> {{ price | money }} </span>
+                        </span>
+                        <span class="was_price"></span>
+                        <div class="sold_out qqq"></div>
+                      </span>
+                    </div>
+                  </a>
+                </div>
+              </div>
+            {% endfor %}
+            <div
+              class="carousel__cell"
+              style="width:{{ section.settings.cell_width }};margin-right:{{ section.settings.mr }}px"
+            >
+              <div class="product-wrap ">
+                <div class="relative product_image seeallbtndiv">
+                  <a href="{{ collection_main.url }}">
+                    <div class="image__container">
+                      <div class="image-element__wrap" style="max-height: 400px; width: calc(2617 /  3587 * 400px);">
+                        <div class="seeall">
+                          <p class="seeallbtn">See all</p>
+                        </div>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {% comment %}
+              {% for block in section.blocks %}
+              {% assign block_product = all_products[block.settings.featured_product] %}
+              {% assign block_first_variant = block_product.selected_or_first_available_variant %}
+              {% assign featured_img_src = block_first_variant.featured_img.src | default: block_product.featured_image.src %}
+              {% assign price = block_first_variant.price %} {% assign compare_at_price = block_first_variant.compare_at_price %}
+              <div class="carousel__cell" style="width:{{ section.settings.cell_width }};margin-right:{{ section.settings.mr }}px"> {% if block.settings.featured_product != blank %} <a href="{{ block_product.url }}">
+                  <img loading="lazy" class="lazyload" data-src="{{ featured_img_src | img_url: img_width }}" alt="{{ block_product.featured_img.alt }}" width="{{ block_product.featured_image.width | default: 292 }}" height="{{ block_product.featured_image.height | default: 400 }}" />
+                </a>
+              {% else %}
+              {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }} {% endif %} <a href="{{ block_product.url }}">
+                  <h5>{{ block_product.title }}</h5>
+                </a> {% if compare_at_price > price %} <s class="block-product__compare-at-price">{{ compare_at_price | money }}</s>
+                <p class="block-product__product-price">{{ price | money }}</p> {% else %} <p class="block-product__product-price">{{ price | money }}</p> {% endif %}
+              </div>
+              {% endfor %}
+            {% endcomment %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom Button below the slider -->
+      <p>
+        <a
+          href="{{ collection_main.url }}"
+          title="{{ collection_main.url }}"
+          class="btn--submit"
+          style="
+            border: 1px solid;
+            padding: 10px 30px;
+          "
+          >View All {{ collection_main.title -}}
+        </a>
+      </p>
+    </div>
+  </div>
+  <div class="description">
+    <h3>Vintage Movie Posters - Our Latest ACQuisitions</h3>
+    <p>
+      A special thanks and important note for our customers outside the USA: due to shipping regulations, all
+      international purchases must be declared for their purchase value, with a minimum $300 declaration. You will be
+      required to pay any import duties/sales tax levied by customs agents in order to release and receive your item(s).
+      Please bear this in mind, as the amount charged can be significant and difficult to predict. We appreciate your
+      understanding and are grateful for your business!
+    </p>
+  </div>
+</section>
+{% schema %}
+{
+  "name": "Collection Slider",
+  "class": "homepage-slider1",
+
+  "settings": [
+    {
+      "type": "collection",
+
+      "id": "collection_main",
+
+      "label": "Choose a Collection"
+    },
+
+    {
+      "type": "range",
+
+      "id": "collection_limit",
+
+      "min": 2,
+
+      "max": 50,
+
+      "step": 1,
+
+      "unit": ".",
+
+      "label": "How many products to show",
+
+      "default": 4
+    },
+
+    {
+      "type": "checkbox",
+
+      "id": "preload_first_image",
+
+      "label": "Preload first image (LCP)",
+
+      "info": "Enable this on the ONE slider that appears highest on the page only (usually the very first one). Its first slide will be preloaded and rendered eagerly; every other slide (and every other slider) always lazy-loads. Turning this on for more than one slider will hurt, not help, page speed.",
+
+      "default": false
+    },
+
+    {
+      "type": "color",
+
+      "id": "bg",
+
+      "label": "Background Color"
+    },
+
+    {
+      "type": "text",
+
+      "id": "title",
+
+      "label": "Title",
+
+      "default": "Featured Collection Slider"
+    },
+
+    {
+      "type": "range",
+
+      "id": "img_width",
+
+      "min": 800,
+
+      "max": 2400,
+
+      "step": 20,
+
+      "unit": "px",
+
+      "label": "Image Width",
+
+      "default": 800
+    },
+
+    {
+      "type": "select",
+
+      "id": "cell_align",
+
+      "label": "Slide Alignment",
+
+      "options": [
+        {
+          "value": "center",
+
+          "label": "Center"
+        },
+
+        {
+          "value": "left",
+
+          "label": "Left"
+        }
+      ],
+
+      "default": "center"
+    },
+
+    {
+      "type": "range",
+
+      "id": "title_mb",
+
+      "min": 30,
+
+      "max": 120,
+
+      "step": 1,
+
+      "unit": "px",
+
+      "label": "Title Margin Bottom",
+
+      "default": 48
+    },
+
+    {
+      "type": "select",
+
+      "id": "cell_width",
+
+      "label": "Choose number of slides to show on start",
+
+      "options": [
+        {
+          "value": "25%",
+
+          "label": "Four"
+        },
+
+        {
+          "value": "20%",
+
+          "label": "Five"
+        },
+
+        {
+          "value": "16.6666667%",
+
+          "label": "Six"
+        },
+
+        {
+          "value": "12.5%",
+
+          "label": "Eight"
+        }
+      ],
+
+      "default": "25%"
+    },
+
+    {
+      "type": "radio",
+
+      "id": "wrap_around",
+
+      "label": "Enable Wrap Around (endless scrolling)",
+
+      "options": [
+        {
+          "value": "true",
+
+          "label": "True"
+        },
+
+        {
+          "value": "false",
+
+          "label": "False"
+        }
+      ],
+
+      "default": "true"
+    },
+
+    {
+      "type": "range",
+
+      "id": "mr",
+
+      "min": 0,
+
+      "max": 48,
+
+      "step": 1,
+
+      "unit": "px",
+
+      "label": "Cell Margin Right",
+
+      "default": 16,
+
+      "info": "Save page to see changes."
+    }
+  ],
+
+  "presets": [
+    {
+      "name": "Collection Slider",
+
+      "category": "Slider"
+    }
+  ]
+}
+{% endschema %}
