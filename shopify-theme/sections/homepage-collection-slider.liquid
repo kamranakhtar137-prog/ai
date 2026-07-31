@@ -150,6 +150,8 @@
     {% assign lcp_h = lcp_img.height | default: 3587 %}
     {% assign lcp_w_f = lcp_w | times: 1.0 %}
     {% assign lcp_box_w = lcp_w_f | divided_by: lcp_h | times: 400 | round %}
+    {% assign lcp_cell_width_vw = section.settings.cell_width | replace: '%', 'vw' %}
+    {% assign lcp_sizes = '(max-width: 768px) min(33vw, ' | append: lcp_box_w | append: 'px), min(' | append: lcp_cell_width_vw | append: ', ' | append: lcp_box_w | append: 'px)' %}
     {%- capture lcp_srcset -%}
       {{ lcp_img_src | img_url: '200x' }} 200w,
       {{ lcp_img_src | img_url: '300x' }} 300w,
@@ -163,7 +165,7 @@
       as="image"
       href="{{ lcp_img_src | img_url: '400x' }}"
       imagesrcset="{{ lcp_srcset }}"
-      imagesizes="{{ lcp_box_w }}px"
+      imagesizes="{{ lcp_sizes }}"
       fetchpriority="high"
     >
   {% endif %}
@@ -229,19 +231,30 @@
 
               {% comment %}
                 Right-size the srcset/sizes to the box the image actually
-                renders at: this design keeps a constant `max-height: 400px`
-                image box (width derived from the real image aspect ratio),
-                it does not scale with the viewport. Hinting the true pixel
-                width (instead of a flat vw guess) stops the browser from
-                downloading a larger-than-needed file on wide desktop
-                viewports, with zero change to the image itself, so no
-                quality is lost — the browser still always picks a srcset
-                entry that is full resolution for the box, just not bigger
-                than it needs to be.
+                renders at. Two constraints compete here, and whichever is
+                SMALLER is what actually renders:
+                  (a) the `max-height: 400px` box on `.image-element__wrap`
+                      (width derived from the real image aspect ratio) —
+                      this is what typically binds on desktop, where the
+                      carousel cell (25%/20%/16.67%/12.5% of a wide page)
+                      is usually wider than the aspect-ratio box needs.
+                  (b) the carousel cell's own width — on mobile this is
+                      forced to a flat 33% by the `!important` media query
+                      above, which is usually narrower than (a), so IT
+                      binds instead. (Confirmed against real field data:
+                      Lighthouse reported ~123px rendered width on mobile
+                      for these slides, matching 33% of a ~372px mobile
+                      viewport, not the larger aspect-ratio box width.)
+                `min()` picks whichever is actually smaller per breakpoint,
+                so the browser is told the true box size at both, instead
+                of guessing high (wastes bytes) or guessing low (blurs the
+                image). No `img_url` widths change — only the hint of how
+                big the box actually is.
               {% endcomment %}
               {% assign fs_w_f = fs_w | times: 1.0 %}
               {% assign img_box_w = fs_w_f | divided_by: fs_h | times: 400 | round %}
-              {% assign image_sizes = img_box_w | append: 'px' %}
+              {% assign cell_width_vw = section.settings.cell_width | replace: '%', 'vw' %}
+              {% assign image_sizes = '(max-width: 768px) min(33vw, ' | append: img_box_w | append: 'px), min(' | append: cell_width_vw | append: ', ' | append: img_box_w | append: 'px)' %}
 
               <div
                 class="carousel__cell"

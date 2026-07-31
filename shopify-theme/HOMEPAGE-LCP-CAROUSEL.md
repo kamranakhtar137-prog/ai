@@ -37,17 +37,32 @@ on load.
    above is on) is eager + `fetchpriority="high"`. Every other slide, on
    every slider, uses the existing SVG-placeholder + `data-src`/`data-srcset`
    lazysizes pattern plus native `loading="lazy"`.
-3. **Right-sized `sizes`.** `sizes` is now computed per image from its real
-   aspect ratio against the fixed 400px-tall box (`width = aspect × 400px`),
-   e.g. `sizes="292px"` instead of a viewport-percentage guess. The browser
-   still always picks a `srcset` candidate that's full resolution for that
-   box (so displayed image quality is unchanged/no upscaling, no added
-   compression) — it just stops over-fetching a bigger file than the slot
-   needs, especially on desktop.
+3. **Right-sized `sizes` — corrected for both breakpoints.** `sizes` is now
+   `(max-width: 768px) min(33vw, {box}px), min({cell_width}vw, {box}px)`,
+   where `{box}` is the aspect-ratio-based width (`aspect × 400px`) and
+   `{cell_width}` is the theme's actual configured cell-width setting
+   (25%/20%/16.67%/12.5%), not a hardcoded guess.
+
+   **Why `min()` of two values instead of one flat number:** an earlier
+   version of this fix used a single fixed-pixel value assuming the
+   `max-height: 400px` box always wins. Real PageSpeed Insights data proved
+   that assumption wrong on mobile — it reported these slides rendering at
+   **123px wide**, matching the `33% !important` mobile cell-width override
+   in this file's own CSS, not the larger aspect-ratio box (~275–292px). A
+   single fixed value would have told the browser the mobile box was over
+   2× wider than it really is, making mobile downloads *worse*, not better.
+   `min()` picks whichever constraint is actually smaller at each
+   breakpoint, matching what really renders in both cases.
 4. **No new image transforms.** All existing `img_url` breakpoints
    (`200x…1200x`) are untouched, so there is no compression/quality change —
    only *which* of those already-existing sizes gets requested, and *when*,
-   changed.
+   changed. `min()` can only make the browser request an **equal or
+   smaller**, still full-resolution-for-the-box candidate than before —
+   never smaller than what's actually displayed, so there's no risk of a
+   blurry/upscaled image on any browser that doesn't support `min()` in
+   `sizes` either (worst case for those browsers: the whole `sizes` list is
+   ignored and the browser defaults to `100vw`, i.e. it downloads *more*
+   than needed, never less — modern Chrome/Safari/Firefox all support it).
 
 ## Install
 
