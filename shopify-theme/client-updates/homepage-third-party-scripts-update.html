@@ -171,12 +171,17 @@
 <h1 id="homepage-speed-update-third-party-scripts">Homepage Speed
 Update: Third-Party Scripts</h1>
 <p><strong>Site:</strong> filmartgallery.com</p>
-<h2 id="summary">Summary</h2>
-<p>Crazy Egg, Microsoft Clarity, ClickCease, and Facebook Pixel are
-already running through Google Tag Manager — they’re not scattered,
-uncontrolled scripts. The problem: all of them fire the instant the page
-starts loading, competing with your homepage content for bandwidth.
-Fixing this is a settings change, not a code change.</p>
+<h2 id="headline-finding">Headline finding</h2>
+<p>We now have a likely explanation for the 10–20 second speed spike:
+your mobile test shows the page frozen (nothing appears on screen at
+all) for <strong>9.6 seconds</strong>, then finishes loading 11 seconds
+after that. That pattern points to one specific culprit — your
+country-restriction tool, which is currently set up to hold the entire
+page from appearing until it finishes checking the visitor’s location.
+Under certain test conditions, that check appears to take several
+seconds instead of being instant.</p>
+<p><strong>This is the #1 priority — likely bigger than everything else
+combined.</strong></p>
 <h2 id="findings-fixes">Findings &amp; Fixes</h2>
 <table>
 <colgroup>
@@ -197,6 +202,16 @@ Fixing this is a settings change, not a code change.</p>
 </thead>
 <tbody>
 <tr class="odd">
+<td>0</td>
+<td><strong>Country-restriction tool holds the whole page from appearing
+while it checks the visitor’s location — likely the main cause of the
+reported slowdown</strong></td>
+<td>Test with it briefly disabled to confirm, then ask the vendor for a
+non-blocking check method</td>
+<td>App vendor</td>
+<td>~10 min to confirm</td>
+</tr>
+<tr class="even">
 <td>1</td>
 <td>Crazy Egg, Clarity, Facebook Pixel (104KB), + Google/Bing ad tags
 all fire at once, on page load</td>
@@ -205,14 +220,14 @@ all fire at once, on page load</td>
 <td>GTM account holder</td>
 <td>~15 min</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>2</td>
 <td>ClickCease also fires at once</td>
 <td>Keep it fast (fraud protection needs speed) — no change needed</td>
 <td>—</td>
 <td>—</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>3</td>
 <td>3 unidentified tracking pixels found outside GTM</td>
 <td>Check Shopify Admin → Customer Events for a duplicate Facebook
@@ -220,7 +235,7 @@ pixel</td>
 <td>Shopify Admin</td>
 <td>~5 min</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>4</td>
 <td>Cookie-consent script (Termly) is the single largest script on the
 page — bigger than the Facebook Pixel</td>
@@ -229,19 +244,13 @@ before we touch it</td>
 <td>Termly support</td>
 <td>Pending their reply</td>
 </tr>
-<tr class="odd">
-<td>5</td>
-<td>Country-restriction tool intentionally delays page render</td>
-<td>Confirm with vendor if a faster mode exists</td>
-<td>App vendor</td>
-<td>Pending their reply</td>
-</tr>
 </tbody>
 </table>
 <h2 id="bottom-line">Bottom line</h2>
 <p>No images, design, or tracking tools are removed. This is purely
-about <em>timing</em> — stopping background scripts from competing with
-your content on first load. Item 1 is the biggest win and can be done
-today with no development work.</p>
+about <em>timing</em> — stopping one blocking check and background
+scripts from competing with your content on first load. Item 0 is the
+fastest way to confirm the biggest lever; item 1 is the biggest win that
+needs no development work at all.</p>
 </body>
 </html>
