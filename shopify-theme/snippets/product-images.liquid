@@ -12,6 +12,9 @@
 
 {%- assign gallery_sizes = '(max-width: 798px) calc(100vw - 32px), (max-width: 1200px) 60vw, 38vw' -%}
 
+{{ 'product-gallery-zoom.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'product-gallery-hover-zoom.js' | asset_url }}" defer></script>
+
 <div class="gallery-wrap
             gallery-arrows--{{ gallery_arrows }}
             {% if set_product_height != blank %}product-height-set{% endif %}
@@ -75,9 +78,7 @@
                 style="max-width: {{ media.width }}px; --gallery-aspect-ratio: {{ media.width }} / {{ media.height }};"
               >
                 {% if product.images.size > 0 %}
-                  {% if gallery_hover_zoom %}
-                    <div class="zoom-container">
-                  {% endif %}
+                  <div class="zoom-container">
 
                   {%- if lazyload -%}
                     {%- capture srcset -%}
@@ -128,9 +129,7 @@
                     }}
                   {%- endif -%}
 
-                  {% if gallery_hover_zoom %}
-                    </div>
-                  {% endif %}
+                  </div>
                 {% else %}
                   <img loading="lazy" decoding="async" width="800" height="1200" src="{{ product.featured_image | image_url: width: 800 }}" alt="{{ product.title | escape }}" />
                 {% endif %}
@@ -229,15 +228,30 @@
 {% if gallery_click_to_zoom or gallery_hover_zoom %}
 <script>
   (function () {
-    var productId = '{{ product.id }}';
-    var gallery = document.querySelector('.product-' + productId + '-gallery');
-    if (!gallery) {
-      return;
+    function initializeGallery() {
+      var productId = '{{ product.id }}';
+      var gallery = document.querySelector('.product-' + productId + '-gallery');
+      if (!gallery) {
+        return false;
+      }
+
+      var debugEnabled = window.location.search.indexOf('gallery-debug=1') !== -1;
+      var zoomCssLoaded = false;
+      var lightboxJsPromise;
+      var hoverJsPromise;
+
+    function debug(message, details) {
+      if (debugEnabled && window.console) {
+        console.info('[Product gallery]', message, details || '');
+      }
     }
 
-    var zoomCssLoaded = false;
-    var lightboxJsPromise;
-    var hoverJsPromise;
+    debug('Initialized.', {
+      productId: productId,
+      clickToZoom: {{ gallery_click_to_zoom | json }},
+      hoverZoom: {{ gallery_hover_zoom | json }},
+      mediaCount: {{ product.media.size }}
+    });
 
     function loadStylesheet(href) {
       if (zoomCssLoaded) {
@@ -249,8 +263,14 @@
         var link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = href;
-        link.onload = resolve;
-        link.onerror = resolve;
+        link.onload = function () {
+          debug('Zoom stylesheet loaded.', { href: href });
+          resolve();
+        };
+        link.onerror = function () {
+          console.error('[Product gallery] Zoom stylesheet failed to load.', { href: href });
+          resolve();
+        };
         document.head.appendChild(link);
       });
     }
@@ -260,8 +280,14 @@
         var script = document.createElement('script');
         script.src = src;
         script.defer = true;
-        script.onload = resolve;
-        script.onerror = resolve;
+        script.onload = function () {
+          debug('Script loaded.', { src: src });
+          resolve();
+        };
+        script.onerror = function () {
+          console.error('[Product gallery] Script failed to load.', { src: src });
+          resolve();
+        };
         document.body.appendChild(script);
       });
     }
@@ -367,17 +393,73 @@
 
     function onHoverIntent() {
       if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+        debug('Hover zoom skipped on a coarse-pointer device.');
         return;
       }
 
       gallery.removeEventListener('mouseenter', onHoverIntent);
       gallery.removeEventListener('mousemove', onHoverIntent);
-      loadHoverZoomAssets();
+      debug('Hover intent detected; loading hover zoom assets.');
+      loadHoverZoomAssets().then(function () {
+        if (!window.ProductGalleryHoverZoom) {
+          console.error('[Product gallery] Hover zoom script loaded but did not expose ProductGalleryHoverZoom.');
+        }
+      });
+    }
+
+    /*
+      Load the custom hover lens as soon as this gallery is parsed instead of
+      waiting for the first pointer event. This makes the lens available for
+      galleries that Flickity initializes or refreshes after page load.
+    */
+    if (!window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+      debug('Eagerly loading hover zoom assets.');
+      loadHoverZoomAssets().then(function () {
+        if (!window.ProductGalleryHoverZoom) {
+          console.error('[Product gallery] Hover zoom script loaded but did not expose ProductGalleryHoverZoom.');
+        }
+      });
     }
 
     gallery.addEventListener('mouseenter', onHoverIntent, { passive: true });
     gallery.addEventListener('mousemove', onHoverIntent, { passive: true });
-    {% endif %}
+      {% endif %}
+      return true;
+    }
+
+    var galleryInitializationAttempts = 0;
+
+    function initializeWhenGalleryExists() {
+      if (initializeGallery()) {
+        return;
+      }
+
+      galleryInitializationAttempts += 1;
+      if (galleryInitializationAttempts < 20) {
+        window.setTimeout(initializeWhenGalleryExists, 50);
+        return;
+      }
+
+      console.warn('[Product gallery] Gallery element was not found after waiting for the page to render.', {
+        productId: '{{ product.id }}'
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeWhenGalleryExists, { once: true });
+    } else {
+      initializeWhenGalleryExists();
+    }
   })();
 </script>
 {% endif %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.ProductGalleryHoverZoom) {
+      window.ProductGalleryHoverZoom.init('{{ product.id }}');
+    } else {
+      console.error('[Product gallery] product-gallery-hover-zoom.js did not load.');
+    }
+  });
+</script>
