@@ -12,6 +12,9 @@
 
 {%- assign gallery_sizes = '(max-width: 798px) calc(100vw - 32px), (max-width: 1200px) 60vw, 38vw' -%}
 
+{{ 'product-gallery-zoom.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'product-gallery-hover-zoom.js' | asset_url }}" defer></script>
+
 <div class="gallery-wrap
             gallery-arrows--{{ gallery_arrows }}
             {% if set_product_height != blank %}product-height-set{% endif %}
@@ -75,9 +78,7 @@
                 style="max-width: {{ media.width }}px; --gallery-aspect-ratio: {{ media.width }} / {{ media.height }};"
               >
                 {% if product.images.size > 0 %}
-                  {% if gallery_hover_zoom %}
-                    <div class="zoom-container">
-                  {% endif %}
+                  <div class="zoom-container">
 
                   {%- if lazyload -%}
                     {%- capture srcset -%}
@@ -128,9 +129,7 @@
                     }}
                   {%- endif -%}
 
-                  {% if gallery_hover_zoom %}
-                    </div>
-                  {% endif %}
+                  </div>
                 {% else %}
                   <img loading="lazy" decoding="async" width="800" height="1200" src="{{ product.featured_image | image_url: width: 800 }}" alt="{{ product.title | escape }}" />
                 {% endif %}
@@ -454,3 +453,13 @@
   })();
 </script>
 {% endif %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.ProductGalleryHoverZoom) {
+      window.ProductGalleryHoverZoom.init('{{ product.id }}');
+    } else {
+      console.error('[Product gallery] product-gallery-hover-zoom.js did not load.');
+    }
+  });
+</script>
