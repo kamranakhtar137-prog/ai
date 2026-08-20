@@ -229,17 +229,17 @@
 {% if gallery_click_to_zoom or gallery_hover_zoom %}
 <script>
   (function () {
-    var productId = '{{ product.id }}';
-    var gallery = document.querySelector('.product-' + productId + '-gallery');
-    if (!gallery) {
-      console.warn('[Product gallery] Gallery element was not found.', { productId: productId });
-      return;
-    }
+    function initializeGallery() {
+      var productId = '{{ product.id }}';
+      var gallery = document.querySelector('.product-' + productId + '-gallery');
+      if (!gallery) {
+        return false;
+      }
 
-    var debugEnabled = window.location.search.indexOf('gallery-debug=1') !== -1;
-    var zoomCssLoaded = false;
-    var lightboxJsPromise;
-    var hoverJsPromise;
+      var debugEnabled = window.location.search.indexOf('gallery-debug=1') !== -1;
+      var zoomCssLoaded = false;
+      var lightboxJsPromise;
+      var hoverJsPromise;
 
     function debug(message, details) {
       if (debugEnabled && window.console) {
@@ -424,7 +424,33 @@
 
     gallery.addEventListener('mouseenter', onHoverIntent, { passive: true });
     gallery.addEventListener('mousemove', onHoverIntent, { passive: true });
-    {% endif %}
+      {% endif %}
+      return true;
+    }
+
+    var galleryInitializationAttempts = 0;
+
+    function initializeWhenGalleryExists() {
+      if (initializeGallery()) {
+        return;
+      }
+
+      galleryInitializationAttempts += 1;
+      if (galleryInitializationAttempts < 20) {
+        window.setTimeout(initializeWhenGalleryExists, 50);
+        return;
+      }
+
+      console.warn('[Product gallery] Gallery element was not found after waiting for the page to render.', {
+        productId: '{{ product.id }}'
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeWhenGalleryExists, { once: true });
+    } else {
+      initializeWhenGalleryExists();
+    }
   })();
 </script>
 {% endif %}
