@@ -408,6 +408,20 @@
       });
     }
 
+    /*
+      Load the custom hover lens as soon as this gallery is parsed instead of
+      waiting for the first pointer event. This makes the lens available for
+      galleries that Flickity initializes or refreshes after page load.
+    */
+    if (!window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+      debug('Eagerly loading hover zoom assets.');
+      loadHoverZoomAssets().then(function () {
+        if (!window.ProductGalleryHoverZoom) {
+          console.error('[Product gallery] Hover zoom script loaded but did not expose ProductGalleryHoverZoom.');
+        }
+      });
+    }
+
     gallery.addEventListener('mouseenter', onHoverIntent, { passive: true });
     gallery.addEventListener('mousemove', onHoverIntent, { passive: true });
     {% endif %}
