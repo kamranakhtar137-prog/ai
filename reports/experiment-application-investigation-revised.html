@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Revised Investigation Report — Experiment e.V. Application Portal</title>
+<style>
+@page{size:A4;margin:16mm}
+:root{--navy:#123a5d;--blue:#e8f2fa;--green:#e2f4e9;--amber:#fff2c9;--red:#ffe6e6;--line:#cbd5df}
+*{box-sizing:border-box}body{color:#1d2730;font:10.2pt/1.45 Arial,sans-serif;margin:0}h1,h2,h3{color:var(--navy);line-height:1.2}h1{font-size:25pt;margin:0 0 8px}h2{border-bottom:2px solid #86b3d3;font-size:15pt;margin:25px 0 10px;padding-bottom:5px;page-break-after:avoid}h3{font-size:11.5pt;margin:17px 0 6px;page-break-after:avoid}.cover{min-height:255mm;padding-top:43mm;page-break-after:always}.eyebrow{color:#2c6d9a;font-size:10pt;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase}.meta{background:#f4f8fb;border-left:5px solid #4d95c5;margin:28px 0;padding:12px 16px;width:82%}.meta p{margin:4px 0}.callout,.confirmed,.caution,.critical{margin:13px 0;padding:12px 15px}.callout{background:var(--amber);border-left:5px solid #cf9400;font-weight:bold}.confirmed{background:var(--green);border-left:5px solid #23834c}.caution{background:var(--blue);border-left:5px solid #4c91bd}.critical{background:var(--red);border-left:5px solid #ba3434}table{border-collapse:collapse;margin:9px 0 15px;width:100%;page-break-inside:avoid}td,th{border:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}th{background:var(--navy);color:white}tr:nth-child(even)td{background:#f7f9fb}code,pre{font:9pt/1.4 "Courier New",monospace}pre{background:#f3f6f8;border:1px solid var(--line);padding:9px;white-space:pre-wrap}.pill{border-radius:12px;display:inline-block;font-size:8.5pt;font-weight:bold;padding:2px 8px}.yes{background:#cbead7;color:#155a2f}.no{background:#f7cccc;color:#851d1d}.unknown{background:#fde5a0;color:#765300}.small{color:#51616e;font-size:9pt}ul,ol{padding-left:21px}a{color:#185e90}
+</style>
+</head>
+<body>
+<section class="cover">
+<div class="eyebrow">Experiment e.V. · Application Portal Investigation</div>
+<h1>Revised Investigation Report<br>Missing Application Cases</h1>
+<div class="meta">
+<p><strong>Cases reviewed:</strong> Jonathan Nelio Eilert; Thea Sitte</p>
+<p><strong>Purpose:</strong> establish the evidence for account/application loss, account attribution, recovery, and wider impact</p>
+<p><strong>Scope:</strong> WordPress, MainWP, and web-server audit records; Gravity Forms data; user metadata; database schema; and UpdraftPlus backup logs</p>
+</div>
+<div class="callout">Key outcome: Jonathan’s account deletion is confirmed. The deletion is not proof that an application was deleted. Thea’s live, recoverable draft proves that application state can be missing from the portal without a user-account deletion.</div>
+</section>
+
+<h2>1. Executive Summary</h2>
+<p>The investigation confirms that Jonathan Nelio Eilert’s WordPress account existed and was deleted by a MainWP maintenance operation authenticated as <code>Effecticore_Maintenance</code>. Web-server evidence identifies the Effecticore MainWP maintenance portal as the source of the session. The available records do not identify the individual person behind that shared account or the exact MainWP command/request body.</p>
+<div class="confirmed"><strong>Jonathan deletion:</strong> user ID <code>40372</code> was deleted on <strong>20 August 2026, 06:25:46.298 UTC</strong> (08:25:46.298 CEST) by the <code>Effecticore_Maintenance</code> account (ID 34066), from <code>187.14.255.7</code>, macOS 10.15.7 / Chrome 151.</div>
+<p>A full database backup completed about 1 minute 50 seconds before this deletion and was successfully uploaded to Google Drive. It is the authoritative recovery source for Jonathan’s pre-deletion state.</p>
+<p>A second case, Thea Sitte, establishes a related but distinct failure mode: her user account remains active, no final Gravity Forms entry exists, but a recoverable 3,427-byte Save-and-Continue draft for the Canada application remains in the database.</p>
+
+<h2>2. Evidentiary Limits</h2>
+<table><tr><th>Question</th><th>Assessment</th></tr>
+<tr><td>Who physically used <code>Effecticore_Maintenance</code>?</td><td><span class="pill unknown">NOT IDENTIFIABLE</span> The logs contain only a shared username, IP, browser/device fingerprint, and timestamp.</td></tr>
+<tr><td>Does the audit entry prove a person clicked “Delete user”?</td><td><span class="pill unknown">NO</span> It proves a MainWP-session user-deletion operation. The exact request body and human operator are not retained locally.</td></tr>
+<tr><td>Was Jonathan’s application deleted with the user?</td><td><span class="pill unknown">NOT PROVEN</span> No database foreign-key cascade exists. A custom hook or separate process would be required.</td></tr>
+<tr><td>Can Jonathan’s data be recovered?</td><td><span class="pill yes">LIKELY</span> A pre-deletion database backup exists remotely.</td></tr>
+<tr><td>Is there evidence of a wider application workflow issue?</td><td><span class="pill yes">YES</span> Thea’s surviving account has an active draft but no final application entry.</td></tr></table>
+
+<h2>3. Jonathan Nelio Eilert</h2>
+<h3>3.1 Account lifecycle</h3>
+<table><tr><th>UTC time</th><th>Finding</th></tr>
+<tr><td>05 Aug 2026, 12:07:09–12:07:11</td><td>Unauthenticated frontend flow from <code>92.209.222.83</code> set display name to Jonathan Eilert and added the Subscriber role. Audit metadata records <code>CurrentUserID=0</code>.</td></tr>
+<tr><td>07 Aug 2026, 11:55:40</td><td>Failed login from the same IP/browser family.</td></tr>
+<tr><td>20 Aug 2026, 06:17:21.629</td><td><code>Effecticore_Maintenance</code> login from <code>187.14.255.7</code>.</td></tr>
+<tr><td>20 Aug 2026, 06:25:46.298</td><td><strong>Account deleted</strong>; target user ID 40372, username <code>jonathaneilert</code>, subscriber role.</td></tr></table>
+
+<h3>3.2 Effecticore MainWP maintenance-session analysis</h3>
+<p>The web-server access log records a signed MainWP single-sign-on request from <code>https://web-maintenance.effecticore.de/</code> at 08:17:21 CEST. The session then accessed WordPress administration and the plugins/UpdraftPlus area. This identifies the originating maintenance system as Effecticore MainWP; it does not identify the individual using that portal.</p>
+<table><tr><th>CEST time</th><th>Evidence</th></tr>
+<tr><td>08:17:21</td><td>Effecticore MainWP signed single-sign-on to WordPress as <code>Effecticore_Maintenance</code> from <code>187.14.255.7</code>.</td></tr>
+<tr><td>08:22:18</td><td>MainWP Child changes log records a <code>user / deleted</code> operation under the maintenance account, with a 273.7489-second duration.</td></tr>
+<tr><td>08:25:46</td><td>WordPress audit log records deletion of target user ID 40372, Jonathan Eilert.</td></tr></table>
+<p>The MainWP operation metadata explicitly identifies <code>changeuserid=40372</code> and Jonathan’s username/role. The access log contains no normal <code>/wp-admin/users.php</code> or <code>/wp-admin/user-edit.php</code> request in the deletion window; it records <code>wp-cron.php</code> and <code>admin-ajax.php</code> requests instead.</p>
+<div class="caution">The available evidence confirms a targeted user-deletion operation initiated through Effecticore MainWP. It does not establish whether the underlying MainWP command was manually selected by an operator or automatically initiated within the portal.</div>
+
+<h3>3.3 Application state in the live database</h3>
+<p>No live record was found for Jonathan in the final Gravity Forms entry table, draft-submission table, started-entry table, ZIP export table, email-log table, WordPress posts, post metadata, or multisite signup table. The custom <code>saw*</code> tables are programme lookup tables only and do not store applicants.</p>
+<p>No foreign key references the WordPress users table, so MySQL could not automatically cascade the user deletion into application data.</p>
+
+<h3>3.4 Recovery source</h3>
+<div class="confirmed"><strong>Pre-deletion backup confirmed.</strong> UpdraftPlus began a database-only backup at 06:22:32 UTC on 20 August. Its database dump finished at approximately 06:23:56 UTC, before Jonathan’s deletion, and was uploaded successfully to Google Drive.</div>
+<pre>backup_2026-08-20-0822_Experiment_Deine_Austauschorga_73a85b8efed0-db.gz</pre>
+<p>The archive contains 198 database tables. It must be restored only to an isolated staging database. Search the staged <code>users</code>, <code>usermeta</code>, <code>gf_entry</code>, <code>gf_entry_meta</code>, and <code>gf_draft_submissions</code> tables for user ID 40372 and Jonathan’s identifiers. In particular, inspect any <code>gpasc-resume-tokens-*</code> metadata before concluding that no draft existed.</p>
+
+<h2>4. Thea Sitte</h2>
+<h3>4.1 Confirmed current state</h3>
+<table><tr><th>Item</th><th>Evidence</th></tr>
+<tr><td>User account</td><td>Active/approved subscriber, user ID 40375; account created 05 Aug 2026.</td></tr>
+<tr><td>Application route</td><td>Canada route <code>/exp-portal/saw-27-28/?program_country=Kanada</code>.</td></tr>
+<tr><td>Application form</td><td>Gravity Forms Form 179: <em>Bewerbung Schüleraustausch weltweit 2027/28</em>.</td></tr>
+<tr><td>Final submission</td><td><span class="pill no">NOT FOUND</span> No final Form 179 entry is associated with user ID 40375.</td></tr>
+<tr><td>Saved draft</td><td><span class="pill yes">FOUND</span> A Form 179 Save-and-Continue draft exists, created 17 Aug 2026 13:06:47 UTC, with 3,427 bytes of submission data.</td></tr></table>
+<p>Thea’s account contains a Form 179 started-entry marker and a Save-and-Continue association. The saved draft should be exported/preserved before any user-facing test is performed. Do not expose or circulate its resume token, session token, nonce, CAPTCHA token, or draft contents.</p>
+
+<h3>4.2 Interpretation</h3>
+<p>Thea’s case is not explained by deletion of her WordPress account: the account remains active. The evidence instead shows a saved draft that was never persisted as a final entry. The reported confirmation email requires independent verification in the transactional mail provider, because the site’s local email-log table has no matching record.</p>
+<div class="caution">The two cases therefore point to a broader application-state/persistence issue. A user can have no visible final application even when an account remains active; Jonathan’s account deletion may be consequential, but it is not sufficient to explain this pattern.</div>
+
+<h3>4.3 Later administrative-context access</h3>
+<p>On 21 Aug 2026 at 11:23:44.724 UTC, Thea’s account was logged in from <code>89.63.10.143</code> with a Windows/Chrome browser. The recorded login URL was a WordPress administrator Users search page for the account email. This is consistent with administrative “login as user”/impersonation access, not an ordinary applicant login. The audit record does not capture the original administrator who initiated it.</p>
+
+<h2>5. Other Deleted Applicants</h2>
+<p>The audit log contains multiple deleted applicant accounts during August 2026, involving both shared/known actors and “Unknown User” records. This establishes that Jonathan’s deletion was not the only user deletion in the period. It does not establish that every deletion was erroneous or that every deleted user had an application.</p>
+<p>A wider impact review should reconcile each deleted account with its final entries, drafts, started-entry records, and confirmation-email evidence before communicating totals or root cause.</p>
+
+<h2>6. Root-Cause Assessment</h2>
+<table><tr><th>Hypothesis</th><th>Assessment</th></tr>
+<tr><td>Jonathan was deleted by an Effecticore MainWP operation</td><td><span class="pill yes">CONFIRMED</span> MainWP signed SSO, access log, MainWP Child change log, and target metadata correlate.</td></tr>
+<tr><td>The MainWP operation was manually selected by a person</td><td><span class="pill unknown">NOT PROVEN</span> The local evidence lacks the portal request body and named portal operator.</td></tr>
+<tr><td>Jonathan was deleted by ordinary scheduled cron</td><td><span class="pill no">NOT SUPPORTED</span> The deletion is correlated with a targeted MainWP operation; the custom cron schedule did not align with the event.</td></tr>
+<tr><td>Jonathan was deleted by database cascade</td><td><span class="pill no">EXCLUDED</span> No database foreign-key relationship exists.</td></tr>
+<tr><td>Application finalization/persistence defect</td><td><span class="pill yes">SUPPORTED</span> Thea has a live draft but no final entry; Jonathan has no live final entry.</td></tr>
+<tr><td>Confirmation sent despite no final entry</td><td><span class="pill unknown">UNVERIFIED</span> Confirm against Brevo/Mailin transaction logs and Gravity Forms notification configuration.</td></tr></table>
+
+<h2>7. Required Actions</h2>
+<ol>
+<li>Preserve/export Thea’s draft, without exposing tokens or submission content.</li>
+<li>Download the pre-deletion Google Drive database backup and restore it only to staging.</li>
+<li>Recover Jonathan’s pre-deletion data from staging and determine whether a final entry or resumable draft existed.</li>
+<li>Obtain Effecticore MainWP portal and VPN/SSO logs for 20 Aug 2026 08:17–08:27 CEST to identify the named portal operator and originating MainWP command.</li>
+<li>Review the form-179 final-submit path, Save-and-Continue handling, notification trigger order, and error handling.</li>
+<li>Reconcile all August deleted accounts against application/draft records before declaring a wider incident scope.</li>
+<li>Replace the shared maintenance account with named, individual accounts and require MFA/audit correlation.</li>
+</ol>
+
+<h2>8. Client-Safe Conclusion</h2>
+<p>Jonathan’s account was deleted on 20 August 2026 at 08:25:46 CEST by a targeted operation initiated through the Effecticore MainWP maintenance session authenticated as <code>Effecticore_Maintenance</code>. The available local records do not identify the individual portal user or show whether that MainWP operation was manually selected or automated. A full database backup from immediately before the deletion is available for safe staging recovery.</p>
+<p>Thea’s account remains active, but her Canada application exists only as a recoverable draft and not as a final entry. This demonstrates that missing application data can occur independently of user-account deletion and requires a focused review of the application finalization and notification workflow.</p>
+</body>
+</html>
