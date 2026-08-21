@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Investigation Report — Missing Experiment Application</title>
+<style>
+  @page { size: A4; margin: 17mm 16mm 18mm; }
+  :root { --navy:#133a5e; --blue:#e8f2fb; --amber:#fff3c4; --red:#ffe5e5; --green:#e5f5ec; --ink:#1d2730; --muted:#52616f; --line:#cbd5df; }
+  * { box-sizing: border-box; }
+  body { color:var(--ink); font: 10.2pt/1.48 Arial, Helvetica, sans-serif; margin:0; }
+  h1,h2,h3 { color:var(--navy); line-height:1.18; }
+  h1 { font-size:24pt; margin:0 0 7px; }
+  h2 { border-bottom:2px solid #8ab6d9; font-size:15pt; margin:26px 0 10px; padding-bottom:5px; page-break-after:avoid; }
+  h3 { font-size:11.5pt; margin:18px 0 7px; page-break-after:avoid; }
+  p,li { orphans:3; widows:3; }
+  .cover { min-height:245mm; padding-top:44mm; page-break-after:always; }
+  .eyebrow { color:#2d6a96; font-size:10pt; font-weight:bold; letter-spacing:1.2px; text-transform:uppercase; }
+  .meta { border-left:5px solid #4c93c5; margin-top:30px; padding:12px 16px; background:#f4f8fb; width:80%; }
+  .meta p { margin:4px 0; }
+  .callout { background:var(--amber); border-left:5px solid #d89c00; font-size:11pt; font-weight:bold; margin:14px 0; padding:13px 15px; }
+  .critical { background:var(--red); border-left:5px solid #c63636; margin:14px 0; padding:12px 15px; }
+  .confirmed { background:var(--green); border-left:5px solid #23834c; margin:14px 0; padding:12px 15px; }
+  .note { background:var(--blue); border-left:5px solid #488bb9; margin:14px 0; padding:12px 15px; }
+  table { border-collapse:collapse; margin:9px 0 16px; width:100%; page-break-inside:avoid; }
+  th { background:var(--navy); color:#fff; text-align:left; }
+  td,th { border:1px solid var(--line); padding:7px 8px; vertical-align:top; }
+  tr:nth-child(even) td { background:#f6f9fb; }
+  code,pre { font:9pt/1.4 "Courier New",monospace; }
+  pre { background:#f2f5f7; border:1px solid var(--line); overflow-wrap:anywhere; padding:10px; white-space:pre-wrap; }
+  .pill { border-radius:12px; display:inline-block; font-size:8.5pt; font-weight:bold; padding:2px 8px; }
+  .pill.red { background:#f8cccc; color:#891c1c; } .pill.green { background:#ccebd8; color:#14572d; } .pill.amber { background:#fde7a1; color:#735100; }
+  .highlight { background:#fff0a8; padding:1px 3px; }
+  .small { color:var(--muted); font-size:9pt; }
+  .page-break { page-break-before:always; }
+  ul,ol { padding-left:21px; }
+  a { color:#185d8d; }
+</style>
+</head>
+<body>
+<section class="cover">
+  <div class="eyebrow">Experiment e.V. · Application Portal Investigation</div>
+  <h1>Investigation Report<br>Missing Experiment Application</h1>
+  <p class="small">Investigation date: 21 August 2026</p>
+  <div class="meta">
+    <p><strong>Reported applicant:</strong> Jonathan Nelio Eilert</p>
+    <p><strong>Email:</strong> nelio.eilert@gmail.com</p>
+    <p><strong>Application:</strong> Bewerbung Parlamentarisches Patenschafts-Programm 2027/2028</p>
+    <p><strong>Reported submission / confirmation:</strong> 11 August 2026, approximately 17:48</p>
+  </div>
+  <div class="callout">
+    Key finding: the WordPress audit log records the deletion of the exact applicant account by the <code>Effecticore_Maintenance</code> administrator account. This does not, by itself, prove that the underlying application was deleted.
+  </div>
+</section>
+
+<h2>1. Executive Summary</h2>
+<p>The reported application cannot currently be found in the backend/application portal and the corresponding applicant account is also absent. The audit-log investigation establishes that the applicant account existed and was subsequently deleted.</p>
+<div class="critical">
+  <strong>Confirmed deletion event:</strong> audit occurrence <code>220294</code> records a <strong>deleted user</strong> event for Jonathan Eilert / <code>nelio.eilert@gmail.com</code>, performed under <code>Effecticore_Maintenance</code>.
+</div>
+<p>The account was recorded as username <code>jonathaneilert</code>, first name Jonathan, last name Eilert, email <code>nelio.eilert@gmail.com</code>, role subscriber. The account deletion is strongly evidenced; the deletion of the application is <strong>not yet proven</strong>.</p>
+<div class="note">The application may still be in Gravity Forms entries or drafts, a custom application table, an orphaned record, or an export/backup. It should not be considered permanently lost until these sources are checked.</div>
+
+<h2>2. Client Report</h2>
+<p>The client reports that Jonathan Nelio Eilert submitted <em>Bewerbung Parlamentarisches Patenschafts-Programm 2027/2028</em> and received an automatic confirmation email on 11 August 2026 at approximately 17:48. The Experiment team could not locate the application or the account in the backend.</p>
+<table><tr><th>Field</th><th>Value</th></tr>
+<tr><td>Name</td><td>Jonathan Nelio Eilert</td></tr><tr><td>Email</td><td>nelio.eilert@gmail.com</td></tr>
+<tr><td>Username</td><td>jonathaneilert</td></tr><tr><td>Reported submission</td><td>11 August 2026, approximately 17:48</td></tr></table>
+
+<h2>3. Database Environment and Relevant Tables</h2>
+<p>The default <code>wp_</code> prefix did not apply. The WordPress installation uses the custom prefix <code>wp_fmrishinnl_</code>, confirmed by querying the post types in <code>wp_fmrishinnl_posts</code>.</p>
+<table><tr><th>Area</th><th>Tables identified</th><th>Why it matters</th></tr>
+<tr><td>WordPress users</td><td><code>wp_fmrishinnl_users</code><br><code>wp_fmrishinnl_usermeta</code></td><td>Account and surviving metadata</td></tr>
+<tr><td>Gravity Forms</td><td><code>wp_fmrishinnl_gf_entry</code>, <code>gf_entry_meta</code>, <code>gf_draft_submissions</code>, <code>gf_form</code>, <code>gf_form_meta</code>, <code>gf_form_revisions</code>, <code>gf_form_view</code></td><td>Form submissions may be independent of the user account</td></tr>
+<tr><td>Custom application data</td><td><code>saw202728classic</code>, <code>SAW2627classic</code>, <code>saw2627choice</code></td><td>Names indicate potentially relevant application-cycle workflows</td></tr>
+<tr><td>Audit logs</td><td><code>wp_fmrishinnl_wsal_occurrences</code><br><code>wp_fmrishinnl_wsal_metadata</code></td><td>Administrative activity and deletion evidence</td></tr></table>
+
+<h2>4. Audit Log Investigation</h2>
+<p>The maintenance account was queried with:</p>
+<pre>SELECT id, created_on, client_ip, user_agent, event_type,
+       object, username, user_id
+FROM wp_fmrishinnl_wsal_occurrences
+WHERE username = 'Effecticore_Maintenance'
+  AND client_ip = '187.14.255.7'
+ORDER BY created_on;</pre>
+<table><tr><th>ID</th><th>Event</th><th>Object</th><th>Interpretation</th></tr>
+<tr><td>220278</td><td>login</td><td>user</td><td>Maintenance session started</td></tr>
+<tr><td>220286</td><td>updated</td><td>system</td><td>System change</td></tr>
+<tr><td>220287–220291</td><td>modified</td><td>post</td><td>Multiple content changes</td></tr>
+<tr><td><strong>220294</strong></td><td><strong>deleted</strong></td><td><strong>user</strong></td><td><strong>Applicant account deletion</strong></td></tr>
+<tr><td>220296–220300</td><td>modified</td><td>post</td><td>Additional content changes</td></tr></table>
+
+<h2>5. Critical Finding — Applicant Account Deletion</h2>
+<p>The metadata for occurrence <code>220294</code> was queried as follows:</p>
+<pre>SELECT occurrence_id, name, LEFT(value, 5000) AS value
+FROM wp_fmrishinnl_wsal_metadata
+WHERE occurrence_id = 220294
+ORDER BY id;</pre>
+<div class="confirmed">
+  <strong>TargetUserID:</strong> <code>40372</code><br>
+  <strong>TargetUserData:</strong> username <code>jonathaneilert</code>; first name Jonathan; last name Eilert; email <code>nelio.eilert@gmail.com</code>; role subscriber.
+</div>
+<p>This directly matches the client-reported applicant. The administrator who performed the deletion is a different user: <code>Effecticore_Maintenance</code>, user ID <code>34066</code>. <span class="highlight">ID 34066 is the administrator; ID 40372 is the deleted applicant.</span></p>
+
+<h2>6. Maintenance Session and Related Changes</h2>
+<p>The logged-in maintenance account used IP <code>187.14.255.7</code> with a macOS Chrome user agent. The login metadata records <code>https://web-maintenance.effecticore.de/</code> as the login page URL.</p>
+<p>Post changes recorded before deletion include <em>New Modern Hero Secion</em> (23941), <em>202508_Preisübersicht_Button</em> (23765), <em>202507_Experience Finder mit hellblauen Karten</em> (23328), <em>Zertifizierte Qualität</em> (23281), and <em>202507_Kontakt_Foto unten zum Scrollen_ohne Buttons</em> (23259). The metadata reviewed indicates content changes rather than a direct modification of this application; they should nevertheless be correlated with the maintenance work.</p>
+
+<h2>7. Was the Application Deleted?</h2>
+<div class="callout">Status: <span class="pill amber">NOT PROVEN</span> The audit log proves deletion of the WordPress user account, not the application record.</div>
+<p>User accounts, application records, form entries, application statuses, and uploads can reside in separate structures. Deleting a WordPress user therefore does not establish that form or custom application data was removed.</p>
+<ol><li>Application still exists but is no longer associated with the deleted user.</li>
+<li>Gravity Forms entry and/or entry metadata survives.</li>
+<li>The record remains as a Gravity Forms draft.</li>
+<li>The record resides in a custom application table.</li>
+<li>The record was separately deleted and must be located in backups or exports.</li>
+<li>The confirmation email was issued before final persistence completed.</li></ol>
+
+<h2>8. Why the Confirmation Email Matters</h2>
+<p>The reported email is evidence that the processing workflow reached its notification stage around 17:48 on 11 August 2026. Its evidentiary weight depends on the implementation: the notification may be sent after database insertion, or before later user/application processing succeeds.</p>
+<p>The next review should identify the source form and form ID, notification trigger, database persistence order, and any custom PHP processing that separately creates users and applications.</p>
+
+<h2>9. Priority Investigation Plan</h2>
+<table><tr><th>Priority</th><th>Action</th><th>Search terms / scope</th></tr>
+<tr><td>1</td><td>Search Gravity Forms entries, metadata, drafts, form definitions</td><td><code>nelio.eilert@gmail.com</code>, <code>jonathaneilert</code>, Jonathan, Eilert; 11 August 2026</td></tr>
+<tr><td>2</td><td>Inspect custom application-table schemas before querying rows</td><td><code>saw202728classic</code>, <code>SAW2627classic</code>, <code>saw2627choice</code></td></tr>
+<tr><td>3</td><td>Check user and usermeta remnants</td><td>Applicant identifiers and <code>40372</code></td></tr>
+<tr><td>4</td><td>Search all audit events/metadata around submission</td><td>Applicant identifiers, <code>40372</code>, and relevant timestamps</td></tr>
+<tr><td>5</td><td>Identify confirmation-email logging and trigger order</td><td>Form ID, notification config, custom workflow</td></tr></table>
+
+<h2>10. Wider Impact Review</h2>
+<p>There is not enough evidence to claim that other applications were affected. A broader review is warranted because a real applicant account was deleted.</p>
+<ul><li>Review recently deleted user events (<code>event_type = deleted</code>, <code>object = user</code>).</li>
+<li>For each deleted applicant, determine whether an application record remains.</li>
+<li>Compare backend-visible application counts with form and custom-table counts.</li>
+<li>When email logs are available, reconcile confirmation emails with application and user records.</li></ul>
+
+<h2>11. Recommended Recovery Procedure</h2>
+<div class="critical"><strong>Safety requirement:</strong> do not restore or recreate the user before locating the original application record. Do not run <code>DELETE</code>, <code>UPDATE</code>, <code>INSERT</code>, or <code>TRUNCATE</code> during the investigation.</div>
+<ol>
+  <li>Create a database backup and preserve audit records, applicant-related rows, confirmation email, and application-table exports.</li>
+  <li>Locate the application using the applicant identifiers across Gravity Forms and custom tables.</li>
+  <li>Determine the source Gravity Forms form ID and inspect its notification/persistence logic.</li>
+  <li>Correlate all records with 11 August 2026 at approximately 17:48.</li>
+  <li>Review deletion and status history in the audit trail.</li>
+  <li>If no live record exists, inspect database, server, plugin, and application-specific backups/exports.</li>
+  <li>Only then select a recovery method that restores the original data without overwriting evidence.</li>
+</ol>
+
+<h2>12. Current Assessment and Conclusion</h2>
+<table><tr><th>Finding</th><th>Assessment</th></tr>
+<tr><td>Applicant account existed; identity and username matched</td><td><span class="pill green">CONFIRMED</span></td></tr>
+<tr><td>Applicant account was deleted by Effecticore_Maintenance</td><td><span class="pill green">CONFIRMED BY AUDIT LOG</span></td></tr>
+<tr><td>Application itself was deleted</td><td><span class="pill amber">NOT PROVEN</span></td></tr>
+<tr><td>Application still exists / can be recovered</td><td><span class="pill amber">POSSIBLE</span></td></tr>
+<tr><td>Other applications were affected</td><td><span class="pill amber">NOT ESTABLISHED</span></td></tr>
+<tr><td>Root cause fully established</td><td><span class="pill red">NOT YET</span></td></tr></table>
+<p>The available evidence confirms deletion of Jonathan Nelio Eilert’s WordPress account, not permanent loss of the application. The most appropriate next action is to locate and correlate the original record across Gravity Forms, custom application tables, audit history, and backups before making any recovery change.</p>
+<p><strong>Investigation status:</strong> <span class="pill amber">IN PROGRESS</span></p>
+</body></html>
